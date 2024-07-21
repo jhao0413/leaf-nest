@@ -1,0 +1,11 @@
+{
+    "Login": {
+        "title": "Hello world!",
+        "username": "Username",
+        "usernamePlaceholder": "Please enter username",
+        "password": "Password",
+        "passwordPlaceholder": "Please enter password",
+        "login": "Login",
+        "forgotPassword": "Forgot your password?"
+    }
+  }
