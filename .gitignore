@@ -10,7 +10,7 @@
 /coverage
 
 # next.js
-/web/.next/
+.next/
 /out/
 
 # production
@@ -35,4 +35,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# vscode
 .vscode/
+.history/
+
+# node_modeules
+node_modules/
