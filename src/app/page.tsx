@@ -39,7 +39,15 @@ export default function Home() {
       {bookInfoList.map((book, index) => (
         <Card isFooterBlurred radius="lg" key={index} className="max-w-48 border-none mr-8 mb-8">
           {book.coverUrl && (
-            <Image isBlurred isZoomed alt="Cover" src={book.coverUrl} width={200} />
+            <Image
+              isBlurred
+              isZoomed
+              alt="Cover"
+              className="object-cover"
+              src={book.coverUrl}
+              width={200}
+              height={280}
+            />
           )}
           <CardFooter className="justify-between h-10 before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">
             <div className="w-[calc(100%_-_20px)]">
