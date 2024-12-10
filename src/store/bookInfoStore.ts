@@ -1,17 +1,19 @@
 import { create } from "zustand";
 
 export type BookBasicInfoType = {
+  id?: string;
   name: string;
   creator: string;
   publisher: string;
   identifier: string;
-  date: string;
+  pubdate: string;
   coverBlob?: ArrayBuffer;
   coverPath: string;
   coverUrl?: string;
   toc: { text: string; path: string; file: string }[];
   fileBlob?: ArrayBuffer;
   language: string;
+  size?: string;
 };
 
 type BookInfoStore = {
@@ -25,7 +27,7 @@ export const useBookInfoStore = create<BookInfoStore>((set) => ({
     creator: "",
     publisher: "",
     identifier: "",
-    date: "",
+    pubdate: "",
     coverPath: "",
     coverUrl: "",
     toc: [],

@@ -5,8 +5,10 @@ import { useMemo, useEffect } from "react";
 import { Image } from "@nextui-org/image";
 import { Info } from "lucide-react";
 import { BookBasicInfoType, useBookInfoListStore } from "@/store/bookInfoStore";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const worker = useMemo<Worker | null>(() => {
     if (typeof window !== "undefined") {
       return new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
@@ -37,7 +39,12 @@ export default function Home() {
   return (
     <div className="p-6 flex flex-wrap">
       {bookInfoList.map((book, index) => (
-        <Card isFooterBlurred radius="lg" key={index} className="max-w-48 border-none mr-8 mb-8">
+        <Card
+          isFooterBlurred
+          radius="lg"
+          key={index}
+          className="max-w-48 border-none mr-8 mb-8 cursor-pointer"
+        >
           {book.coverUrl && (
             <Image
               isBlurred
@@ -47,6 +54,7 @@ export default function Home() {
               src={book.coverUrl}
               width={200}
               height={280}
+              onClick={() => router.push(`/reader/${book.id}`)}
             />
           )}
           <CardFooter className="justify-between h-10 before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-large bottom-1 w-[calc(100%_-_8px)] shadow-small ml-1 z-10">

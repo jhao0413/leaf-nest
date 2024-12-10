@@ -24,6 +24,7 @@ export const Navbar: React.FC = () => {
         event.data.data.coverUrl = URL.createObjectURL(
           new Blob([event.data.data.coverBlob], { type: "image/jpeg" })
         );
+        console.log(event.data.data);
         setBookInfoList([...bookInfoList, event.data.data]);
       }
     };

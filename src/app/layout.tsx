@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { Sidebar } from "@/components/Sidebar";
-import { Navbar } from "@/components/Navbar";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Providers } from "./providers";
+import { ClientLayout } from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "LeafNest",
@@ -17,21 +16,14 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
-
   const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="bg-blue">
+      <body className="bg-default">
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            <div className="flex h-screen">
-              <Sidebar />
-              <div className="flex flex-col w-full">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-              </div>
-            </div>
+            <ClientLayout>{children}</ClientLayout>
           </Providers>
         </NextIntlClientProvider>
       </body>

@@ -1,8 +1,10 @@
 import { nextui } from "@nextui-org/theme";
 import type { Config } from "tailwindcss";
 import defaultTheme from "tailwindcss/defaultTheme";
+import animate from "tailwindcss-animate";
 
 export default {
+  darkMode: ["selector"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -35,5 +37,5 @@ export default {
       },
     },
   },
-  plugins: [nextui()],
+  plugins: [animate, nextui()],
 } satisfies Config;

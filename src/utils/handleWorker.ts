@@ -21,7 +21,10 @@ onmessage = async (event) => {
         pubdate DATE,
         percentage NUMERIC NOT NULL,
         file_blob BLOB NOT NULL,
-        cover_blob BLOB
+        cover_blob BLOB,
+        toc TEXT,
+        language VARCHAR(20),
+        size VARCHAR(20)
       );
   `);
   } else {
@@ -38,6 +41,9 @@ onmessage = async (event) => {
       break;
     case "addBook":
       await addBook(db, event.data.data);
+      break;
+    case "getBookById":
+      await getBookById(db, event.data.data.id);
       break;
     default:
       break;
@@ -72,11 +78,28 @@ const addBook = async (db: OpfsDatabase, book: BookBasicInfoType) => {
 
     if (!book.coverBlob) throw new Error("Book cover blob is required.");
 
-    await insertBook(db, book);
-    postMessage({ success: true, data: book });
+    const id = await insertBook(db, book);
+    postMessage({ success: true, data: { ...book, id } });
   } catch (err) {
     console.error("Error adding book:", err);
     postMessage({ error: err });
+  }
+};
+
+const getBookById = async (db: OpfsDatabase, id: string) => {
+  try {
+    db.exec({
+      sql: `select * from books where id = ?;`,
+      bind: [id],
+      rowMode: "object",
+      callback: (row) => {
+        const camelCaseRow = convertKeysToCamelCase(row);
+        postMessage({ success: true, data: camelCaseRow });
+      },
+    });
+  } catch (err) {
+    console.error("Error getting book by id:", err);
+    postMessage({ success: false, error: err });
   }
 };
 
@@ -91,8 +114,8 @@ async function insertBook(db: OpfsDatabase, bookInfo: BookBasicInfoType) {
     // Insert into database
     db.exec({
       sql: `
-        INSERT INTO books (id, name, creator, publisher, identifier, pubdate, percentage, file_blob, cover_blob) VALUES 
-        (?, ?, ?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO books (id, name, creator, publisher, identifier, pubdate, percentage, file_blob, cover_blob, toc, language, size) VALUES 
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
       `,
       bind: [
         id,
@@ -100,10 +123,13 @@ async function insertBook(db: OpfsDatabase, bookInfo: BookBasicInfoType) {
         bookInfo.creator,
         bookInfo.publisher,
         bookInfo.identifier,
-        bookInfo.date,
+        bookInfo.pubdate,
         0,
         bookInfo.fileBlob,
         bookInfo.coverBlob,
+        JSON.stringify(bookInfo.toc),
+        bookInfo.language,
+        bookInfo.size,
       ],
     });
 
