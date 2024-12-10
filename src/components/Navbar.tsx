@@ -42,6 +42,8 @@ export const Navbar: React.FC = () => {
     const file = files[0];
 
     if (file && worker) {
+      const fileSizeInBytes = file.size;
+      const fileSizeInMB = (fileSizeInBytes / (1024 * 1024)).toFixed(2);
       const fileBlob = await getFileBinary(file);
       const bookParserInfo = await epubStructureParser(file);
 
@@ -50,6 +52,7 @@ export const Navbar: React.FC = () => {
         data: {
           ...bookParserInfo,
           fileBlob: fileBlob,
+          size: `${parseFloat(fileSizeInMB)} MB`,
         },
       });
     }

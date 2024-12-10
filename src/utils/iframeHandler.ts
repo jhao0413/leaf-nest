@@ -77,7 +77,7 @@ export const handleIframeLoad = (
         pageWidthRef.current = newPageWidth;
       }
 
-      let scrollWidth = iframeDoc.body.scrollWidth;
+      const scrollWidth = iframeDoc.body.scrollWidth;
       const ratio = scrollWidth / pageWidthRef.current;
       const fraction = ratio - Math.floor(ratio);
 
