@@ -6,6 +6,7 @@ import { Slider } from "@nextui-org/slider";
 import { ALargeSmall, AArrowDown, AArrowUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 const FontConfig: React.FC = ({}) => {
   const t = useTranslations("Renderer");
@@ -42,14 +43,7 @@ const FontConfig: React.FC = ({}) => {
     });
   };
 
-  return (
-    <>
-      <div
-        className="w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
-        onClick={handleMenuClick}
-      >
-        <ALargeSmall />
-      </div>
+  const overlay = <>
       <div
         className={`fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-10 z-20 transition-opacity duration-500 ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -58,7 +52,7 @@ const FontConfig: React.FC = ({}) => {
       ></div>
       <div
         className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] ${
-          mode === "single" ? "right-1/4" : "right-[10%]"
+          mode === "single" ? "right-0 sm:right-1/4" : "right-[10%]"
         } z-30 rounded-2xl transition-opacity duration-500 transform ${
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         } shadow-md`}
@@ -94,6 +88,19 @@ const FontConfig: React.FC = ({}) => {
           ))}
         </div>
       </div>
+  </>
+
+  return (
+    <>
+      <div
+        className="w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
+        onClick={handleMenuClick}
+      >
+        <ALargeSmall />
+      </div>
+      {
+        createPortal(overlay, document.body)
+      }
     </>
   );
 };

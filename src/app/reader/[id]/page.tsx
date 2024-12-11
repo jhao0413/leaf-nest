@@ -8,6 +8,7 @@ import { useBookZipStore } from "@/store/bookZipStore";
 import { loadZip } from "@/utils/zipUtils";
 import { useEffect } from "react";
 import React from "react";
+import { useBreakpoints } from "@/hooks/useBreakpoints";
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -33,10 +34,14 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     return () => worker.terminate();
   }, [id, setBookInfo, setBookZip]);
 
+  const { isMobile } = useBreakpoints();
+
+  const isSingleMode = isMobile || rendererMode === "single";
+
   return (
     <>
       {bookInfo.name ? (
-        rendererMode === "single" ? (
+        isSingleMode ? (
           <SingleColumnRenderer />
         ) : (
           <DoubleColumnRenderer />

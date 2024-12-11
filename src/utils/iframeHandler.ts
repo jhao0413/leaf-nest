@@ -21,6 +21,17 @@ export const writeToIframe = (
   
   const script = `
     <script>
+
+      document.addEventListener('click', function(e) {
+        const event = new MouseEvent('click', {
+          ...e,
+          bubbles: true,
+          cancelable: true,
+        });
+        console.log('clicked', event);
+        window.parent.document.dispatchEvent(event);
+      });
+
       document.addEventListener('keydown', function(e) {
         // Create a new event and dispatch it to the parent window
         const event = new KeyboardEvent('keydown', {

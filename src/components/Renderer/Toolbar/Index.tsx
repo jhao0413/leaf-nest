@@ -7,7 +7,9 @@ export const Toolbar = () => {
   return (
     <>
       <Menu />
-      <SwitchRendererMode />
+      <div className="hidden sm:block">
+        <SwitchRendererMode />
+      </div>
       <ThemeSwitcher />
       <FontConfig />
     </>
