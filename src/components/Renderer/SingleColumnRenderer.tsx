@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@nextui-org/button";
 import { useBookInfoStore } from "@/store/bookInfoStore";
 import { useCurrentChapterStore } from "@/store/currentChapterStore";
@@ -13,24 +13,35 @@ import { useRendererModeStore } from "@/store/rendererModeStore";
 import { loadChapterContent } from "@/utils/chapterLoader";
 import { useBookZipStore } from "@/store/bookZipStore";
 import { parseAndProcessChapter } from "@/utils/chapterParser";
-import { waitForImagesAndCalculatePages, writeToIframe } from "@/utils/iframeHandler";
+import {
+  waitForImagesAndCalculatePages,
+  writeToIframe,
+} from "@/utils/iframeHandler";
 import { useTranslations } from "next-intl";
 import { useDisclosure } from "@nextui-org/modal";
 import _ from "lodash";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useRouter } from "next/navigation";
 import { BookInfoModal } from "@/components/BookInfoModal";
+import { MoreButton } from "./Toolbar/MoreButton";
 
 const EpubReader: React.FC = () => {
   const t = useTranslations("SingleColumnRenderer");
-  const currentChapter = useCurrentChapterStore((state) => state.currentChapter);
-  const setCurrentChapter = useCurrentChapterStore((state) => state.setCurrentChapter);
-  const currentFontConfig = useRendererConfigStore((state) => state.rendererConfig);
+  const currentChapter = useCurrentChapterStore(
+    (state) => state.currentChapter
+  );
+  const setCurrentChapter = useCurrentChapterStore(
+    (state) => state.setCurrentChapter
+  );
+  const currentFontConfig = useRendererConfigStore(
+    (state) => state.rendererConfig
+  );
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const { theme } = useTheme();
   const bookZip = useBookZipStore((state) => state.bookZip);
   const rendererMode = useRendererModeStore((state) => state.rendererMode);
   const router = useRouter();
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState(false);
 
   useEffect(() => {
     const processChapter = async () => {
@@ -39,10 +50,21 @@ const EpubReader: React.FC = () => {
         bookInfo,
         currentChapter
       );
-      const updatedChapter = await parseAndProcessChapter(chapterContent, bookZip, basePath);
-      const renderer = writeToIframe(updatedChapter, currentFontConfig, theme, rendererMode, 0);
+      const updatedChapter = await parseAndProcessChapter(
+        chapterContent,
+        bookZip,
+        basePath
+      );
+      const renderer = writeToIframe(
+        updatedChapter,
+        currentFontConfig,
+        theme,
+        rendererMode,
+        0
+      );
       const iframeDoc =
-        renderer.contentDocument || (renderer.contentWindow && renderer.contentWindow.document);
+        renderer.contentDocument ||
+        (renderer.contentWindow && renderer.contentWindow.document);
       if (iframeDoc) {
         waitForImagesAndCalculatePages(renderer, iframeDoc);
       } else {
@@ -58,7 +80,9 @@ const EpubReader: React.FC = () => {
   }, [bookInfo, bookZip, currentChapter]);
 
   useEffect(() => {
-    const renderer = document.getElementById("epub-renderer") as HTMLIFrameElement;
+    const renderer = document.getElementById(
+      "epub-renderer"
+    ) as HTMLIFrameElement;
     if (!renderer || !renderer.contentWindow) {
       throw new Error("Renderer not found");
     }
@@ -113,7 +137,7 @@ const EpubReader: React.FC = () => {
   return (
     <>
       <div className="w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800"></div>
-      <div className="w-1/2 h-14 bg-white border-b-2 flex fixed items-center pl-4 z-20 inset-x-0 m-auto dark:bg-neutral-900">
+      <div className="sm:w-1/2 h-14 bg-white border-b-2 flex fixed items-center pl-4 z-20 inset-x-0 m-auto dark:bg-neutral-900">
         <div className="flex w-full justify-between items-center pr-4">
           <div className="flex items-center cursor-pointer" onClick={onOpen}>
             <BookOpen size={20} />
@@ -122,10 +146,12 @@ const EpubReader: React.FC = () => {
                 bookInfo.language === "zh" ? "" : "italic"
               }`}
             >
-              {bookInfo.language === "zh" ? `《${bookInfo.name}》` : bookInfo.name}
+              {bookInfo.language === "zh"
+                ? `《${bookInfo.name}》`
+                : bookInfo.name}
             </p>
           </div>
-          <div>
+          <div className="flex items-center">
             <Button
               className="ml-4 bg-white dark:bg-neutral-900"
               isIconOnly
@@ -135,11 +161,16 @@ const EpubReader: React.FC = () => {
             >
               <House size={16} className="dark:bg-neutral-900" />
             </Button>
+            
+            <MoreButton />
           </div>
         </div>
       </div>
-      <div className="w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900">
-        <iframe id="epub-renderer" className="w-full z-10 px-14 grow dark:bg-neutral-900"></iframe>
+      <div className="sm:w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900">
+        <iframe
+          id="epub-renderer"
+          className="w-full z-10 px-14 grow dark:bg-neutral-900"
+        ></iframe>
         <div className="w-full z-10 h-20 flex justify-around items-start">
           <Button
             variant="bordered"
@@ -157,8 +188,8 @@ const EpubReader: React.FC = () => {
           </Button>
         </div>
 
-        <div className="fixed right-[20%] bottom-[40%] z-50">
-          <Toolbar />
+        <div className="hidden sm:block fixed right-[20%] bottom-[40%] z-50">
+          <Toolbar/>
         </div>
       </div>
 
