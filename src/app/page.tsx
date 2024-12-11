@@ -31,12 +31,10 @@ export default function Home() {
 
   if (worker) {
     worker.onmessage = (event) => {
-      console.log(event.data.data);
       event.data.data.map((item: BookBasicInfoType) => {
         if (!item.coverBlob) return;
         item.coverUrl = URL.createObjectURL(new Blob([item.coverBlob], { type: "image/jpeg" }));
       });
-      console.log(event.data.data);
       setBookInfoList(event.data.data);
     };
   }
