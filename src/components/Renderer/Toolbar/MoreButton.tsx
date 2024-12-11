@@ -8,8 +8,7 @@ export const MoreButton = () => {
 
   // click outside to close
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-
+    const handleClickOutside = () => {
       if (isToolbarExpanded) {
         setIsToolbarExpanded(false);
         return false;
@@ -34,7 +33,12 @@ export const MoreButton = () => {
       >
         <MoreVertical size={16} className="dark:bg-neutral-900" />
       </Button>
-      <div className={"absolute top-full bg-white dark:bg-neutral-900 " + (isToolbarExpanded ? "block" : "hidden")}>
+      <div
+        className={
+          "absolute top-full bg-white dark:bg-neutral-900 " +
+          (isToolbarExpanded ? "block" : "hidden")
+        }
+      >
         <Toolbar />
       </div>
     </div>

@@ -5,10 +5,7 @@ interface KeyboardListener {
   onNext: () => void;
 }
 
-export const useKeyboardNavigation = ({
-  onPrevious,
-  onNext,
-}: KeyboardListener) => {
+export const useKeyboardNavigation = ({ onPrevious, onNext }: KeyboardListener) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "ArrowLeft") {
