@@ -17,6 +17,7 @@ import { waitForImagesAndCalculatePages, writeToIframe } from "@/utils/iframeHan
 import { useTranslations } from "next-intl";
 import { useDisclosure } from "@nextui-org/modal";
 import _ from "lodash";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useRouter } from "next/navigation";
 import { BookInfoModal } from "@/components/BookInfoModal";
 
@@ -101,6 +102,11 @@ const EpubReader: React.FC = () => {
   const handleNextChapter = () => {
     setCurrentChapter(currentChapter + 1);
   };
+
+  useKeyboardNavigation({
+    onPrevious: handlePrevChapter,
+    onNext: handleNextChapter,
+  });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 

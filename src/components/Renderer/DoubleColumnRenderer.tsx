@@ -19,6 +19,7 @@ import {
 } from "@/utils/iframeHandler";
 import { applyFontAndThemeStyles } from "@/utils/styleHandler";
 import { useRendererModeStore } from "@/store/rendererModeStore";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useDisclosure } from "@nextui-org/modal";
 import _ from "lodash";
 import { useRouter } from "next/navigation";
@@ -133,6 +134,11 @@ const EpubReader: React.FC = () => {
   };
 
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useKeyboardNavigation({
+    onPrevious: handlePrevPage,
+    onNext: handleNextPage,
+  });
 
   return (
     <div className="w-full h-screen bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800">
