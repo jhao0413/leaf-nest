@@ -1,12 +1,9 @@
 import ReaderContent from "@/app/reader/[id]/ReaderContent";
 
-type ReaderPageProps = {
-  params: {
-    id: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+type Props = {
+  params: { id: string };
 };
 
-export default async function ReaderPage({ params }: Pick<ReaderPageProps, "params">) {
+export default async function ReaderPage({ params }: Props) {
   return <ReaderContent id={params.id} />;
 }
