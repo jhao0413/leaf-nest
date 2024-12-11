@@ -451,6 +451,26 @@
     "@react-aria/utils" "3.24.1"
     "@react-types/shared" "3.23.1"
 
+"@nextui-org/checkbox@^2.3.4":
+  version "2.3.4"
+  resolved "https://registry.npmmirror.com/@nextui-org/checkbox/-/checkbox-2.3.4.tgz#dd856bef24cddbb5eabb7a67f66ab2e1069750f7"
+  integrity sha512-dpsUdfVDpj08rYEvP44+7Odjwuj4hiYbebNF0qJkzSwdZW7x0u9t1dlrP/t4tc5IAhNdBQcEWzKX+EphDCZIyQ==
+  dependencies:
+    "@nextui-org/form" "2.1.4"
+    "@nextui-org/react-utils" "2.1.1"
+    "@nextui-org/shared-utils" "2.1.1"
+    "@nextui-org/use-callback-ref" "2.1.1"
+    "@nextui-org/use-safe-layout-effect" "2.1.1"
+    "@react-aria/checkbox" "3.15.0"
+    "@react-aria/focus" "3.19.0"
+    "@react-aria/interactions" "3.22.5"
+    "@react-aria/utils" "3.26.0"
+    "@react-aria/visually-hidden" "3.8.18"
+    "@react-stately/checkbox" "3.6.10"
+    "@react-stately/toggle" "3.8.0"
+    "@react-types/checkbox" "3.9.0"
+    "@react-types/shared" "3.26.0"
+
 "@nextui-org/divider@2.0.32":
   version "2.0.32"
   resolved "https://registry.npmmirror.com/@nextui-org/divider/-/divider-2.0.32.tgz#831a19f454e4dd259662134a066e6e6c25576f42"
@@ -491,6 +511,20 @@
     "@react-aria/utils" "3.24.1"
     "@react-stately/menu" "3.7.1"
     "@react-types/menu" "3.9.9"
+
+"@nextui-org/form@2.1.4":
+  version "2.1.4"
+  resolved "https://registry.npmmirror.com/@nextui-org/form/-/form-2.1.4.tgz#b8b441adddcf0199eca747a58c114b6afc64c0ab"
+  integrity sha512-mXueTRa8jmQpfxNLStRd/UrxjYJuqN7pkJEtvUvaG3luthz3J1yAsrHHcyehK7MSwqtMQd+K1BbxgHt3TJxlpg==
+  dependencies:
+    "@nextui-org/react-utils" "2.1.1"
+    "@nextui-org/shared-utils" "2.1.1"
+    "@nextui-org/system" "2.4.4"
+    "@nextui-org/theme" "2.4.1"
+    "@react-aria/utils" "3.26.0"
+    "@react-stately/form" "3.1.0"
+    "@react-types/form" "3.7.8"
+    "@react-types/shared" "3.26.0"
 
 "@nextui-org/framer-utils@2.0.25":
   version "2.0.25"
@@ -742,6 +776,20 @@
     "@react-aria/utils" "3.26.0"
     "@react-stately/utils" "3.10.5"
     "@react-types/datepicker" "3.9.0"
+
+"@nextui-org/theme@2.4.1":
+  version "2.4.1"
+  resolved "https://registry.npmmirror.com/@nextui-org/theme/-/theme-2.4.1.tgz#fa8b766f90475e23b1347b79850cff37b231aa41"
+  integrity sha512-tJn4KsSU4QR8HAzAJk/TwbjtYWBuVcrRsiJeqTAN5L4galKXt5jJe23wGzHg+EAIs3t6IsjIjgo/PGwZenUPGQ==
+  dependencies:
+    "@nextui-org/shared-utils" "2.1.1"
+    clsx "^1.2.1"
+    color "^4.2.3"
+    color2k "^2.0.2"
+    deepmerge "4.3.1"
+    flat "^5.0.2"
+    tailwind-merge "^2.5.2"
+    tailwind-variants "^0.1.20"
 
 "@nextui-org/theme@^2.2.11":
   version "2.2.11"
@@ -1073,6 +1121,23 @@
     "@react-types/shared" "^3.23.1"
     "@swc/helpers" "^0.5.0"
 
+"@react-aria/checkbox@3.15.0":
+  version "3.15.0"
+  resolved "https://registry.npmmirror.com/@react-aria/checkbox/-/checkbox-3.15.0.tgz#4d224b71c65d6a079ff935ab22c806323f84b746"
+  integrity sha512-z/8xd4em7o0MroBXwkkwv7QRwiJaA1FwqMhRUb7iqtBGP2oSytBEDf0N7L09oci32a1P4ZPz2rMK5GlLh/PD6g==
+  dependencies:
+    "@react-aria/form" "^3.0.11"
+    "@react-aria/interactions" "^3.22.5"
+    "@react-aria/label" "^3.7.13"
+    "@react-aria/toggle" "^3.10.10"
+    "@react-aria/utils" "^3.26.0"
+    "@react-stately/checkbox" "^3.6.10"
+    "@react-stately/form" "^3.1.0"
+    "@react-stately/toggle" "^3.8.0"
+    "@react-types/checkbox" "^3.9.0"
+    "@react-types/shared" "^3.26.0"
+    "@swc/helpers" "^0.5.0"
+
 "@react-aria/dialog@3.5.14":
   version "3.5.14"
   resolved "https://registry.npmmirror.com/@react-aria/dialog/-/dialog-3.5.14.tgz#d4b078410c00b7cc7e6f25f67dfe53fa755be769"
@@ -1119,7 +1184,7 @@
     "@swc/helpers" "^0.5.0"
     clsx "^2.0.0"
 
-"@react-aria/form@^3.0.5":
+"@react-aria/form@^3.0.11", "@react-aria/form@^3.0.5":
   version "3.0.11"
   resolved "https://registry.npmmirror.com/@react-aria/form/-/form-3.0.11.tgz#84511874e1fad5f981bae97ebd4d549923849455"
   integrity sha512-oXzjTiwVuuWjZ8muU0hp3BrDH5qjVctLOF50mjPvqUbvXQTHhoDxWweyIXPQjGshaqBd2w4pWaE4A2rG2O/apw==
@@ -1330,6 +1395,19 @@
     "@react-types/textfield" "^3.9.3"
     "@swc/helpers" "^0.5.0"
 
+"@react-aria/toggle@^3.10.10":
+  version "3.10.10"
+  resolved "https://registry.npmmirror.com/@react-aria/toggle/-/toggle-3.10.10.tgz#444658bf606e6d56b1fd96737d5a552c93493979"
+  integrity sha512-QwMT/vTNrbrILxWVHfd9zVQ3mV2NdBwyRu+DphVQiFAXcmc808LEaIX2n0lI6FCsUDC9ZejCyvzd91/YemdZ1Q==
+  dependencies:
+    "@react-aria/focus" "^3.19.0"
+    "@react-aria/interactions" "^3.22.5"
+    "@react-aria/utils" "^3.26.0"
+    "@react-stately/toggle" "^3.8.0"
+    "@react-types/checkbox" "^3.9.0"
+    "@react-types/shared" "^3.26.0"
+    "@swc/helpers" "^0.5.0"
+
 "@react-aria/tooltip@3.7.10":
   version "3.7.10"
   resolved "https://registry.npmmirror.com/@react-aria/tooltip/-/tooltip-3.7.10.tgz#d710532e80337e50be818dfbf2cc54d0a9b8c592"
@@ -1375,6 +1453,17 @@
     "@react-types/shared" "^3.26.0"
     "@swc/helpers" "^0.5.0"
 
+"@react-stately/checkbox@3.6.10", "@react-stately/checkbox@^3.6.10":
+  version "3.6.10"
+  resolved "https://registry.npmmirror.com/@react-stately/checkbox/-/checkbox-3.6.10.tgz#69b619fdfcf1e15d2d93392e13289a36d85a8a6c"
+  integrity sha512-LHm7i4YI8A/RdgWAuADrnSAYIaYYpQeZqsp1a03Og0pJHAlZL0ymN3y2IFwbZueY0rnfM+yF+kWNXjJqbKrFEQ==
+  dependencies:
+    "@react-stately/form" "^3.1.0"
+    "@react-stately/utils" "^3.10.5"
+    "@react-types/checkbox" "^3.9.0"
+    "@react-types/shared" "^3.26.0"
+    "@swc/helpers" "^0.5.0"
+
 "@react-stately/collections@3.10.7":
   version "3.10.7"
   resolved "https://registry.npmmirror.com/@react-stately/collections/-/collections-3.10.7.tgz#b1add46cb8e2f2a0d33938ef1b232fb2d0fd11eb"
@@ -1391,7 +1480,7 @@
     "@react-types/shared" "^3.26.0"
     "@swc/helpers" "^0.5.0"
 
-"@react-stately/form@^3.0.3", "@react-stately/form@^3.1.0":
+"@react-stately/form@3.1.0", "@react-stately/form@^3.0.3", "@react-stately/form@^3.1.0":
   version "3.1.0"
   resolved "https://registry.npmmirror.com/@react-stately/form/-/form-3.1.0.tgz#7fdb4ca153be18e7516a02e507ada393ad38945d"
   integrity sha512-E2wxNQ0QaTyDHD0nJFtTSnEH9A3bpJurwxhS4vgcUmESHgjFEMLlC9irUSZKgvOgb42GAq+fHoWBsgKeTp9Big==
@@ -1457,7 +1546,7 @@
     "@react-types/slider" "^3.7.7"
     "@swc/helpers" "^0.5.0"
 
-"@react-stately/toggle@^3.7.4":
+"@react-stately/toggle@3.8.0", "@react-stately/toggle@^3.7.4", "@react-stately/toggle@^3.8.0":
   version "3.8.0"
   resolved "https://registry.npmmirror.com/@react-stately/toggle/-/toggle-3.8.0.tgz#39a3e45989f56e236809d8fe69c160cc88a616f5"
   integrity sha512-pyt/k/J8BwE/2g6LL6Z6sMSWRx9HEJB83Sm/MtovXnI66sxJ2EfQ1OaXB7Su5PEL9OMdoQF6Mb+N1RcW3zAoPw==
@@ -1534,7 +1623,7 @@
     "@internationalized/date" "^3.6.0"
     "@react-types/shared" "^3.26.0"
 
-"@react-types/checkbox@^3.9.0":
+"@react-types/checkbox@3.9.0", "@react-types/checkbox@^3.9.0":
   version "3.9.0"
   resolved "https://registry.npmmirror.com/@react-types/checkbox/-/checkbox-3.9.0.tgz#d4621fef81850543f7a028917e9c2781cd871443"
   integrity sha512-9hbHx0Oo2Hp5a8nV8Q75LQR0DHtvOIJbFaeqESSopqmV9EZoYjtY/h0NS7cZetgahQgnqYWQi44XGooMDCsmxA==
@@ -1557,6 +1646,13 @@
   integrity sha512-OXWMjrALwrlgw8aHD8SeRm/s3tbAssdaEh2h73KUSeFau3fU3n5mfKv+WnFqsEaOtN261o48l7hTlS6615H9AA==
   dependencies:
     "@react-types/overlays" "^3.8.11"
+    "@react-types/shared" "^3.26.0"
+
+"@react-types/form@3.7.8":
+  version "3.7.8"
+  resolved "https://registry.npmmirror.com/@react-types/form/-/form-3.7.8.tgz#4d6b9e78770b9345cc9e1041990a7a26fb65e0ee"
+  integrity sha512-0wOS97/X0ijTVuIqik1lHYTZnk13QkvMTKvIEhM7c6YMU3vPiirBwLbT2kJiAdwLiymwcCkrBdDF1NTRG6kPFA==
+  dependencies:
     "@react-types/shared" "^3.26.0"
 
 "@react-types/menu@3.9.13", "@react-types/menu@^3.9.13", "@react-types/menu@^3.9.9":
@@ -4217,6 +4313,11 @@ tailwind-merge@^1.14.0:
   version "1.14.0"
   resolved "https://registry.npmmirror.com/tailwind-merge/-/tailwind-merge-1.14.0.tgz#e677f55d864edc6794562c63f5001f45093cdb8b"
   integrity sha512-3mFKyCo/MBcgyOTlrY8T7odzZFx+w+qKSMAmdFzRvqBfLlSigU6TZnlFHK0lkMwj9Bj8OYU+9yW9lmGuS0QEnQ==
+
+tailwind-merge@^2.5.2:
+  version "2.5.5"
+  resolved "https://registry.npmmirror.com/tailwind-merge/-/tailwind-merge-2.5.5.tgz#98167859b856a2a6b8d2baf038ee171b9d814e39"
+  integrity sha512-0LXunzzAZzo0tEPxV3I297ffKZPlKDrjj7NXphC8V5ak9yHC5zRmxnOe2m/Rd/7ivsOMJe3JZ2JVocoDdQTRBA==
 
 tailwind-variants@^0.1.20:
   version "0.1.20"

@@ -20,6 +20,7 @@ export default {
       backgroundImage: {
         default: "url('/background.png')",
         blue: "url('/background-blue.png')",
+        test: "url('/test.png')",
       },
       fontFamily: {
         SiYuanSongTi: ["SiYuanSongTi", ...defaultTheme.fontFamily.sans],
