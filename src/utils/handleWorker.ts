@@ -45,6 +45,9 @@ onmessage = async (event) => {
     case "getBookById":
       await getBookById(db, event.data.data.id);
       break;
+    case "deleteBook":
+      await deleteBook(db, event.data.data);
+      break;
     default:
       break;
   }
@@ -62,13 +65,18 @@ const queryDatabase = async (db: OpfsDatabase) => {
       rowMode: "object",
       callback: (row) => {
         const camelCaseRow = convertKeysToCamelCase(row);
+        for (const key in camelCaseRow) {
+          if (key === "toc" && typeof camelCaseRow[key] === "string") {
+            camelCaseRow[key] = JSON.parse(camelCaseRow[key]);
+          }
+        }
         books.push(camelCaseRow);
       },
     });
-    postMessage(books);
+    postMessage({ success: true, action: "query", data: books });
   } catch (err) {
     console.error("Error querying database:", err);
-    postMessage({ error: err });
+    postMessage({ success: false, action: "query", error: err });
   }
 };
 
@@ -79,10 +87,10 @@ const addBook = async (db: OpfsDatabase, book: BookBasicInfoType) => {
     if (!book.coverBlob) throw new Error("Book cover blob is required.");
 
     const id = await insertBook(db, book);
-    postMessage({ success: true, data: { ...book, id } });
+    postMessage({ success: true, action: "addBook", data: { ...book, id } });
   } catch (err) {
     console.error("Error adding book:", err);
-    postMessage({ error: err });
+    postMessage({ success: false, action: "addBook", error: err });
   }
 };
 
@@ -94,12 +102,25 @@ const getBookById = async (db: OpfsDatabase, id: string) => {
       rowMode: "object",
       callback: (row) => {
         const camelCaseRow = convertKeysToCamelCase(row);
-        postMessage({ success: true, data: camelCaseRow });
+        postMessage({ success: true, action: "getBookByid", data: camelCaseRow });
       },
     });
   } catch (err) {
     console.error("Error getting book by id:", err);
-    postMessage({ success: false, error: err });
+    postMessage({ success: false, action: "getBookByid", error: err });
+  }
+};
+
+const deleteBook = async (db: OpfsDatabase, ids: string[]) => {
+  try {
+    console.log(ids);
+    db.exec({
+      sql: `delete from books where id in ('${ids.join("','")}');`,
+    });
+    postMessage({ success: true, action: "deleteBook" });
+  } catch (err) {
+    console.error("Error deleting book:", err);
+    postMessage({ success: false, action: "deleteBook", error: err });
   }
 };
 

@@ -3,7 +3,7 @@ import { BookText } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
   return (
-    <div className="bg-white w-56 h-full p-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between border border-white/20">
+    <div className="bg-white w-64 h-full p-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between border border-white/20">
       <div className="flex items-center">
         <Image src="/logo.png" alt="Logo" width={48} height={48} />
         <h1 className="text-2xl font-bold ml-2">LeafNest</h1>

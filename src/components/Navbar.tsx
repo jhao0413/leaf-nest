@@ -1,31 +1,44 @@
 "use client";
 
-import { useBookInfoListStore } from "@/store/bookInfoStore";
+import { BookBasicInfoType, useBookInfoListStore } from "@/store/bookInfoStore";
+import { useManageModeStore, useSelectedBookIdsStore } from "@/store/manageModeStore";
 import epubStructureParser from "@/utils/epubStructureParser";
 import { getFileBinary } from "@/utils/utils";
 import { Input } from "@nextui-org/input";
-import { BookDown, BookUp, Pencil } from "lucide-react";
+import { BookDown, Github, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useRef } from "react";
 
 export const Navbar: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const bookInfoList = useBookInfoListStore((state) => state.bookInfoList);
   const setBookInfoList = useBookInfoListStore((state) => state.setBookInfoList);
+  const manageMode = useManageModeStore((state) => state.manageMode);
+  const setManageMode = useManageModeStore((state) => state.setManageMode);
+  const selectedBookIds = useSelectedBookIdsStore((state) => state.selectedBookIds);
+  const setSelectedBookIds = useSelectedBookIdsStore((state) => state.setSelectedBookIds);
   const worker = useMemo(() => {
     if (typeof window !== "undefined") {
-      return new Worker(new URL("../utils/handleWorker.ts", import.meta.url));
+      return new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
     }
     return null;
   }, []);
 
   if (worker) {
     worker.onmessage = (event) => {
-      if (event.data.success) {
-        event.data.data.coverUrl = URL.createObjectURL(
-          new Blob([event.data.data.coverBlob], { type: "image/jpeg" })
-        );
-        console.log(event.data.data);
-        setBookInfoList([...bookInfoList, event.data.data]);
+      if (
+        event.data.success &&
+        (event.data.action === "addBook" || event.data.action === "deleteBook")
+      ) {
+        worker.postMessage({
+          action: "query",
+        });
+        setSelectedBookIds([]);
+        setManageMode(false);
+      } else if (event.data.success && event.data.action === "query") {
+        event.data.data.map((item: BookBasicInfoType) => {
+          if (!item.coverBlob) return;
+          item.coverUrl = URL.createObjectURL(new Blob([item.coverBlob], { type: "image/jpeg" }));
+        });
+        setBookInfoList(event.data.data);
       }
     };
   }
@@ -57,6 +70,15 @@ export const Navbar: React.FC = () => {
       });
     }
   };
+
+  const handleDelete = () => {
+    if (selectedBookIds.length === 0) return;
+
+    worker?.postMessage({
+      action: "deleteBook",
+      data: selectedBookIds,
+    });
+  };
   return (
     <>
       <div className="flex justify-between items-center">
@@ -64,30 +86,57 @@ export const Navbar: React.FC = () => {
           Books
         </div>
         <div className="flex">
-          <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border border-white/20 overflow-hidden py-1">
-            <div className="pl-4 flex w-28 items-center" onClick={handleButtonClick}>
-              <BookDown size={20} className="mr-2" />
-              <span>Import</span>
-              <Input
-                id="picture"
-                type="file"
-                accept=".epub"
-                ref={inputRef}
-                className="hidden"
-                onChange={handleFileChange}
-              />
+          <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1">
+            <div
+              className="pl-4 flex w-28 items-center"
+              onClick={() => window.open("https://github.com/jhao0413/leaf-nest", "_blank")}
+            >
+              <Github size={20} className="mr-2" />
+              <span>Github</span>
             </div>
           </div>
-          <div className="rounded-full flex items-center px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border border-white/20 overflow-hidden py-1">
-            <div className="pl-4 flex w-28 items-center">
-              <BookUp size={20} className="mr-2" />
-              <span>Export</span>
-            </div>
+          <div
+            className={`rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1 ${
+              manageMode ? "border-red-500 text-red-500" : ""
+            }`}
+          >
+            {manageMode ? (
+              <>
+                <div className={`pl-4 flex w-28 items-center `} onClick={handleDelete}>
+                  <Trash2 size={20} className="mr-2" />
+                  <span>Delete</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="pl-4 flex w-28 items-center" onClick={handleButtonClick}>
+                  <BookDown size={20} className="mr-2" />
+                  <span>Import</span>
+                  <Input
+                    id="picture"
+                    type="file"
+                    accept=".epub"
+                    ref={inputRef}
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
+              </>
+            )}
           </div>
-          <div className="rounded-full flex items-center px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border border-white/20 overflow-hidden py-1">
-            <div className="pl-4 flex w-28 items-center">
-              <Pencil size={20} className="mr-2" />
-              <span>Manage</span>
+          <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1">
+            <div className="pl-4 flex w-28 items-center" onClick={() => setManageMode(!manageMode)}>
+              {manageMode ? (
+                <>
+                  <X size={20} className="mr-2" />
+                  <span>Cancel</span>
+                </>
+              ) : (
+                <>
+                  <Pencil size={20} className="mr-2" />
+                  <span>Manage</span>
+                </>
+              )}
             </div>
           </div>
         </div>

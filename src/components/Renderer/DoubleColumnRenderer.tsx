@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { BookOpen, ChevronLeft, ChevronRight, Github } from "lucide-react";
+import { BookOpen, ChevronLeft, ChevronRight, House } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@nextui-org/button";
 import { useBookInfoStore } from "@/store/bookInfoStore";
 import { useCurrentChapterStore } from "@/store/currentChapterStore";
 import { useRendererConfigStore } from "@/store/fontConfigStore";
 import { Toolbar } from "@/components/Renderer/Toolbar/Index";
-import LocaleSwitcher from "@/components/LocaleSwitcher";
 import { useTheme } from "next-themes";
 import { useBookZipStore } from "@/store/bookZipStore";
 import { loadChapterContent } from "@/utils/chapterLoader";
@@ -20,17 +19,15 @@ import {
 } from "@/utils/iframeHandler";
 import { applyFontAndThemeStyles } from "@/utils/styleHandler";
 import { useRendererModeStore } from "@/store/rendererModeStore";
-import { Modal, ModalContent, ModalHeader, ModalBody, useDisclosure } from "@nextui-org/modal";
-import { Image } from "@nextui-org/image";
-import { Tooltip } from "@nextui-org/tooltip";
-import dayjs from "dayjs";
+import { useDisclosure } from "@nextui-org/modal";
 import _ from "lodash";
+import { useRouter } from "next/navigation";
+import { BookInfoModal } from "@/components/BookInfoModal";
 
 const COLUMN_GAP = 100;
 
 const EpubReader: React.FC = () => {
   const t = useTranslations("Renderer");
-  const tModal = useTranslations("BookInfoModal");
   const currentChapter = useCurrentChapterStore((state) => state.currentChapter);
   const setCurrentChapter = useCurrentChapterStore((state) => state.setCurrentChapter);
   const [currentPageIndex, setCurrentPageIndex] = useState(1);
@@ -42,6 +39,7 @@ const EpubReader: React.FC = () => {
   const { theme } = useTheme();
   const bookZip = useBookZipStore((state) => state.bookZip);
   const rendererMode = useRendererModeStore((state) => state.rendererMode);
+  const router = useRouter();
 
   useEffect(() => {
     const processChapter = async () => {
@@ -150,15 +148,14 @@ const EpubReader: React.FC = () => {
           </p>
         </div>
         <div>
-          <LocaleSwitcher />
           <Button
             className="ml-4 bg-white dark:bg-neutral-900"
             isIconOnly
             variant="shadow"
             radius="sm"
-            onClick={() => window.open("https://github.com/jhao0413/react-epub-parser", "_blank")}
+            onClick={() => router.push("/")}
           >
-            <Github size={16} className="dark:bg-neutral-900" />
+            <House size={16} className="dark:bg-neutral-900" />
           </Button>
         </div>
       </div>
@@ -191,74 +188,7 @@ const EpubReader: React.FC = () => {
         </div>
       </div>
 
-      <Modal backdrop="blur" size="2xl" isOpen={isOpen} onClose={onClose} className="pb-6">
-        <ModalContent>
-          {() => (
-            <>
-              <ModalHeader>
-                <div className="flex items-center">
-                  <BookOpen size={16} className="mr-2" />
-                  {tModal("title")}
-                </div>
-              </ModalHeader>
-              <ModalBody>
-                <div className="flex">
-                  <div className="mr-10">
-                    <Image
-                      isBlurred
-                      alt="Event image"
-                      width={300}
-                      src={
-                        bookInfo.coverBlob
-                          ? URL.createObjectURL(new Blob([bookInfo.coverBlob]))
-                          : ""
-                      }
-                    />
-                  </div>
-
-                  <div className="flex flex-col w-1/2">
-                    <Tooltip content={bookInfo.name}>
-                      <h2 className="font-bold truncate w-[90%] text-2xl font-XiaLuZhenKai mb-2">
-                        {bookInfo.name}
-                      </h2>
-                    </Tooltip>
-                    {bookInfo.creator && (
-                      <p className="mb-2">
-                        <span className="font-bold">{tModal("author")}：</span>
-                        {bookInfo.creator}
-                      </p>
-                    )}
-                    {bookInfo.language && (
-                      <p className="mb-2">
-                        <span className="font-bold">{tModal("language")}：</span>
-                        {bookInfo.language}
-                      </p>
-                    )}
-                    {bookInfo.size && (
-                      <p className="mb-2">
-                        <span className="font-bold">{tModal("size")} :</span>
-                        {bookInfo.size}
-                      </p>
-                    )}
-                    {bookInfo.pubdate && (
-                      <p className="mb-2">
-                        <span className="font-bold">{tModal("publicationDate")} :</span>
-                        {dayjs(bookInfo.pubdate).format("YYYY-MM-DD")}
-                      </p>
-                    )}
-                    {bookInfo.publisher && (
-                      <p className="mb-2">
-                        <span className="font-bold">{tModal("publisher")} :</span>
-                        {bookInfo.publisher}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </ModalBody>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={bookInfo} />
     </div>
   );
 };
