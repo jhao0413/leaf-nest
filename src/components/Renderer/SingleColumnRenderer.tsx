@@ -21,6 +21,7 @@ import { Image } from "@nextui-org/image";
 import { Tooltip } from "@nextui-org/tooltip";
 import dayjs from "dayjs";
 import _ from "lodash";
+import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 
 const EpubReader: React.FC = () => {
   const t = useTranslations("SingleColumnRenderer");
@@ -103,6 +104,11 @@ const EpubReader: React.FC = () => {
   const handleNextChapter = () => {
     setCurrentChapter(currentChapter + 1);
   };
+
+  useKeyboardNavigation({
+    onPrevious: handlePrevChapter,
+    onNext: handleNextChapter,
+  });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
