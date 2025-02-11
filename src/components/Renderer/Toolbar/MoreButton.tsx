@@ -1,4 +1,4 @@
-import { Button } from "@nextui-org/button";
+import { Button } from "@heroui/button";
 import { MoreVertical } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Toolbar } from "./Index";

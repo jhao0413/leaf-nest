@@ -18,7 +18,7 @@ export const writeToIframe = (
   }
   const iframeDoc =
     renderer.contentDocument || (renderer.contentWindow && renderer.contentWindow.document);
-  
+
   const script = `
     <script>
 
@@ -28,7 +28,7 @@ export const writeToIframe = (
           bubbles: true,
           cancelable: true,
         });
-        console.log('clicked', event);
+        
         window.parent.document.dispatchEvent(event);
       });
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { BookOpen, ChevronLeft, ChevronRight, House } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@nextui-org/button";
+import { Button } from "@heroui/button";
 import { useBookInfoStore } from "@/store/bookInfoStore";
 import { useCurrentChapterStore } from "@/store/currentChapterStore";
 import { useRendererConfigStore } from "@/store/fontConfigStore";
@@ -20,7 +20,7 @@ import {
 import { applyFontAndThemeStyles } from "@/utils/styleHandler";
 import { useRendererModeStore } from "@/store/rendererModeStore";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
-import { useDisclosure } from "@nextui-org/modal";
+import { useDisclosure } from "@heroui/modal";
 import _ from "lodash";
 import { useRouter } from "next/navigation";
 import { BookInfoModal } from "@/components/BookInfoModal";
@@ -166,7 +166,7 @@ const EpubReader: React.FC = () => {
         </div>
       </div>
       <div className="w-4/5 h-[86vh] bg-white p-14 mt-4 rounded-2xl dark:bg-neutral-900">
-        <div className="h-full relative">
+        <div className="h-full relative" id="renderer-container">
           <iframe id="epub-renderer" style={{ width: "100%", height: "100%" }}></iframe>
           <div className="w-full flex justify-between">
             <Button

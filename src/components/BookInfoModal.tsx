@@ -1,7 +1,7 @@
 import { BookOpen } from "lucide-react";
-import { Modal, ModalBody, ModalContent, ModalHeader } from "@nextui-org/modal";
-import { Image } from "@nextui-org/image";
-import { Tooltip } from "@nextui-org/tooltip";
+import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/modal";
+import { Image } from "@heroui/image";
+import { Tooltip } from "@heroui/tooltip";
 import { useTranslations } from "next-intl";
 import { BookBasicInfoType } from "@/store/bookInfoStore";
 import dayjs from "dayjs";

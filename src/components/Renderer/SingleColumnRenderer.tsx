@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Button } from "@nextui-org/button";
+import { Button } from "@heroui/button";
 import { useBookInfoStore } from "@/store/bookInfoStore";
 import { useCurrentChapterStore } from "@/store/currentChapterStore";
 import { useRendererConfigStore } from "@/store/fontConfigStore";
@@ -15,7 +15,7 @@ import { useBookZipStore } from "@/store/bookZipStore";
 import { parseAndProcessChapter } from "@/utils/chapterParser";
 import { waitForImagesAndCalculatePages, writeToIframe } from "@/utils/iframeHandler";
 import { useTranslations } from "next-intl";
-import { useDisclosure } from "@nextui-org/modal";
+import { useDisclosure } from "@heroui/modal";
 import _ from "lodash";
 import { useKeyboardNavigation } from "@/hooks/useKeyboardNavigation";
 import { useRouter } from "next/navigation";

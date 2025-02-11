@@ -4,7 +4,7 @@ import { BookBasicInfoType, useBookInfoListStore } from "@/store/bookInfoStore";
 import { useManageModeStore, useSelectedBookIdsStore } from "@/store/manageModeStore";
 import epubStructureParser from "@/utils/epubStructureParser";
 import { getFileBinary } from "@/utils/utils";
-import { Input } from "@nextui-org/input";
+import { Input } from "@heroui/input";
 import { BookDown, Github, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useRef } from "react";
 

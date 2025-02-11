@@ -1,15 +1,15 @@
 "use client";
 
-import { Card, CardFooter } from "@nextui-org/card";
+import { Card, CardFooter } from "@heroui/card";
 import { useMemo, useEffect, useRef } from "react";
-import { Image } from "@nextui-org/image";
+import { Image } from "@heroui/image";
 import { Info } from "lucide-react";
 import { BookBasicInfoType, useBookInfoListStore } from "@/store/bookInfoStore";
 import { useRouter } from "next/navigation";
 import { BookInfoModal } from "@/components/BookInfoModal";
-import { useDisclosure } from "@nextui-org/modal";
+import { useDisclosure } from "@heroui/modal";
 import { useManageModeStore, useSelectedBookIdsStore } from "@/store/manageModeStore";
-import { Checkbox } from "@nextui-org/checkbox";
+import { Checkbox } from "@heroui/checkbox";
 
 export default function Home() {
   const router = useRouter();
