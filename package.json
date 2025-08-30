@@ -15,6 +15,7 @@
     "@heroui/dropdown": "2.3.10",
     "@heroui/image": "2.2.6",
     "@heroui/input": "2.4.10",
+    "@heroui/kbd": "^2.2.19",
     "@heroui/menu": "2.2.10",
     "@heroui/modal": "2.2.8",
     "@heroui/slider": "2.4.8",
