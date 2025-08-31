@@ -1,5 +1,5 @@
 import { applyFontAndThemeStyles } from "@/utils/styleHandler";
-import { TextPositionMapper } from './textPositionMapper';
+import { TextPositionMapper, TextPosition } from './textPositionMapper';
 
 export const writeToIframe = (
   updatedChapter: string,
@@ -75,7 +75,7 @@ export const handleIframeLoad = (
   setCurrentPageIndex: (pageIndex: number) => void,
   COLUMN_GAP: number,
   currentSearchQuery:string,
-  onTextPositionsAnalyzed: any
+  onTextPositionsAnalyzed: (searchQuery: string, positions: TextPosition[]) => void
 ) => {
   renderer.style.visibility = "hidden";
   const handleLoad = () => {

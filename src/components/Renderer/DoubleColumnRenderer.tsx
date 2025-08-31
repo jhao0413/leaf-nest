@@ -80,7 +80,7 @@ const EpubReader: React.FC = () => {
         onCloseSearch();
       }
     }
-  }, [searchAndNavigate, onCloseSearch, highlightText]);
+  }, [searchAndNavigate, onCloseSearch, highlightText, setCurrentPageIndex]);
   
   
   useEffect(() => {
@@ -121,7 +121,7 @@ const EpubReader: React.FC = () => {
     };
 
     processChapter();
-  }, [bookInfo, bookZip, rendererMode, currentChapter, currentFontConfig, theme, handleTextSearchWithPositions]);
+  }, [bookInfo, bookZip, rendererMode, currentChapter, currentFontConfig, theme, handleTextSearchWithPositions, setCurrentPageIndex]);
 
   // book index init 
   useEffect(() => {
@@ -248,8 +248,6 @@ const EpubReader: React.FC = () => {
             onClick={onOpenSearch}
             startContent={<Search size={16} />}
             endContent={<Kbd keys={["ctrl"]}>K</Kbd>}
-            onKeyDown={(e) => {
-            }}
           />
           {/* <LocaleSwitcher /> */}
           <Button
