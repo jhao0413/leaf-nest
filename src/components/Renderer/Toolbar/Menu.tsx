@@ -1,25 +1,21 @@
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { MenuIcon } from "@/components/ui/menu";
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { MenuIcon } from '@/components/ui/menu';
 import { Tooltip } from "@heroui/tooltip";
-import { useRendererModeStore } from "@/store/rendererModeStore";
-import { useBookInfoStore } from "@/store/bookInfoStore";
-import { useCurrentChapterStore } from "@/store/currentChapterStore";
-import { useTheme } from "next-themes";
-import { createPortal } from "react-dom";
+import { useRendererModeStore } from '@/store/rendererModeStore';
+import { useBookInfoStore } from '@/store/bookInfoStore';
+import { useReaderStateStore } from '@/store/readerStateStore';
+import { useTheme } from 'next-themes';
 
 const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const mode = useRendererModeStore((state) => state.rendererMode);
-  const bookInfo = useBookInfoStore((state) => state.bookInfo);
-  const currentChapter = useCurrentChapterStore(
-    (state) => state.currentChapter
-  );
-  const setCurrentChapter = useCurrentChapterStore(
-    (state) => state.setCurrentChapter
-  );
+  const mode = useRendererModeStore(state => state.rendererMode);
+  const bookInfo = useBookInfoStore(state => state.bookInfo);
+  const currentChapter = useReaderStateStore(state => state.currentChapter);
+  const setCurrentChapter = useReaderStateStore(state => state.setCurrentChapter);
+  const setCurrentPageIndex = useReaderStateStore(state => state.setCurrentPageIndex);
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -43,21 +39,24 @@ const Menu: React.FC = () => {
     setIsOpen(false);
   };
 
-  const overlay = (
+  return (
     <>
       <div
-        className={`fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-10 z-20 transition-opacity duration-500 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={handleOverlayClick}
-      ></div>
+        className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
+        onClick={handleMenuClick}>
+        <MenuIcon isOpen={isOpen} />
+      </div>
       <div
-        className={`max-w-md w-full sm:w-96 h-[86vh] bg-white rounded-2xl dark:bg-neutral-800 fixed top-[calc(7vh+32px)] ${
-          mode === "single" ? "right-0 sm:right-1/4" : " right-[10%]"
+        className={`fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-10 z-20 transition-opacity duration-500 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={handleOverlayClick}></div>
+      <div
+        className={`w-auto max-w-md min-w-96 h-[86vh] bg-white rounded-2xl dark:bg-neutral-800 fixed top-[calc(7vh+32px)] ${
+          mode === 'single' ? 'right-1/4' : ' right-[10%]'
         } z-30 transition-opacity duration-500 transform ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        } shadow-md`}
-      >
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        } shadow-md`}>
         <div className="flex px-6 pt-8 pb-4 z-50">
           {coverUrl && (
             <Image
@@ -66,7 +65,7 @@ const Menu: React.FC = () => {
               alt="Book Cover"
               width={80}
               height={160}
-              style={{ objectFit: "cover", width: "80px", height: "auto" }}
+              style={{ objectFit: 'cover', width: '80px', height: 'auto' }}
             />
           )}
           <div className="w-4/6 mx-4">
@@ -86,19 +85,17 @@ const Menu: React.FC = () => {
                 <div
                   key={index}
                   className={`py-4 px-8 ${
-                    theme === "dark"
-                      ? "hover:bg-neutral-600"
-                      : "hover:bg-blue-50"
-                  }  dark:text-white cursor-pointer	`}
-                >
+                    theme === 'dark' ? 'hover:bg-neutral-600' : 'hover:bg-blue-50'
+                  }  dark:text-white cursor-pointer	`}>
                   <a
-                    onClick={() => setCurrentChapter(index)}
+                    onClick={() => {
+                      handleOverlayClick()
+                      setCurrentChapter(index)
+                      setCurrentPageIndex(1)
+                    }}
                     className={`block text-sm ${
-                      currentChapter === index
-                        ? "text-blue-500"
-                        : "text-slate-500 dark:text-white"
-                    }`}
-                  >
+                      currentChapter === index ? 'text-blue-500' : 'text-slate-500 dark:text-white'
+                    }`}>
                     {_item.text}
                   </a>
                 </div>
@@ -107,18 +104,6 @@ const Menu: React.FC = () => {
           </ScrollArea>
         </div>
       </div>
-    </>
-  );
-
-  return (
-    <>
-      <div
-        className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
-        onClick={handleMenuClick}
-      >
-        <MenuIcon isOpen={isOpen} />
-      </div>
-      {createPortal(overlay, document.body)}
     </>
   );
 };

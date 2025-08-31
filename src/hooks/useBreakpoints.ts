@@ -2,7 +2,7 @@ import { MOBILE_BREAKPOINT } from "@/utils/const";
 import { useEffect, useState } from "react";
 
 export const useBreakpoints = () => {
-  const [isMobile, setIsMobile] = useState(window?.innerWidth < 640);
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window?.innerWidth < MOBILE_BREAKPOINT);

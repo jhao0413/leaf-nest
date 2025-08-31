@@ -75,6 +75,12 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
                       {bookInfo.publisher}
                     </p>
                   )}
+                  {bookInfo.identifier && (
+                    <p className="mb-2">
+                      <span className="font-bold">{tModal("identifier")}：</span>
+                      {bookInfo.identifier}
+                    </p>
+                  )}
                 </div>
               </div>
             </ModalBody>

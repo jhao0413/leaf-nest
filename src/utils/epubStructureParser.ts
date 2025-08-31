@@ -134,11 +134,11 @@ const epubBasicInfoParser = (content: string): [BookBasicInfoType, string] => {
 
   return [
     {
-      name: getName(),
+      title: getName(),
       creator: getCreator(),
       publisher: getPublisher(),
       identifier: getIdentifier(),
-      pubdate: getDate(),
+      date: getDate(),
       coverPath: getCoverPath(),
       toc: [],
       language: getLanaguage(),

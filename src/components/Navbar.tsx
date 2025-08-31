@@ -24,6 +24,7 @@ export const Navbar: React.FC = () => {
 
   if (worker) {
     worker.onmessage = (event) => {
+      console.log(event.data.data);
       if (
         event.data.success &&
         (event.data.action === "addBook" || event.data.action === "deleteBook")
@@ -64,7 +65,7 @@ export const Navbar: React.FC = () => {
         action: "addBook",
         data: {
           ...bookParserInfo,
-          fileBlob: fileBlob,
+          blob: fileBlob,
           size: `${parseFloat(fileSizeInMB)} MB`,
         },
       });

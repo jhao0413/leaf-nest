@@ -1,4 +1,5 @@
 import { applyFontAndThemeStyles } from "@/utils/styleHandler";
+import { TextPositionMapper } from './textPositionMapper';
 
 export const writeToIframe = (
   updatedChapter: string,
@@ -21,17 +22,6 @@ export const writeToIframe = (
 
   const script = `
     <script>
-
-      document.addEventListener('click', function(e) {
-        const event = new MouseEvent('click', {
-          ...e,
-          bubbles: true,
-          cancelable: true,
-        });
-        
-        window.parent.document.dispatchEvent(event);
-      });
-
       document.addEventListener('keydown', function(e) {
         // Create a new event and dispatch it to the parent window
         const event = new KeyboardEvent('keydown', {
@@ -45,9 +35,8 @@ export const writeToIframe = (
       });
     </script>
   `;
-
   iframeDoc.open();
-  iframeDoc.write(updatedChapter + script); // Add the script to the iframe content
+  iframeDoc.write(updatedChapter + script);
   iframeDoc.close();
 
   applyFontAndThemeStyles(currentFontConfig, theme, mode, COLUMN_GAP);
@@ -83,8 +72,10 @@ export const handleIframeLoad = (
   pageWidthRef: React.MutableRefObject<number>,
   pageCountRef: React.MutableRefObject<number>,
   goToLastPageRef: React.MutableRefObject<boolean>,
-  setCurrentPageIndex: React.Dispatch<React.SetStateAction<number>>,
-  COLUMN_GAP: number
+  setCurrentPageIndex: (pageIndex: number) => void,
+  COLUMN_GAP: number,
+  currentSearchQuery:string,
+  onTextPositionsAnalyzed: any
 ) => {
   renderer.style.visibility = "hidden";
   const handleLoad = () => {
@@ -105,7 +96,7 @@ export const handleIframeLoad = (
         pageWidthRef.current = newPageWidth;
       }
 
-      const scrollWidth = iframeDoc.body.scrollWidth;
+      let scrollWidth = iframeDoc.body.scrollWidth;
       const ratio = scrollWidth / pageWidthRef.current;
       const fraction = ratio - Math.floor(ratio);
 
@@ -123,11 +114,18 @@ export const handleIframeLoad = (
           left: (pageCountRef.current - 1) * pageWidthRef.current,
         });
         goToLastPageRef.current = false;
-        setCurrentPageIndex(Math.ceil(scrollWidth / pageWidthRef.current));
+        setCurrentPageIndex(pageCountRef.current);
       } else {
         renderer.contentWindow.scrollTo({
           left: 0,
         });
+      }
+
+      const textMapper = new TextPositionMapper(pageWidthRef.current, COLUMN_GAP);
+      const textPositions = textMapper.analyzeTextPositions(iframeDoc);
+      
+      if (onTextPositionsAnalyzed) {
+        onTextPositionsAnalyzed(currentSearchQuery, textPositions);
       }
       renderer.style.visibility = "visible";
 
