@@ -33,7 +33,6 @@ const COLUMN_GAP = 100;
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('Renderer');
-  const tModal = useTranslations('BookInfoModal');
   const router = useRouter();
   
   // book info modal

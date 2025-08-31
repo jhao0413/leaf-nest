@@ -35,7 +35,6 @@ export interface TextPosition {
     }
   
     private processTextNode(textNode: Text, iframeDoc: Document) {
-      const range = iframeDoc.createRange();
       const text = textNode.textContent || '';
       
       const tempSpan = iframeDoc.createElement('span');

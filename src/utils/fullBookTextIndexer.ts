@@ -114,8 +114,7 @@ export class FullBookTextIndexer {
     const results: SearchResult[] = [];
     const searchQuery = query.toLowerCase();
     const seenResults = new Set<string>();
-    let textIndex = this.textIndex;
-    console.log(textIndex);
+    const textIndex = this.textIndex;
     console.log(`Searching for "${searchQuery}" in chapters...`);
     textIndex.forEach((chapter) => {
       const searchText = chapter.searchableText.toLowerCase();

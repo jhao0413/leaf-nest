@@ -16,17 +16,13 @@ import { useBookZipStore } from '@/store/bookZipStore';
 import { parseAndProcessChapter } from '@/utils/chapterParser';
 import { waitForImagesAndCalculatePages, writeToIframe } from '@/utils/iframeHandler';
 import { useTranslations } from 'next-intl';
-import { Modal, ModalContent, ModalHeader, ModalBody, useDisclosure } from '@heroui/modal';
-import { Image } from '@heroui/image';
-import { Tooltip } from '@heroui/tooltip';
+import { useDisclosure } from '@heroui/modal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import dayjs from 'dayjs';
 import router from 'next/router';
 import { BookInfoModal } from '../BookInfoModal';
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
-  const tModal = useTranslations('BookInfoModal');
   const currentChapter = useReaderStateStore(state => state.currentChapter);
   const setCurrentChapter = useReaderStateStore(state => state.setCurrentChapter);
   const currentFontConfig = useRendererConfigStore(state => state.rendererConfig);
@@ -122,8 +118,8 @@ const EpubReader: React.FC = () => {
               className={`font-bold text-lg font-XiaLuZhenKai max-w-lg truncate ${
                 bookInfo.language === 'zh' ? '' : 'italic'
               }`}
-              title={bookInfo.language === 'zh' ? `《${bookInfo.title}》` : bookInfo.title}>
-              {bookInfo.language === 'zh' ? `《${bookInfo.title}》` : bookInfo.title}
+              title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}>
+              {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
             </p>
           </div>
           <div>
