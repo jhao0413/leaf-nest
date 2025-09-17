@@ -11,7 +11,7 @@ export type BookBasicInfoType = {
   coverPath: string;
   coverUrl?: string;
   toc: { text: string; path: string; file: string }[];
-  fileBlob?: ArrayBuffer;
+  blob?: ArrayBuffer;
   language: string;
   size?: string;
 };
@@ -32,7 +32,7 @@ export const useBookInfoStore = create<BookInfoStore>(set => ({
     coverPath: '',
     coverUrl: '',
     toc: [],
-    fileBlob: new ArrayBuffer(0),
+    blob: new ArrayBuffer(0),
     language: '',
     size: '',
   },

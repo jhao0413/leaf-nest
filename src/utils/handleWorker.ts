@@ -82,7 +82,7 @@ const queryDatabase = async (db: OpfsDatabase) => {
 
 const addBook = async (db: OpfsDatabase, book: BookBasicInfoType) => {
   try {
-    if (!book.fileBlob) throw new Error("Book blob is required.");
+    if (!book.blob) throw new Error("Book blob is required.");
 
     if (!book.coverBlob) throw new Error("Book cover blob is required.");
 
@@ -126,7 +126,7 @@ const deleteBook = async (db: OpfsDatabase, ids: string[]) => {
 
 async function insertBook(db: OpfsDatabase, bookInfo: BookBasicInfoType) {
   try {
-    if (!bookInfo.fileBlob) throw new Error("Book blob is required.");
+    if (!bookInfo.blob) throw new Error("Book blob is required.");
 
     if (!bookInfo.coverBlob) throw new Error("Book cover blob is required.");
 
@@ -146,7 +146,7 @@ async function insertBook(db: OpfsDatabase, bookInfo: BookBasicInfoType) {
         bookInfo.identifier,
         bookInfo.pubdate,
         0,
-        bookInfo.fileBlob,
+        bookInfo.blob,
         bookInfo.coverBlob,
         JSON.stringify(bookInfo.toc),
         bookInfo.language,

@@ -50,7 +50,7 @@ const EpubReader: React.FC = () => {
 
       return handleIframeLoad(renderer);
     };
-
+    if (Object.keys(bookZip.files).length === 0) return;
     processChapter();
   }, [bookInfo, bookZip, currentChapter]);
 

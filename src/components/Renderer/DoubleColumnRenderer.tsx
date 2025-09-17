@@ -119,7 +119,7 @@ const EpubReader: React.FC = () => {
         handleTextSearchWithPositions
       );
     };
-
+    if (Object.keys(bookZip.files).length === 0) return;
     processChapter();
   }, [bookInfo, bookZip, rendererMode, currentChapter, currentFontConfig, theme, handleTextSearchWithPositions, setCurrentPageIndex]);
 
