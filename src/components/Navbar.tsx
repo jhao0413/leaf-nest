@@ -82,62 +82,55 @@ export const Navbar: React.FC = () => {
   };
   return (
     <>
-      <div className="flex justify-between items-center">
-        <div className="w-full h-16 border-none dark:bg-default-100/50 flex items-center font-bold p-4 text-2xl">
-          Books
-        </div>
-        <div className="flex">
-          <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1">
+      <div className="flex justify-between items-center w-full bg-white/30 backdrop-blur-xl backdrop-saturate-150 shadow-md">
+        <div className="flex justify-center items-center w-6xl mx-auto">
+          <div className="w-full h-16 border-none dark:bg-default-100/50 flex items-center font-bold p-4 text-2xl">
+            Leaf Nest
+          </div>
+          <div className="flex">
             <div
-              className="pl-4 flex w-28 items-center"
-              onClick={() => window.open("https://github.com/jhao0413/leaf-nest", "_blank")}
+              className={`rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1 ${
+                manageMode ? "border-red-500 text-red-500" : ""
+              }`}
             >
-              <Github size={20} className="mr-2" />
-              <span>Github</span>
-            </div>
-          </div>
-          <div
-            className={`rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1 ${
-              manageMode ? "border-red-500 text-red-500" : ""
-            }`}
-          >
-            {manageMode ? (
-              <>
-                <div className={`pl-4 flex w-28 items-center `} onClick={handleDelete}>
-                  <Trash2 size={20} className="mr-2" />
-                  <span>Delete</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="pl-4 flex w-28 items-center" onClick={handleButtonClick}>
-                  <BookDown size={20} className="mr-2" />
-                  <span>Import</span>
-                  <Input
-                    id="picture"
-                    type="file"
-                    accept=".epub"
-                    ref={inputRef}
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-          <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-blur backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1">
-            <div className="pl-4 flex w-28 items-center" onClick={() => setManageMode(!manageMode)}>
               {manageMode ? (
                 <>
-                  <X size={20} className="mr-2" />
-                  <span>Cancel</span>
+                  <div className={`pl-4 flex w-28 items-center `} onClick={handleDelete}>
+                    <Trash2 size={20} className="mr-2" />
+                    <span>Delete</span>
+                  </div>
                 </>
               ) : (
                 <>
-                  <Pencil size={20} className="mr-2" />
-                  <span>Manage</span>
+                  <div className="pl-4 flex w-28 items-center" onClick={handleButtonClick}>
+                    <BookDown size={20} className="mr-2" />
+                    <span>Import</span>
+                    <Input
+                      id="picture"
+                      type="file"
+                      accept=".epub"
+                      ref={inputRef}
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </div>
                 </>
               )}
+            </div>
+            <div className="rounded-full flex items-center cursor-pointer px-2 mr-4 bg-white/30 backdrop-saturate-150 justify-between h-10 border-2 border-white/20 overflow-hidden py-1">
+              <div className="pl-4 flex w-28 items-center" onClick={() => setManageMode(!manageMode)}>
+                {manageMode ? (
+                  <>
+                    <X size={20} className="mr-2" />
+                    <span>Cancel</span>
+                  </>
+                ) : (
+                  <>
+                    <Pencil size={20} className="mr-2" />
+                    <span>Manage</span>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>

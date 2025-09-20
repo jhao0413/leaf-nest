@@ -20,7 +20,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="bg-default">
+      <body className="bg-[url(/background.png)]">
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <ClientLayout>{children}</ClientLayout>

@@ -136,7 +136,7 @@ const EpubReader: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900">
+      <div className="w-1/2 h-full min-h-screen mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900">
         <iframe id="epub-renderer" className="w-full z-10 px-14 grow dark:bg-neutral-900"></iframe>
         <div className="w-full z-10 h-20 flex justify-around items-start">
           <Button

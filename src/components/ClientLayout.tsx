@@ -9,11 +9,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   const isReaderRoute = pathname?.startsWith("/reader");
 
   return (
-    <div className="flex h-screen">
-      {!isReaderRoute && <Sidebar />}
-      <div className="flex flex-col w-full">
+    <div className="flex h-screen bg-white/30 backdrop-blur-xl backdrop-saturate-150 justify-between">
+      {/* {!isReaderRoute && <Sidebar />} */}
+      <div className="flex flex-col w-full justify-center items-center">
         {!isReaderRoute && <Navbar />}
-        <main className={`flex-1 ${isReaderRoute ? "w-full" : ""}`}>{children}</main>
+        <main className={`flex-1 ${isReaderRoute ? "w-full" : "w-6xl"}`}>{children}</main>
       </div>
     </div>
   );

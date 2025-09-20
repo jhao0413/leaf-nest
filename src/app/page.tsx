@@ -73,7 +73,7 @@ export default function Home() {
   };
 
   return (
-    <div className="p-6 flex flex-wrap">
+    <div className="p-4 flex flex-wrap">
       {bookInfoList.map((book, index) => (
         <Card isFooterBlurred radius="lg" key={index} className="max-w-48 border-none mr-8 mb-8 ">
           {book.coverUrl && (
@@ -88,8 +88,8 @@ export default function Home() {
               onClick={() => router.push(`/reader/${book.id}`)}
             />
           )}
-          <CardFooter className="justify-between h-10 before:bg-white/10 border-white/20 border-1 overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
-            <div className="w-[calc(100%_-_20px)]">
+          <CardFooter className="justify-between h-10 before:bg-white/10 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
+            <div className="w-[calc(100%-20px)]">
               <p className="text-black/80 font-bold text-sm overflow-hidden whitespace-nowrap text-ellipsis font-XiaLuZhenKai">
                 {book.name}
               </p>

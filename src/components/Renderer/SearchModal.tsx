@@ -56,7 +56,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
       </div>
       <div className="text-sm text-gray-600 dark:text-gray-400">
         <span>{result.contextBefore}</span>
-        <span className="bg-yellow-200 dark:bg-yellow-700 px-1 rounded">
+        <span className="bg-yellow-200 dark:bg-yellow-700 px-1 rounded-sm">
           {result.matchText}
         </span>
         <span>{result.contextAfter}</span>

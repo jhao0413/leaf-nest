@@ -32,7 +32,8 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
                   <Image
                     isBlurred
                     alt="Event image"
-                    width={300}
+                    width={340}
+                    height={480}
                     src={
                       bookInfo.coverBlob ? URL.createObjectURL(new Blob([bookInfo.coverBlob])) : ""
                     }

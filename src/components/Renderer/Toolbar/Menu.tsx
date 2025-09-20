@@ -47,7 +47,7 @@ const Menu: React.FC = () => {
         <MenuIcon isOpen={isOpen} />
       </div>
       <div
-        className={`fixed top-0 left-0 w-screen h-screen bg-black bg-opacity-10 z-20 transition-opacity duration-500 ${
+        className={`fixed top-0 left-0 w-screen h-screen bg-zinc-500/50 z-20 transition-opacity duration-500 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={handleOverlayClick}></div>
