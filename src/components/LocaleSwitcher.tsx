@@ -27,7 +27,7 @@ export default function LocaleSwitcher() {
         <Button
           className=" bg-white dark:bg-neutral-900"
           isIconOnly
-          variant={mode === "single" ? "bordered" : "shadow-sm"}
+          variant={mode === "single" ? "bordered" : "shadow"}
           radius="sm"
         >
           <Languages className="cursor-pointer" size={16} />
