@@ -5,7 +5,7 @@ import { useManageModeStore, useSelectedBookIdsStore } from "@/store/manageModeS
 import epubStructureParser from "@/utils/epubStructureParser";
 import { getFileBinary } from "@/utils/utils";
 import { Input } from "@heroui/input";
-import { BookDown, Github, Pencil, Trash2, X } from "lucide-react";
+import { BookDown, Pencil, Trash2, X } from "lucide-react";
 import { useMemo, useRef } from "react";
 
 export const Navbar: React.FC = () => {
