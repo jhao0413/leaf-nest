@@ -76,9 +76,9 @@ export const useFontStore = create<FontStore>(() => ({
       format: "truetype",
     },
     {
-      name: "临海隶书",
-      value: "LinHaiLiShu",
-      url: "/fonts/Chinese/LinHaiLiShu.ttf",
+      name: "霞鹭文楷",
+      value: "LXGWWenKaiMonoGB",
+      url: "/fonts/Chinese/LXGWWenKaiMonoGB-Medium.ttf",
       format: "truetype",
     },
   ],

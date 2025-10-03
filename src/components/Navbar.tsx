@@ -84,7 +84,7 @@ export const Navbar: React.FC = () => {
     <>
       <div className="flex justify-between items-center w-full bg-white/30 backdrop-blur-xl backdrop-saturate-150 shadow-md">
         <div className="flex justify-center items-center w-6xl mx-auto">
-          <div className="w-full h-16 border-none dark:bg-default-100/50 flex items-center font-bold p-4 text-2xl">
+          <div className="w-full h-16 border-none dark:bg-default-100/50 flex items-center font-bold p-4 text-2xl font-lxgw">
             Leaf Nest
           </div>
           <div className="flex">

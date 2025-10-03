@@ -30,9 +30,6 @@
   --font-Jiang-cheng-yuan-ti:
     JiangChengYuanTi, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  --font-Lin-hai-li-shu:
-    LinHaiLiShu, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
-    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
   --font-Comfortaa:
     Comfortaa, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
@@ -48,6 +45,9 @@
   --font-Comic-neue-angular:
     ComicNeueAngular, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
     'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-LXGW-wen-kai-mono-gb:
+    LXGWWenKaiMonoGB, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
 }
 
 /*
@@ -65,6 +65,10 @@
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
+  }
+
+  .font-lxgw {
+    font-family: var(--font-LXGW-wen-kai-mono-gb);
   }
 }
 
@@ -188,11 +192,6 @@
     src: url(/fonts/Chinese/JiangChengYuanTi.ttf) format("truetype");
   }
 
-  @font-face {
-    font-family: "LinHaiLiShu";
-    font-style: normal;
-    src: url(/fonts/Chinese/LinHaiLiShu.ttf) format("truetype");
-  }
 
   @font-face {
     font-family: "Comfortaa";
@@ -222,5 +221,11 @@
     font-family: "ComicNeueAngular";
     font-style: normal;
     src: url(/fonts/English/ComicNeueAngular-Regular.ttf) format("truetype");
+  }
+
+  @font-face {
+    font-family: "LXGWWenKaiMonoGB";
+    font-style: normal;
+    src: url(/fonts/Chinese/LXGWWenKaiMonoGB-Medium.ttf) format("truetype");
   }
 }

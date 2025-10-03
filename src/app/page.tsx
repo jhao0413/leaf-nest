@@ -90,7 +90,7 @@ export default function Home() {
           )}
           <CardFooter className="justify-between h-10 before:bg-white/10 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
             <div className="w-[calc(100%-20px)]">
-              <p className="text-black/80 font-bold text-sm overflow-hidden whitespace-nowrap text-ellipsis font-XiaLuZhenKai">
+              <p className="text-black/80 font-bold text-md overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
                 {book.name}
               </p>
             </div>

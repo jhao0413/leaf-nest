@@ -70,7 +70,7 @@ const Menu: React.FC = () => {
           )}
           <div className="w-4/6 mx-4">
             <Tooltip content={bookInfo.name}>
-              <h2 className="font-bold truncate w-[90%] text-lg font-XiaLuZhenKai">
+              <h2 className="font-bold truncate w-[90%] text-lg font-lxgw">
                 {bookInfo.name}
               </h2>
             </Tooltip>

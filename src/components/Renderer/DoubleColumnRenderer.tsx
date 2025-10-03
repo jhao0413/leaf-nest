@@ -231,7 +231,7 @@ const EpubReader: React.FC = () => {
         <div className="flex items-center cursor-pointer" onClick={onOpen}>
           <BookOpen size={20} />
           <p
-            className={`font-bold text-lg font-XiaLuZhenKai max-w-lg truncate ${
+            className={`font-bold text-lg font-lxgw max-w-lg truncate ${
               bookInfo.language === 'zh' ? '' : 'italic'
             }`}
             title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}>

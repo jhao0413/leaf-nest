@@ -42,7 +42,7 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
 
                 <div className="flex flex-col w-1/2">
                   <Tooltip content={bookInfo.name} delay={1000}>
-                    <h2 className="font-bold truncate w-[90%] text-2xl font-XiaLuZhenKai mb-2">
+                    <h2 className="font-bold truncate w-[90%] text-2xl font-lxgw mb-2">
                       {bookInfo.name}
                     </h2>
                   </Tooltip>
