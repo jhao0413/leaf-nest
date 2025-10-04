@@ -20,32 +20,35 @@ export interface SearchResult {
 export class FullBookTextIndexer {
   private textIndex: BookTextIndex[] = [];
   private isIndexed: boolean = false;
-  private currentBookId: string = '';
+  private worker: Worker | null = null;
 
-  constructor() {
+  constructor(worker?: Worker) {
     // full book text index
     this.textIndex = [];
     this.isIndexed = false;
-    this.currentBookId = '';
+    this.worker = worker || null;
   }
   // index the text content of the entire book
   async indexFullBook(
     zip: JSZip, 
-    bookInfo: BookBasicInfoType
+    bookInfo: BookBasicInfoType,
+    bookId: string
   ): Promise<void> {
-    const bookId = `${bookInfo.name}_${bookInfo.toc.length}`;
+    // Check if index already exists in database
+    const existingIndex = await this.loadIndexFromDB(bookId);
     
-    // if (this.isIndexed && this.currentBookId === bookId) {
-    //   console.log('Book already indexed, skipping...');
-    //   return;
-    // }
+    if (existingIndex && existingIndex.length > 0) {
+      console.log('Loading existing index from database...');
+      this.textIndex = existingIndex;
+      this.isIndexed = true;
+      return;
+    }
     
+    console.log('Creating new index...');
     this.clearIndex();
-    this.currentBookId = bookId;
     
     this.textIndex = [];
     const totalChapters = bookInfo.toc.length;
-    console.log(totalChapters)
 
     for (let i = 0; i < totalChapters; i++) {
       try {
@@ -80,6 +83,9 @@ export class FullBookTextIndexer {
     }
 
     this.isIndexed = true;
+    
+    // Save index to database
+    await this.saveIndexToDB(bookId, this.textIndex);
   }
 
   // extract plain text from HTML content
@@ -188,6 +194,93 @@ export class FullBookTextIndexer {
   clearIndex(): void {
     this.textIndex = [];
     this.isIndexed = false;
-    this.currentBookId = '';
+  }
+
+  // Load index from database
+  private async loadIndexFromDB(bookId: string): Promise<BookTextIndex[] | null> {
+    if (!this.worker) {
+      console.warn('Worker not available, skipping database load');
+      return null;
+    }
+
+    const worker = this.worker;
+    return new Promise((resolve) => {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.action === 'getBookIndex') {
+          worker.removeEventListener('message', handleMessage);
+          if (event.data.success && event.data.data) {
+            resolve(event.data.data);
+          } else {
+            resolve(null);
+          }
+        }
+      };
+
+      worker.addEventListener('message', handleMessage);
+      worker.postMessage({
+        action: 'getBookIndex',
+        data: { bookId }
+      });
+    });
+  }
+
+  // Save index to database
+  private async saveIndexToDB(bookId: string, indexes: BookTextIndex[]): Promise<void> {
+    if (!this.worker) {
+      console.warn('Worker not available, skipping database save');
+      return;
+    }
+
+    const worker = this.worker;
+    return new Promise((resolve, reject) => {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.action === 'saveBookIndex') {
+          worker.removeEventListener('message', handleMessage);
+          if (event.data.success) {
+            console.log('Index saved to database successfully');
+            resolve();
+          } else {
+            console.error('Failed to save index:', event.data.error);
+            reject(event.data.error);
+          }
+        }
+      };
+
+      worker.addEventListener('message', handleMessage);
+      worker.postMessage({
+        action: 'saveBookIndex',
+        data: { bookId, indexes }
+      });
+    });
+  }
+
+  // Delete index from database
+  async deleteIndexFromDB(bookId: string): Promise<void> {
+    if (!this.worker) {
+      console.warn('Worker not available, skipping database delete');
+      return;
+    }
+
+    const worker = this.worker;
+    return new Promise((resolve, reject) => {
+      const handleMessage = (event: MessageEvent) => {
+        if (event.data.action === 'deleteBookIndex') {
+          worker.removeEventListener('message', handleMessage);
+          if (event.data.success) {
+            console.log('Index deleted from database successfully');
+            resolve();
+          } else {
+            console.error('Failed to delete index:', event.data.error);
+            reject(event.data.error);
+          }
+        }
+      };
+
+      worker.addEventListener('message', handleMessage);
+      worker.postMessage({
+        action: 'deleteBookIndex',
+        data: { bookId }
+      });
+    });
   }
 }

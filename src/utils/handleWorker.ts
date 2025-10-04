@@ -27,6 +27,17 @@ onmessage = async (event) => {
         size VARCHAR(20)
       );
   `);
+    
+    // Create book_text_index table for storing full book text indexes
+    // Each book has ONE record containing all chapter indexes as JSON
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS book_text_index (
+        book_id VARCHAR(40) PRIMARY KEY,
+        index_data TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
   } else {
     postMessage({ error: "sqlite3.opfs is not available." });
     return;
@@ -47,6 +58,15 @@ onmessage = async (event) => {
       break;
     case "deleteBook":
       await deleteBook(db, event.data.data);
+      break;
+    case "getBookIndex":
+      await getBookIndex(db, event.data.data.bookId);
+      break;
+    case "saveBookIndex":
+      await saveBookIndex(db, event.data.data);
+      break;
+    case "deleteBookIndex":
+      await deleteBookIndex(db, event.data.data.bookId);
       break;
     default:
       break;
@@ -102,12 +122,12 @@ const getBookById = async (db: OpfsDatabase, id: string) => {
       rowMode: "object",
       callback: (row) => {
         const camelCaseRow = convertKeysToCamelCase(row);
-        postMessage({ success: true, action: "getBookByid", data: camelCaseRow });
+        postMessage({ success: true, action: "getBookById", data: camelCaseRow });
       },
     });
   } catch (err) {
     console.error("Error getting book by id:", err);
-    postMessage({ success: false, action: "getBookByid", error: err });
+    postMessage({ success: false, action: "getBookById", error: err });
   }
 };
 
@@ -159,3 +179,60 @@ async function insertBook(db: OpfsDatabase, bookInfo: BookBasicInfoType) {
     console.error("Error fetching or inserting book data:", error);
   }
 }
+
+const getBookIndex = async (db: OpfsDatabase, bookId: string) => {
+  try {
+    let indexData = null;
+    db.exec({
+      sql: `SELECT index_data FROM book_text_index WHERE book_id = ?;`,
+      bind: [bookId],
+      rowMode: "object",
+      callback: (row: any) => {
+        // Parse the JSON string back to array
+        indexData = JSON.parse(row.index_data);
+      },
+    });
+    
+    postMessage({ success: true, action: "getBookIndex", data: indexData });
+  } catch (err) {
+    console.error("Error getting book index:", err);
+    postMessage({ success: false, action: "getBookIndex", error: err });
+  }
+};
+
+const saveBookIndex = async (db: OpfsDatabase, data: { bookId: string; indexes: any[] }) => {
+  try {
+    const { bookId, indexes } = data;
+    
+    // Serialize the entire index array to JSON
+    const indexDataJson = JSON.stringify(indexes);
+    
+    // Use INSERT OR REPLACE to update if exists, insert if not
+    db.exec({
+      sql: `
+        INSERT OR REPLACE INTO book_text_index (book_id, index_data, updated_at)
+        VALUES (?, ?, CURRENT_TIMESTAMP);
+      `,
+      bind: [bookId, indexDataJson],
+    });
+    
+    console.log(`Saved index for book ${bookId}, total chapters: ${indexes.length}`);
+    postMessage({ success: true, action: "saveBookIndex" });
+  } catch (err) {
+    console.error("Error saving book index:", err);
+    postMessage({ success: false, action: "saveBookIndex", error: err });
+  }
+};
+
+const deleteBookIndex = async (db: OpfsDatabase, bookId: string) => {
+  try {
+    db.exec({
+      sql: `DELETE FROM book_text_index WHERE book_id = ?;`,
+      bind: [bookId],
+    });
+    postMessage({ success: true, action: "deleteBookIndex" });
+  } catch (err) {
+    console.error("Error deleting book index:", err);
+    postMessage({ success: false, action: "deleteBookIndex", error: err });
+  }
+};

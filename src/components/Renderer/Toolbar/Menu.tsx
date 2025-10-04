@@ -64,8 +64,8 @@ const Menu: React.FC = () => {
               src={coverUrl}
               alt="Book Cover"
               width={80}
-              height={160}
-              style={{ objectFit: 'cover', width: '80px', height: 'auto' }}
+              height={120}
+              style={{ objectFit: 'cover', height: 'auto' }}
             />
           )}
           <div className="w-4/6 mx-4">

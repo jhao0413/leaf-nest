@@ -126,15 +126,18 @@ const EpubReader: React.FC = () => {
   // book index init 
   useEffect(() => {
     const initializeFullBookIndex = async () => {
-      if (!bookZip || !bookInfo.toc.length) {
+      if (!bookZip || !bookInfo.toc.length || !bookInfo.id) {
         return;
       }
+
+      console.log(bookInfo.id)
 
       try {
         setIndexing(true);
         await indexer.indexFullBook(
           bookZip, 
-          bookInfo
+          bookInfo,
+          bookInfo.id
         );
         console.log('full book text index initialized successfully');
       } catch (error) {
