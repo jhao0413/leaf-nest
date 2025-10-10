@@ -121,7 +121,7 @@ const EpubReader: React.FC = () => {
     };
     if (Object.keys(bookZip.files).length === 0) return;
     processChapter();
-  }, [bookInfo, bookZip, rendererMode, currentChapter, currentFontConfig, theme, handleTextSearchWithPositions, setCurrentPageIndex]);
+  }, [bookInfo, bookZip, rendererMode, currentChapter, handleTextSearchWithPositions, setCurrentPageIndex]);
 
   // book index init 
   useEffect(() => {
@@ -129,8 +129,6 @@ const EpubReader: React.FC = () => {
       if (!bookZip || !bookInfo.toc.length || !bookInfo.id) {
         return;
       }
-
-      console.log(bookInfo.id)
 
       try {
         setIndexing(true);
@@ -183,7 +181,7 @@ const EpubReader: React.FC = () => {
   useEffect(() => {
     const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
     if (!renderer || !renderer.contentWindow) {
-      throw new Error('Renderer not found');
+      return;
     }
     applyFontAndThemeStyles(currentFontConfig, theme, rendererMode, COLUMN_GAP);
   }, [currentFontConfig, theme, rendererMode]);
