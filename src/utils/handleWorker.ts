@@ -187,9 +187,10 @@ const getBookIndex = async (db: OpfsDatabase, bookId: string) => {
       sql: `SELECT index_data FROM book_text_index WHERE book_id = ?;`,
       bind: [bookId],
       rowMode: "object",
-      callback: (row: any) => {
+      callback: (row) => {
         // Parse the JSON string back to array
-        indexData = JSON.parse(row.index_data);
+        const typedRow = row as { index_data: string };
+        indexData = JSON.parse(typedRow.index_data);
       },
     });
     
@@ -200,7 +201,7 @@ const getBookIndex = async (db: OpfsDatabase, bookId: string) => {
   }
 };
 
-const saveBookIndex = async (db: OpfsDatabase, data: { bookId: string; indexes: any[] }) => {
+const saveBookIndex = async (db: OpfsDatabase, data: { bookId: string; indexes: unknown[] }) => {
   try {
     const { bookId, indexes } = data;
     
