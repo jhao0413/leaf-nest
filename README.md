@@ -4,7 +4,7 @@ A modern, browser-based EPUB reader application with local storage support.
 
 ## Screenshots
 
-![Screenshot](https://jhao413.oss-cn-beijing.aliyuncs.com/2025-11-14_22-1711.png)
+![Screenshot](https://jhao413.oss-cn-beijing.aliyuncs.com/leaf-nest.png)
 
 ## Features
 
