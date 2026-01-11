@@ -27,7 +27,7 @@ onmessage = async (event) => {
         size VARCHAR(20)
       );
   `);
-    
+
     // Create book_text_index table for storing full book text indexes
     // Each book has ONE record containing all chapter indexes as JSON
     db.exec(`
@@ -38,6 +38,9 @@ onmessage = async (event) => {
         updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
     `);
+
+    // Migrate database to add reading progress fields
+    migrateDatabase(db);
   } else {
     postMessage({ error: "sqlite3.opfs is not available." });
     return;
@@ -68,8 +71,45 @@ onmessage = async (event) => {
     case "deleteBookIndex":
       await deleteBookIndex(db, event.data.data.bookId);
       break;
+    case "updateReadingProgress":
+      await updateReadingProgress(db, event.data.data);
+      break;
     default:
       break;
+  }
+};
+
+const migrateDatabase = (db: OpfsDatabase) => {
+  try {
+    // Get existing columns
+    const columns: string[] = [];
+    db.exec({
+      sql: "PRAGMA table_info(books);",
+      rowMode: "object",
+      callback: (row) => {
+        columns.push((row as { name: string }).name);
+      },
+    });
+
+    // Check and add missing fields
+    if (!columns.includes('current_chapter')) {
+      db.exec("ALTER TABLE books ADD COLUMN current_chapter INTEGER DEFAULT 0;");
+      console.log("Added column: current_chapter");
+    }
+    if (!columns.includes('current_page')) {
+      db.exec("ALTER TABLE books ADD COLUMN current_page INTEGER DEFAULT 1;");
+      console.log("Added column: current_page");
+    }
+    if (!columns.includes('text_anchor')) {
+      db.exec("ALTER TABLE books ADD COLUMN text_anchor TEXT;");
+      console.log("Added column: text_anchor");
+    }
+    if (!columns.includes('last_read_at')) {
+      db.exec("ALTER TABLE books ADD COLUMN last_read_at DATETIME;");
+      console.log("Added column: last_read_at");
+    }
+  } catch (err) {
+    console.error("Error migrating database:", err);
   }
 };
 
@@ -235,5 +275,42 @@ const deleteBookIndex = async (db: OpfsDatabase, bookId: string) => {
   } catch (err) {
     console.error("Error deleting book index:", err);
     postMessage({ success: false, action: "deleteBookIndex", error: err });
+  }
+};
+
+const updateReadingProgress = async (
+  db: OpfsDatabase,
+  data: {
+    bookId: string;
+    currentChapter: number;
+    currentPage: number;
+    textAnchor: string;
+    percentage: number;
+  }
+) => {
+  try {
+    db.exec({
+      sql: `
+        UPDATE books
+        SET current_chapter = ?,
+            current_page = ?,
+            text_anchor = ?,
+            percentage = ?,
+            last_read_at = CURRENT_TIMESTAMP
+        WHERE id = ?;
+      `,
+      bind: [
+        data.currentChapter,
+        data.currentPage,
+        data.textAnchor,
+        data.percentage,
+        data.bookId
+      ],
+    });
+    console.log(`Reading progress updated for book ${data.bookId}: chapter ${data.currentChapter}, page ${data.currentPage}, ${data.percentage}%`);
+    postMessage({ success: true, action: "updateReadingProgress" });
+  } catch (err) {
+    console.error("Error updating reading progress:", err);
+    postMessage({ success: false, action: "updateReadingProgress", error: err });
   }
 };

@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect, useRef, useCallback } from 'react';
-import { BookOpen, ChevronLeft, ChevronRight, House, Search } from 'lucide-react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { BookOpen, ChevronLeft, ChevronRight, House, Search, Loader2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@heroui/button';
 import { useBookInfoStore } from '@/store/bookInfoStore';
@@ -29,6 +29,7 @@ import { Kbd } from '@heroui/kbd';
 import { SearchModal } from './SearchModal';
 import { useRouter } from "next/navigation";
 import { BookInfoModal } from '../BookInfoModal';
+import { ReadingProgressManager } from '@/utils/readingProgressManager';
 const COLUMN_GAP = 100;
 
 const EpubReader: React.FC = () => {
@@ -53,6 +54,11 @@ const EpubReader: React.FC = () => {
   const goToLastPageRef = useRef(false);
   const pageWidthRef = useRef(0);
   const pageCountRef = useRef(0);
+  const progressManagerRef = useRef<ReadingProgressManager | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const isFirstLoadRef = useRef(true);
+  const loadVersionRef = useRef(0);
+  const [isRestoring, setIsRestoring] = useState(true);
 
   // font and theme
   const currentFontConfig = useRendererConfigStore(state => state.rendererConfig);
@@ -74,23 +80,77 @@ const EpubReader: React.FC = () => {
           left: (targetPage - 1) * pageWidthRef.current,
         });
         setCurrentPageIndex(targetPage);
-        
+
         highlightText(rendererWindow.document, searchText);
-        
+
         onCloseSearch();
       }
     }
   }, [searchAndNavigate, onCloseSearch, highlightText, setCurrentPageIndex]);
-  
+
+  // Initialize worker and progress manager
+  useEffect(() => {
+    const worker = new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
+    workerRef.current = worker;
+    progressManagerRef.current = new ReadingProgressManager(worker);
+
+    return () => {
+      progressManagerRef.current?.cleanup();
+      worker.terminate();
+    };
+  }, []);
+
+  // Save progress on unmount (only when component unmounts, not on page change)
+  useEffect(() => {
+    return () => {
+      // Use latest values via ref to avoid stale closure
+      const rendererWindow = getRendererWindow();
+      const { currentChapter: latestChapter, currentPageIndex: latestPage } = useReaderStateStore.getState();
+      if (rendererWindow && bookInfo.id && progressManagerRef.current) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          latestChapter,
+          latestPage,
+          rendererWindow,
+          bookInfo,
+          'double',
+          0,
+          true
+        );
+      }
+    };
+  }, []);
+
+  const onPageReady = useCallback(() => {
+    // Page is ready, hide loading state
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+      setIsRestoring(false);
+    }
+  }, []);
   
   useEffect(() => {
+    const currentVersion = ++loadVersionRef.current;
+
     const processChapter = async () => {
       const { chapterContent, basePath } = await loadChapterContent(
         bookZip,
         bookInfo,
         currentChapter
       );
+
+      // Check if this load has been superseded by a newer one
+      if (loadVersionRef.current !== currentVersion) {
+        return;
+      }
+
       const updatedChapter = await parseAndProcessChapter(chapterContent, bookZip, basePath);
+
+      // Check again after parsing
+      if (loadVersionRef.current !== currentVersion) {
+        return;
+      }
+
       const renderer = writeToIframe(
         updatedChapter,
         currentFontConfig,
@@ -108,7 +168,7 @@ const EpubReader: React.FC = () => {
 
       const { currentSearchQuery } = useFullBookSearchStore.getState();
 
-      return handleIframeLoad(
+      await handleIframeLoad(
         renderer,
         pageWidthRef,
         pageCountRef,
@@ -116,14 +176,15 @@ const EpubReader: React.FC = () => {
         setCurrentPageIndex,
         COLUMN_GAP,
         currentSearchQuery,
-        handleTextSearchWithPositions
+        handleTextSearchWithPositions,
+        onPageReady
       );
     };
     if (Object.keys(bookZip.files).length === 0) return;
     processChapter();
-  }, [bookInfo, bookZip, rendererMode, currentChapter, handleTextSearchWithPositions, setCurrentPageIndex]);
+  }, [bookInfo, bookZip, rendererMode, currentChapter, handleTextSearchWithPositions, setCurrentPageIndex, onPageReady]);
 
-  // book index init 
+  // book index init
   useEffect(() => {
     const initializeFullBookIndex = async () => {
       if (!bookZip || !bookInfo.toc.length || !bookInfo.id) {
@@ -137,7 +198,6 @@ const EpubReader: React.FC = () => {
           bookInfo,
           bookInfo.id
         );
-        console.log('full book text index initialized successfully');
       } catch (error) {
         console.error(error);
       } finally {
@@ -152,7 +212,6 @@ const EpubReader: React.FC = () => {
     if (renderer?.contentWindow) {
       return renderer.contentWindow;
     } else {
-      console.error('Renderer not found');
       return null;
     }
   };
@@ -195,7 +254,35 @@ const EpubReader: React.FC = () => {
         left: currentPageIndex * pageWidthRef.current,
       });
       setCurrentPageIndex(currentPageIndex + 1);
+
+      // Save progress with debounce (after scrollTo completes)
+      if (progressManagerRef.current && bookInfo.id) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          currentChapter,
+          currentPageIndex + 1,
+          rendererWindow,
+          bookInfo,
+          'double',
+          3000,
+          false
+        );
+      }
     } else if (currentChapter < bookInfo.toc.length - 1) {
+      // Save progress immediately when switching chapter
+      if (progressManagerRef.current && bookInfo.id) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          currentChapter,
+          currentPageIndex,
+          rendererWindow,
+          bookInfo,
+          'double',
+          0,
+          true
+        );
+      }
+
       setCurrentPageIndex(1);
       setCurrentChapter(currentChapter + 1);
     }
@@ -206,17 +293,45 @@ const EpubReader: React.FC = () => {
       return;
     }
 
+    const rendererWindow = getRendererWindow();
+    if (!rendererWindow) return;
+
     if (currentPageIndex === 1 && currentChapter > 0) {
+      // Save progress immediately when switching chapter
+      if (progressManagerRef.current && bookInfo.id) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          currentChapter,
+          currentPageIndex,
+          rendererWindow,
+          bookInfo,
+          'double',
+          0,
+          true
+        );
+      }
+
       goToLastPageRef.current = true;
       setCurrentChapter(currentChapter - 1);
     } else if (currentPageIndex > 1) {
-      const rendererWindow = getRendererWindow();
-      if (!rendererWindow) return;
-
       rendererWindow.scrollTo({
         left: (currentPageIndex - 2) * pageWidthRef.current,
       });
       setCurrentPageIndex(currentPageIndex - 1);
+
+      // Save progress with debounce (after scrollTo completes)
+      if (progressManagerRef.current && bookInfo.id) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          currentChapter,
+          currentPageIndex - 1,
+          rendererWindow,
+          bookInfo,
+          'double',
+          3000,
+          false
+        );
+      }
     }
   };
 
@@ -266,6 +381,11 @@ const EpubReader: React.FC = () => {
       {/* renderer */}
       <div className="w-4/5 h-[86vh] bg-white p-14 mt-4 rounded-2xl dark:bg-neutral-900">
         <div className="h-full relative">
+          {isRestoring && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900 z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          )}
           <iframe id="epub-renderer" style={{ width: '100%', height: '100%' }}></iframe>
           <div className="w-full flex justify-between">
             <Button

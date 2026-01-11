@@ -41,3 +41,6 @@ next-env.d.ts
 
 # node_modeules
 node_modules/
+
+# code agent
+CLAUDE.md

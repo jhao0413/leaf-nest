@@ -7,8 +7,8 @@ export const loadChapterContent = async (
   currentChapter: number
 ) => {
   const contentOpfPath = `${
-    bookInfo.toc[currentChapter].path ? bookInfo.toc[currentChapter].path + "/" : ""
-  }${decodeURIComponent(bookInfo.toc[currentChapter].file)}`;
+    bookInfo.toc[currentChapter]?.path ? bookInfo.toc[currentChapter].path + "/" : ""
+  }${decodeURIComponent(bookInfo.toc[currentChapter]?.file)}`;
   const chapterFile = zip.file(contentOpfPath);
   if (chapterFile) {
     const chapterContent = await chapterFile.async("string");

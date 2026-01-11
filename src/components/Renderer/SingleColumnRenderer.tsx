@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from '@heroui/button';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
@@ -20,6 +20,7 @@ import { useDisclosure } from '@heroui/modal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRouter } from 'next/navigation';
 import { BookInfoModal } from '../BookInfoModal';
+import { ReadingProgressManager } from '@/utils/readingProgressManager';
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
@@ -31,6 +32,51 @@ const EpubReader: React.FC = () => {
   const { theme } = useTheme();
   const bookZip = useBookZipStore(state => state.bookZip);
   const rendererMode = useRendererModeStore(state => state.rendererMode);
+
+  const progressManagerRef = useRef<ReadingProgressManager | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const isFirstLoadRef = useRef(true);
+
+  // Initialize worker and progress manager
+  useEffect(() => {
+    const worker = new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
+    workerRef.current = worker;
+    progressManagerRef.current = new ReadingProgressManager(worker);
+
+    return () => {
+      progressManagerRef.current?.cleanup();
+      worker.terminate();
+    };
+  }, []);
+
+  // Restore reading progress on first load
+  useEffect(() => {
+    if (isFirstLoadRef.current && bookInfo.currentChapter !== undefined) {
+      setCurrentChapter(bookInfo.currentChapter);
+      isFirstLoadRef.current = false;
+    }
+  }, [bookInfo.currentChapter, setCurrentChapter]);
+
+  // Save progress on unmount (only when component unmounts, not on chapter change)
+  useEffect(() => {
+    return () => {
+      // Use latest values via ref to avoid stale closure
+      const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+      const { currentChapter: latestChapter } = useReaderStateStore.getState();
+      if (renderer?.contentWindow && bookInfo.id && progressManagerRef.current) {
+        progressManagerRef.current.saveProgress(
+          bookInfo.id,
+          latestChapter,
+          1, // Single column mode always uses page 1
+          renderer.contentWindow,
+          bookInfo,
+          'single',
+          0,
+          true
+        );
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const processChapter = async () => {
@@ -94,10 +140,40 @@ const EpubReader: React.FC = () => {
   };
 
   const handlePrevChapter = () => {
+    // Save progress immediately when switching chapter
+    const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+    if (renderer?.contentWindow && bookInfo.id && progressManagerRef.current) {
+      progressManagerRef.current.saveProgress(
+        bookInfo.id,
+        currentChapter,
+        1,
+        renderer.contentWindow,
+        bookInfo,
+        'single',
+        0,
+        true
+      );
+    }
+
     setCurrentChapter(currentChapter - 1);
   };
 
   const handleNextChapter = () => {
+    // Save progress immediately when switching chapter
+    const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+    if (renderer?.contentWindow && bookInfo.id && progressManagerRef.current) {
+      progressManagerRef.current.saveProgress(
+        bookInfo.id,
+        currentChapter,
+        1,
+        renderer.contentWindow,
+        bookInfo,
+        'single',
+        0,
+        true
+      );
+    }
+
     setCurrentChapter(currentChapter + 1);
   };
 

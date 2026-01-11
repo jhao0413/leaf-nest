@@ -14,6 +14,11 @@ export type BookBasicInfoType = {
   blob?: ArrayBuffer;
   language: string;
   size?: string;
+  percentage?: number;
+  currentChapter?: number;
+  currentPage?: number;
+  textAnchor?: string;
+  lastReadAt?: string;
 };
 
 type BookInfoStore = {

@@ -1,11 +1,13 @@
 "use client";
 
+import JSZip from "jszip";
 import DoubleColumnRenderer from "@/components/Renderer/DoubleColumnRenderer";
 import SingleColumnRenderer from "@/components/Renderer/SingleColumnRenderer";
 import { useRendererModeStore } from "@/store/rendererModeStore";
 import { useBookInfoStore } from "@/store/bookInfoStore";
 import { useBookZipStore } from "@/store/bookZipStore";
 import { useFullBookSearchStore } from "@/store/fullBookSearchStore";
+import { useReaderStateStore } from "@/store/readerStateStore";
 import { loadZip } from "@/utils/zipUtils";
 import { useEffect } from "react";
 import React from "react";
@@ -21,20 +23,38 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   useEffect(() => {
     const worker = new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
-    
+
     // Set worker for full book search indexer
     setWorker(worker);
-    
+
+    // Clear old book data first to prevent loading stale content
+    setBookZip(new JSZip());
+
     worker.postMessage({ action: "getBookById", data: { id } });
     worker.onmessage = async (event) => {
-      console.log("Received message from main thread:", event.data);
       if (event.data.success && event.data.action === "getBookById") {
-        event.data.data.coverUrl = URL.createObjectURL(
-          new Blob([event.data.data.coverBlob], { type: "image/jpeg" })
+        const bookData = event.data.data;
+
+        // Process cover and TOC
+        bookData.coverUrl = URL.createObjectURL(
+          new Blob([bookData.coverBlob], { type: "image/jpeg" })
         );
-        event.data.data.toc = JSON.parse(event.data.data.toc);
-        setBookInfo(event.data.data);
-        setBookZip(await loadZip(event.data.data.fileBlob));
+        bookData.toc = JSON.parse(bookData.toc);
+
+        // Set book info
+        setBookInfo(bookData);
+
+        // Restore reading state if available
+        if (bookData.currentChapter !== undefined && bookData.currentChapter !== null) {
+          const { setReaderState } = useReaderStateStore.getState();
+          setReaderState(
+            bookData.currentChapter,
+            bookData.currentPage || 1
+          );
+        }
+
+        // Load book ZIP
+        setBookZip(await loadZip(bookData.fileBlob));
       }
     };
     return () => worker.terminate();
