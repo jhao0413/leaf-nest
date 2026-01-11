@@ -19,8 +19,8 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className="bg-gray-100 dark:bg-neutral-800">
+    <html lang={locale} suppressHydrationWarning className="overflow-hidden">
+      <body className="bg-gray-100 dark:bg-neutral-800 overflow-hidden">
         <NextIntlClientProvider messages={messages}>
           <Providers>
             <ClientLayout>{children}</ClientLayout>

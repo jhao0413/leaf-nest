@@ -342,7 +342,7 @@ const EpubReader: React.FC = () => {
   });
 
   return (
-    <div className="w-full h-screen bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800">
+    <div className="w-full h-full bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800">
       <div className="flex w-4/5 h-12 justify-between items-center">
         <div className="flex items-center cursor-pointer" onClick={onOpen}>
           <BookOpen size={20} />
