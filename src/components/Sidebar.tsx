@@ -3,11 +3,6 @@
 import Image from "next/image";
 import { Home, NotebookPen } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { cn } from "@/utils/utils"; // Assuming cn exists, or I will use template literals if unsure. Checking utils...
-// I'll check utils.ts first or just use standard string manipulation to be safe,
-// but usually cn is in utils/utils.ts in shadcn-like setups.
-// I'll stick to template literals for safety unless I verify cn.
-// Actually, I'll just use template literals.
 
 interface SidebarItemProps {
   icon: React.ReactNode;
