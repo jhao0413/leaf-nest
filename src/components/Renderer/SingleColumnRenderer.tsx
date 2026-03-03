@@ -25,13 +25,13 @@ import { ReadingProgressManager } from '@/utils/readingProgressManager';
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
   const router = useRouter();
-  const currentChapter = useReaderStateStore(state => state.currentChapter);
-  const setCurrentChapter = useReaderStateStore(state => state.setCurrentChapter);
-  const currentFontConfig = useRendererConfigStore(state => state.rendererConfig);
-  const bookInfo = useBookInfoStore(state => state.bookInfo);
+  const currentChapter = useReaderStateStore((state) => state.currentChapter);
+  const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
+  const currentFontConfig = useRendererConfigStore((state) => state.rendererConfig);
+  const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const { theme } = useTheme();
-  const bookZip = useBookZipStore(state => state.bookZip);
-  const rendererMode = useRendererModeStore(state => state.rendererMode);
+  const bookZip = useBookZipStore((state) => state.bookZip);
+  const rendererMode = useRendererModeStore((state) => state.rendererMode);
 
   const progressManagerRef = useRef<ReadingProgressManager | null>(null);
   const workerRef = useRef<Worker | null>(null);
@@ -39,7 +39,7 @@ const EpubReader: React.FC = () => {
 
   // Initialize worker and progress manager
   useEffect(() => {
-    const worker = new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
+    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
     workerRef.current = worker;
     progressManagerRef.current = new ReadingProgressManager(worker);
 
@@ -119,7 +119,7 @@ const EpubReader: React.FC = () => {
         throw new Error('Iframe document not found');
       }
 
-      renderer.style.height = `0px`;
+      renderer.style.height = '0px';
       if (iframeDoc.body) {
         renderer.style.visibility = 'visible';
         const body = iframeDoc.body;
@@ -179,64 +179,67 @@ const EpubReader: React.FC = () => {
 
   useKeyboardShortcuts({
     onPrevious: handlePrevChapter,
-    onNext: handleNextChapter,
+    onNext: handleNextChapter
   });
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <>
-      <div className="w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800"></div>
-      <div className="w-1/2 h-14 bg-white border-b-2 flex fixed items-center pl-4 z-20 inset-x-0 m-auto dark:bg-neutral-900">
-        <div className="flex w-full justify-between items-center pr-4">
-          <div className="flex items-center cursor-pointer" onClick={onOpen}>
+    <div>
+      <div className='w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800'></div>
+      <div className='w-1/2 h-14 bg-white border-b-2 flex fixed items-center pl-4 z-20 inset-x-0 m-auto dark:bg-neutral-900'>
+        <div className='flex w-full justify-between items-center pr-4'>
+          <div className='flex items-center cursor-pointer' onClick={onOpen}>
             <BookOpen size={20} />
             <p
               className={`font-bold text-lg font-lxgw max-w-lg truncate ${
                 bookInfo.language === 'zh' ? '' : 'italic'
               }`}
-              title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}>
+              title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
+            >
               {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
             </p>
           </div>
           <div>
             <LocaleSwitcher />
             <Button
-              className="ml-4 bg-white dark:bg-neutral-900"
+              className='ml-4 bg-white dark:bg-neutral-900'
               isIconOnly
-              variant="bordered"
-              radius="sm"
-              onPress={() => router.push("/")}
+              variant='bordered'
+              radius='sm'
+              onPress={() => router.push('/')}
             >
-              <House size={16} className="dark:bg-neutral-900" />
+              <House size={16} className='dark:bg-neutral-900' />
             </Button>
           </div>
         </div>
       </div>
-      <div className="w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900">
-        <iframe id="epub-renderer" className="w-full z-10 px-14 grow dark:bg-neutral-900"></iframe>
-        <div className="w-full z-10 h-20 flex justify-around items-start">
+      <div className='w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900'>
+        <iframe id='epub-renderer' className='w-full z-10 px-14 grow dark:bg-neutral-900'></iframe>
+        <div className='w-full z-10 h-20 flex justify-around items-start'>
           <Button
-            variant="bordered"
-            className="text-base rounded-md w-40 dark:bg-neutral-900"
-            onPress={handlePrevChapter}>
+            variant='bordered'
+            className='text-base rounded-md w-40 dark:bg-neutral-900'
+            onPress={handlePrevChapter}
+          >
             {t('previous')}
           </Button>
           <Button
-            variant="bordered"
-            className="text-base rounded-md w-40 dark:bg-neutral-900"
-            onPress={handleNextChapter}>
+            variant='bordered'
+            className='text-base rounded-md w-40 dark:bg-neutral-900'
+            onPress={handleNextChapter}
+          >
             {t('next')}
           </Button>
         </div>
 
-        <div className="fixed right-[20%] bottom-[40%] z-50">
+        <div className='fixed right-[20%] bottom-[40%] z-50'>
           <Toolbar />
         </div>
       </div>
 
       <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={bookInfo} />
-    </>
+    </div>
   );
 };
 

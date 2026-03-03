@@ -29,35 +29,31 @@ export class FullBookTextIndexer {
     this.worker = worker || null;
   }
   // index the text content of the entire book
-  async indexFullBook(
-    zip: JSZip, 
-    bookInfo: BookBasicInfoType,
-    bookId: string
-  ): Promise<void> {
+  async indexFullBook(zip: JSZip, bookInfo: BookBasicInfoType, bookId: string): Promise<void> {
     // Check if index already exists in database
     const existingIndex = await this.loadIndexFromDB(bookId);
-    
+
     if (existingIndex && existingIndex.length > 0) {
       console.log('Loading existing index from database...');
       this.textIndex = existingIndex;
       this.isIndexed = true;
       return;
     }
-    
+
     console.log('Creating new index...');
     this.clearIndex();
-    
+
     this.textIndex = [];
     const totalChapters = bookInfo.toc.length;
 
     for (let i = 0; i < totalChapters; i++) {
       try {
         const chapter = bookInfo.toc[i];
-        const contentOpfPath = `${chapter.path ? chapter.path + "/" : ""}${decodeURIComponent(chapter.file)}`;
+        const contentOpfPath = `${chapter.path ? chapter.path + '/' : ''}${decodeURIComponent(chapter.file)}`;
         const chapterFile = zip.file(contentOpfPath);
 
         if (chapterFile) {
-          const chapterContent = await chapterFile.async("string");
+          const chapterContent = await chapterFile.async('string');
           // html content
           const processedContent = await this.extractTextFromChapter(chapterContent);
           // plain text
@@ -83,7 +79,7 @@ export class FullBookTextIndexer {
     }
 
     this.isIndexed = true;
-    
+
     // Save index to database
     await this.saveIndexToDB(bookId, this.textIndex);
   }
@@ -92,21 +88,21 @@ export class FullBookTextIndexer {
   private extractPlainText(htmlContent: string): string {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent, 'text/html');
-    
+
     const scripts = doc.querySelectorAll('script, style');
-    scripts.forEach(script => script.remove());
-    
+    scripts.forEach((script) => script.remove());
+
     const textContent = doc.body ? doc.body.textContent || doc.body.innerText || '' : '';
-    
+
     return textContent.replace(/\s+/g, ' ').trim();
   }
 
   private async extractTextFromChapter(chapterContent: string): Promise<string> {
     const parser = new DOMParser();
-    const chapterDoc = parser.parseFromString(chapterContent, "application/xml");
+    const chapterDoc = parser.parseFromString(chapterContent, 'application/xml');
 
     if (!chapterDoc) {
-      throw new Error("Failed to parse chapter content");
+      throw new Error('Failed to parse chapter content');
     }
 
     return chapterDoc.documentElement.outerHTML;
@@ -140,10 +136,13 @@ export class FullBookTextIndexer {
         const contextLength = 50;
         const contextStart = Math.max(0, index - contextLength);
         const contextEnd = Math.min(searchText.length, index + searchQuery.length + contextLength);
-        
+
         const contextBefore = chapter.searchableText.substring(contextStart, index);
         const matchText = chapter.searchableText.substring(index, index + searchQuery.length);
-        const contextAfter = chapter.searchableText.substring(index + searchQuery.length, contextEnd);
+        const contextAfter = chapter.searchableText.substring(
+          index + searchQuery.length,
+          contextEnd
+        );
 
         results.push({
           chapterIndex: chapter.chapterIndex,
@@ -187,7 +186,10 @@ export class FullBookTextIndexer {
     return {
       isReady: this.isIndexed,
       chaptersCount: this.textIndex.length,
-      totalTextLength: this.textIndex.reduce((sum, chapter) => sum + chapter.searchableText.length, 0)
+      totalTextLength: this.textIndex.reduce(
+        (sum, chapter) => sum + chapter.searchableText.length,
+        0
+      )
     };
   }
 

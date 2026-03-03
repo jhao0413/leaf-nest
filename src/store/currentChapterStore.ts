@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 type currentChapterStore = {
   currentChapter: number;
@@ -7,5 +7,5 @@ type currentChapterStore = {
 
 export const useCurrentChapterStore = create<currentChapterStore>((set) => ({
   currentChapter: 0,
-  setCurrentChapter: (chapter: number) => set({ currentChapter: chapter }),
+  setCurrentChapter: (chapter: number) => set({ currentChapter: chapter })
 }));

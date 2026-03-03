@@ -1,5 +1,5 @@
-import JSZip from "jszip";
-import { create } from "zustand";
+import JSZip from 'jszip';
+import { create } from 'zustand';
 
 type bookZipStoreType = {
   bookZip: JSZip;
@@ -8,5 +8,5 @@ type bookZipStoreType = {
 
 export const useBookZipStore = create<bookZipStoreType>((set) => ({
   bookZip: new JSZip(),
-  setBookZip: (bookZip: JSZip) => set({ bookZip: bookZip }),
+  setBookZip: (bookZip: JSZip) => set({ bookZip: bookZip })
 }));

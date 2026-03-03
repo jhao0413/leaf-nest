@@ -1,4 +1,4 @@
-import { applyFontAndThemeStyles } from "@/utils/styleHandler";
+import { applyFontAndThemeStyles } from '@/utils/styleHandler';
 import { TextPositionMapper, TextPosition } from './textPositionMapper';
 import { useReaderStateStore } from '@/store/readerStateStore';
 
@@ -10,13 +10,13 @@ export const writeToIframe = (
     fontUrl: string;
     fontFormat: string;
   },
-  theme: string = "light",
-  mode: string = "double",
+  theme: string = 'light',
+  mode: string = 'double',
   COLUMN_GAP: number
 ) => {
-  const renderer = document.getElementById("epub-renderer") as HTMLIFrameElement;
+  const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
   if (!renderer || !renderer.contentWindow) {
-    throw new Error("Renderer not found");
+    throw new Error('Renderer not found');
   }
   const iframeDoc =
     renderer.contentDocument || (renderer.contentWindow && renderer.contentWindow.document);
@@ -54,15 +54,15 @@ export const waitForImagesAndCalculatePages = (
       if (img.complete) {
         resolve();
       } else {
-        img.addEventListener("load", () => resolve());
-        img.addEventListener("error", () => resolve());
+        img.addEventListener('load', () => resolve());
+        img.addEventListener('error', () => resolve());
       }
     });
   });
 
   return Promise.all(imagesLoaded).then(() => {
     if (!renderer?.contentWindow) {
-      console.error("Renderer not found");
+      console.error('Renderer not found');
       return;
     }
   });
@@ -80,13 +80,13 @@ export const handleIframeLoad = (
   onPageReady?: () => void
 ): Promise<void> => {
   return new Promise((resolve) => {
-    renderer.style.visibility = "hidden";
+    renderer.style.visibility = 'hidden';
 
     const handleLoad = () => {
       const iframeDoc = renderer.contentDocument || renderer.contentWindow?.document;
 
       if (!iframeDoc || !renderer.contentWindow) {
-        console.error("Iframe document not found");
+        console.error('Iframe document not found');
         resolve();
         return;
       }
@@ -108,8 +108,8 @@ export const handleIframeLoad = (
 
         // add an empty div to the end of the content if the last page is less than half full
         if (fraction <= 0.5) {
-          const emptyDiv = renderer.contentWindow.document.createElement("div");
-          emptyDiv.style.height = "100%";
+          const emptyDiv = renderer.contentWindow.document.createElement('div');
+          emptyDiv.style.height = '100%';
           body.appendChild(emptyDiv);
         }
 
@@ -117,7 +117,7 @@ export const handleIframeLoad = (
 
         if (goToLastPageRef.current) {
           renderer.contentWindow.scrollTo({
-            left: (pageCountRef.current - 1) * pageWidthRef.current,
+            left: (pageCountRef.current - 1) * pageWidthRef.current
           });
           goToLastPageRef.current = false;
           setCurrentPageIndex(pageCountRef.current);
@@ -126,7 +126,7 @@ export const handleIframeLoad = (
           const { currentPageIndex } = useReaderStateStore.getState();
           const targetPage = Math.max(1, Math.min(currentPageIndex, pageCountRef.current));
           renderer.contentWindow.scrollTo({
-            left: (targetPage - 1) * pageWidthRef.current,
+            left: (targetPage - 1) * pageWidthRef.current
           });
           if (targetPage !== currentPageIndex) {
             setCurrentPageIndex(targetPage);
@@ -142,9 +142,9 @@ export const handleIframeLoad = (
 
         // Call onPageReady to update React state
         onPageReady?.();
-        renderer.style.visibility = "visible";
+        renderer.style.visibility = 'visible';
 
-        renderer.removeEventListener("load", handleLoad);
+        renderer.removeEventListener('load', handleLoad);
         resolve();
       }
     };
@@ -154,7 +154,7 @@ export const handleIframeLoad = (
     if (iframeDoc && iframeDoc.readyState === 'complete' && iframeDoc.body) {
       handleLoad();
     } else {
-      renderer.addEventListener("load", handleLoad);
+      renderer.addEventListener('load', handleLoad);
     }
   });
 };

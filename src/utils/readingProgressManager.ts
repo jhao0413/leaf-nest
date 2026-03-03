@@ -1,4 +1,4 @@
-import { BookBasicInfoType } from "@/store/bookInfoStore";
+import { BookBasicInfoType } from '@/store/bookInfoStore';
 
 export interface ReadingProgressData {
   bookId: string;
@@ -23,18 +23,14 @@ export class ReadingProgressManager {
   extractTextAnchor(iframeWindow: Window): string {
     try {
       const doc = iframeWindow.document;
-      const walker = doc.createTreeWalker(
-        doc.body,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null);
 
       let textContent = '';
       let node;
       const viewportWidth = iframeWindow.innerWidth;
 
       // Traverse text nodes and extract visible text from current viewport
-      while (node = walker.nextNode()) {
+      while ((node = walker.nextNode())) {
         const text = node.textContent?.trim();
         if (text && text.length > 0) {
           const element = node.parentElement;
@@ -56,7 +52,7 @@ export class ReadingProgressManager {
       // Take first 50 characters
       return textContent.substring(0, 50).trim();
     } catch (error) {
-      console.error("Error extracting text anchor:", error);
+      console.error('Error extracting text anchor:', error);
       return '';
     }
   }
@@ -116,15 +112,10 @@ export class ReadingProgressManager {
       if (!this.worker || !iframeWindow) return;
 
       const textAnchor = this.extractTextAnchor(iframeWindow);
-      const percentage = this.calculatePercentage(
-        chapter,
-        page,
-        bookInfo.toc.length,
-        mode
-      );
+      const percentage = this.calculatePercentage(chapter, page, bookInfo.toc.length, mode);
 
       this.worker.postMessage({
-        action: "updateReadingProgress",
+        action: 'updateReadingProgress',
         data: {
           bookId,
           currentChapter: chapter,
@@ -134,7 +125,9 @@ export class ReadingProgressManager {
         }
       });
 
-      console.log(`[Progress] Saved: Chapter ${chapter}, Page ${page}, Anchor: "${textAnchor.substring(0, 20)}...", ${percentage}%`);
+      console.log(
+        `[Progress] Saved: Chapter ${chapter}, Page ${page}, Anchor: "${textAnchor.substring(0, 20)}...", ${percentage}%`
+      );
     };
 
     if (immediate) {
@@ -164,12 +157,7 @@ export class ReadingProgressManager {
 
     // Double column mode: try to use text anchor
     if (mode === 'double' && textAnchor) {
-      const targetPage = this.findPageByTextAnchor(
-        iframeWindow,
-        textAnchor,
-        pageWidth,
-        columnGap
-      );
+      const targetPage = this.findPageByTextAnchor(iframeWindow, textAnchor, pageWidth, columnGap);
 
       if (targetPage) {
         // Scroll to target page
@@ -207,18 +195,14 @@ export class ReadingProgressManager {
   ): number | null {
     try {
       const doc = iframeWindow.document;
-      const walker = doc.createTreeWalker(
-        doc.body,
-        NodeFilter.SHOW_TEXT,
-        null
-      );
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, null);
 
       let node;
       // Use first 20 characters for matching
       const searchText = anchor.substring(0, 20);
-      console.log(searchText)
+      console.log(searchText);
 
-      while (node = walker.nextNode()) {
+      while ((node = walker.nextNode())) {
         const text = node.textContent?.trim();
         if (text && text.includes(searchText)) {
           // Found matching text node
@@ -234,7 +218,7 @@ export class ReadingProgressManager {
       console.log(`[Progress] Text anchor not found, falling back to page number`);
       return null;
     } catch (error) {
-      console.error("Error finding page by text anchor:", error);
+      console.error('Error finding page by text anchor:', error);
       return null;
     }
   }

@@ -1,22 +1,22 @@
-import { useBookInfoStore } from "@/store/bookInfoStore";
-import { useFontStore, useRendererConfigStore } from "@/store/fontConfigStore";
-import { useRendererModeStore } from "@/store/rendererModeStore";
-import { Button } from "@heroui/button";
-import { Slider } from "@heroui/slider";
-import { ALargeSmall, AArrowDown, AArrowUp } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useState } from "react";
-import { createPortal } from "react-dom";
+import { useBookInfoStore } from '@/store/bookInfoStore';
+import { useFontStore, useRendererConfigStore } from '@/store/fontConfigStore';
+import { useRendererModeStore } from '@/store/rendererModeStore';
+import { Button } from '@heroui/button';
+import { Slider } from '@heroui/slider';
+import { ALargeSmall, AArrowDown, AArrowUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 const FontConfig: React.FC = ({}) => {
-  const t = useTranslations("Renderer");
+  const t = useTranslations('Renderer');
   const [isOpen, setIsOpen] = useState(false);
   const mode = useRendererModeStore((state) => state.rendererMode);
   const rendererConfig = useRendererConfigStore((state) => state.rendererConfig);
   const setRendererConfig = useRendererConfigStore((state) => state.setRendererConfig);
   const { zhFontFamilies, enFontFamilies } = useFontStore((state) => state);
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
-  const cuurentFontFamilies = bookInfo.language === "zh" ? zhFontFamilies : enFontFamilies;
+  const cuurentFontFamilies = bookInfo.language === 'zh' ? zhFontFamilies : enFontFamilies;
 
   const handleMenuClick = () => {
     setIsOpen(!isOpen);
@@ -29,7 +29,7 @@ const FontConfig: React.FC = ({}) => {
   const onFontSizeChange = (value: number) => {
     setRendererConfig({
       ...rendererConfig,
-      fontSize: value,
+      fontSize: value
     });
   };
 
@@ -38,47 +38,48 @@ const FontConfig: React.FC = ({}) => {
     setRendererConfig({
       ...rendererConfig,
       fontFamily: value,
-      fontUrl: fontInfo?.url || "",
-      fontFormat: fontInfo?.format || "",
+      fontUrl: fontInfo?.url || '',
+      fontFormat: fontInfo?.format || ''
     });
   };
 
-  const overlay = <>
+  const overlay = (
+    <>
       <div
         className={`fixed top-0 left-0 w-screen h-screen bg-black bg-zinc-500/50 z-20 transition-opacity duration-500 ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={handleOverlayClick}
       ></div>
       <div
         className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] ${
-          mode === "single" ? "right-0 sm:right-1/4" : "right-[10%]"
+          mode === 'single' ? 'right-0 sm:right-1/4' : 'right-[10%]'
         } z-30 rounded-2xl transition-opacity duration-500 transform ${
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         } shadow-md`}
       >
         <Slider
-          size="lg"
+          size='lg'
           step={2}
-          color="foreground"
-          label={t("fontSize")}
+          color='foreground'
+          label={t('fontSize')}
           showSteps={true}
           maxValue={26}
           minValue={18}
           defaultValue={rendererConfig.fontSize}
           getValue={(fontSize) => `${fontSize}px`}
-          startContent={<AArrowDown className="text-2xl" />}
-          endContent={<AArrowUp className="text-2xl" />}
-          className="max-w-md"
+          startContent={<AArrowDown className='text-2xl' />}
+          endContent={<AArrowUp className='text-2xl' />}
+          className='max-w-md'
           onChange={(value) => onFontSizeChange(Number(value))}
         />
-        <p className="mt-2">{t("fontFamily")}</p>
-        <div className="grid gap-2 grid-cols-2">
+        <p className='mt-2'>{t('fontFamily')}</p>
+        <div className='grid gap-2 grid-cols-2'>
           {cuurentFontFamilies.map((font) => (
             <Button
               key={font.value}
-              variant="bordered"
-              color={rendererConfig.fontFamily === font.value ? "primary" : "default"}
+              variant='bordered'
+              color={rendererConfig.fontFamily === font.value ? 'primary' : 'default'}
               className={`min-w-36 bg-white dark:bg-neutral-700 p-1 rounded-md mt-2 font-${font.value} text-base`}
               style={{ fontFamily: font.value }}
               onClick={() => onFontFamilyChange(font.value)}
@@ -88,19 +89,18 @@ const FontConfig: React.FC = ({}) => {
           ))}
         </div>
       </div>
-  </>
+    </>
+  );
 
   return (
     <>
       <div
-        className="w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
+        className='w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900'
         onClick={handleMenuClick}
       >
         <ALargeSmall />
       </div>
-      {
-        createPortal(overlay, document.body)
-      }
+      {createPortal(overlay, document.body)}
     </>
   );
 };

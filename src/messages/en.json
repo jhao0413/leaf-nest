@@ -1,37 +1,37 @@
 {
-    "HomePage": {
-        "title": "EPUB Reader Parser",
-        "introduction": "This is a simple, open-source EPUB reader and parser that enables you to upload an EPUB file and read its content directly in your browser.",
-        "example": "Example EPUB files download",
-        "selectEpub": "Select Epub"
-    },
-    "Renderer": {
-        "previous": "Previous",
-        "next": "Next",
-        "fontSize": "Font Size",
-        "fontFamily": "Font Family"
-    },
-    "SingleColumnRenderer": {
-        "previous": "Previous",
-        "next": "Next"
-    },
-    "BookInfoModal": {
-        "title": "Book Information",
-        "author": "Author",
-        "publisher": "Publisher",
-        "publicationDate": "Publication Date",
-        "size": "Size",
-        "language": "Language",
-        "identifier": "Identifier"
-    },
-    "SearchModal": {
-        "title": "Search",
-        "placeholder": "Enter search content...",
-        "searchButton": "Search",
-        "chapterFormat": "Chapter {chapterNumber}: {chapterTitle}",
-        "resultsFound": "Found {count} search results",
-        "noResultsFound": "No content found containing \"{query}\"",
-        "tryOtherKeywords": "Please try other keywords",
-        "searchInBook": "Search keywords in the book"
-    }
+  "HomePage": {
+    "title": "EPUB Reader Parser",
+    "introduction": "This is a simple, open-source EPUB reader and parser that enables you to upload an EPUB file and read its content directly in your browser.",
+    "example": "Example EPUB files download",
+    "selectEpub": "Select Epub"
+  },
+  "Renderer": {
+    "previous": "Previous",
+    "next": "Next",
+    "fontSize": "Font Size",
+    "fontFamily": "Font Family"
+  },
+  "SingleColumnRenderer": {
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "BookInfoModal": {
+    "title": "Book Information",
+    "author": "Author",
+    "publisher": "Publisher",
+    "publicationDate": "Publication Date",
+    "size": "Size",
+    "language": "Language",
+    "identifier": "Identifier"
+  },
+  "SearchModal": {
+    "title": "Search",
+    "placeholder": "Enter search content...",
+    "searchButton": "Search",
+    "chapterFormat": "Chapter {chapterNumber}: {chapterTitle}",
+    "resultsFound": "Found {count} search results",
+    "noResultsFound": "No content found containing \"{query}\"",
+    "tryOtherKeywords": "Please try other keywords",
+    "searchInBook": "Search keywords in the book"
+  }
 }

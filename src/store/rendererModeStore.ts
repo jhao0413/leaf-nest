@@ -7,7 +7,7 @@ type rendererModeStore = {
   setRendererMode: (mode: rendererModeType) => void;
 };
 
-export const useRendererModeStore = create<rendererModeStore>(set => ({
+export const useRendererModeStore = create<rendererModeStore>((set) => ({
   rendererMode: 'double',
-  setRendererMode: (mode: rendererModeType) => set({ rendererMode: mode }),
+  setRendererMode: (mode: rendererModeType) => set({ rendererMode: mode })
 }));

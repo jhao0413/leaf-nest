@@ -7,7 +7,7 @@ interface FullBookSearchStore {
   indexProgress: { current: number; total: number } | null;
   searchResults: SearchResult[];
   currentSearchQuery: string;
-  
+
   setIndexing: (isIndexing: boolean) => void;
   setWorker: (worker: Worker) => void;
   searchText: (query: string) => void;
@@ -22,12 +22,12 @@ export const useFullBookSearchStore = create<FullBookSearchStore>((set, get) => 
   currentSearchQuery: '',
 
   setIndexing: (isIndexing: boolean) => set({ isIndexing }),
-  
+
   setWorker: (worker: Worker) => {
     const newIndexer = new FullBookTextIndexer(worker);
     set({ indexer: newIndexer });
   },
-  
+
   searchText: (query: string) => {
     const { indexer } = get();
     if (!query.trim()) {
@@ -36,28 +36,29 @@ export const useFullBookSearchStore = create<FullBookSearchStore>((set, get) => 
     }
 
     const results = indexer.searchText(query);
-    
+
     const uniqueResults = results.filter((result, index, array) => {
       const resultKey = `${result.chapterIndex}-${result.position}-${result.matchText}`;
-      return array.findIndex(r => 
-        `${r.chapterIndex}-${r.position}-${r.matchText}` === resultKey
-      ) === index;
+      return (
+        array.findIndex((r) => `${r.chapterIndex}-${r.position}-${r.matchText}` === resultKey) ===
+        index
+      );
     });
-    
-    set({ 
-      searchResults: uniqueResults, 
-      currentSearchQuery: query 
+
+    set({
+      searchResults: uniqueResults,
+      currentSearchQuery: query
     });
   },
 
   clearIndex: () => {
     const { indexer } = get();
     indexer.clearIndex();
-    set({ 
-      isIndexing: false, 
-      indexProgress: null, 
-      searchResults: [], 
-      currentSearchQuery: '' 
+    set({
+      isIndexing: false,
+      indexProgress: null,
+      searchResults: [],
+      currentSearchQuery: ''
     });
   }
 }));

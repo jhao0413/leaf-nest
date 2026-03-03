@@ -1,4 +1,4 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 type ManageModeState = {
   manageMode: boolean;
@@ -7,7 +7,7 @@ type ManageModeState = {
 
 export const useManageModeStore = create<ManageModeState>()((set) => ({
   manageMode: false,
-  setManageMode: (manageMode) => set({ manageMode }),
+  setManageMode: (manageMode) => set({ manageMode })
 }));
 
 type SelectedBookIdsState = {
@@ -17,5 +17,5 @@ type SelectedBookIdsState = {
 
 export const useSelectedBookIdsStore = create<SelectedBookIdsState>()((set) => ({
   selectedBookIds: [],
-  setSelectedBookIds: (ids) => set({ selectedBookIds: ids }),
+  setSelectedBookIds: (ids) => set({ selectedBookIds: ids })
 }));

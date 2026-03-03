@@ -12,13 +12,13 @@ export const useKeyboardShortcuts = ({ onPrevious, onNext, onSearch }: KeyboardS
       // Check for Ctrl+K or Cmd+K (macOS)
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
       const isShortcut = isMac ? event.metaKey : event.ctrlKey;
-      
+
       if (isShortcut && event.key === 'k' && onSearch) {
         event.preventDefault();
         onSearch();
         return;
       }
-      
+
       // Original navigation keys
       if (event.key === 'ArrowLeft') {
         onPrevious();
@@ -26,7 +26,7 @@ export const useKeyboardShortcuts = ({ onPrevious, onNext, onSearch }: KeyboardS
         onNext();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);

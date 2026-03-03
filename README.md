@@ -31,7 +31,7 @@ A modern, browser-based EPUB reader application with local storage support.
 
 ### Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm 9.0.0
 
 ### Installation
@@ -109,6 +109,7 @@ All database operations run in Web Workers to prevent blocking the main thread.
 ### Reading Progress
 
 The ReadingProgressManager automatically saves:
+
 - Current chapter index
 - Current page number
 - Text anchor for precise position restoration

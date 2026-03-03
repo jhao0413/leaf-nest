@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import JSZip from "jszip";
-import DoubleColumnRenderer from "@/components/Renderer/DoubleColumnRenderer";
-import SingleColumnRenderer from "@/components/Renderer/SingleColumnRenderer";
-import { useRendererModeStore } from "@/store/rendererModeStore";
-import { useBookInfoStore } from "@/store/bookInfoStore";
-import { useBookZipStore } from "@/store/bookZipStore";
-import { useFullBookSearchStore } from "@/store/fullBookSearchStore";
-import { useReaderStateStore } from "@/store/readerStateStore";
-import { loadZip } from "@/utils/zipUtils";
-import { useEffect } from "react";
-import React from "react";
-import { useBreakpoints } from "@/hooks/useBreakpoints";
+import JSZip from 'jszip';
+import DoubleColumnRenderer from '@/components/Renderer/DoubleColumnRenderer';
+import SingleColumnRenderer from '@/components/Renderer/SingleColumnRenderer';
+import { useRendererModeStore } from '@/store/rendererModeStore';
+import { useBookInfoStore } from '@/store/bookInfoStore';
+import { useBookZipStore } from '@/store/bookZipStore';
+import { useFullBookSearchStore } from '@/store/fullBookSearchStore';
+import { useReaderStateStore } from '@/store/readerStateStore';
+import { loadZip } from '@/utils/zipUtils';
+import { useEffect } from 'react';
+import React from 'react';
+import { useBreakpoints } from '@/hooks/useBreakpoints';
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -22,7 +22,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const setWorker = useFullBookSearchStore((state) => state.setWorker);
 
   useEffect(() => {
-    const worker = new Worker(new URL("@/utils/handleWorker.ts", import.meta.url));
+    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
 
     // Set worker for full book search indexer
     setWorker(worker);
@@ -30,14 +30,14 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
     // Clear old book data first to prevent loading stale content
     setBookZip(new JSZip());
 
-    worker.postMessage({ action: "getBookById", data: { id } });
+    worker.postMessage({ action: 'getBookById', data: { id } });
     worker.onmessage = async (event) => {
-      if (event.data.success && event.data.action === "getBookById") {
+      if (event.data.success && event.data.action === 'getBookById') {
         const bookData = event.data.data;
 
         // Process cover and TOC
         bookData.coverUrl = URL.createObjectURL(
-          new Blob([bookData.coverBlob], { type: "image/jpeg" })
+          new Blob([bookData.coverBlob], { type: 'image/jpeg' })
         );
         bookData.toc = JSON.parse(bookData.toc);
 
@@ -47,10 +47,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         // Restore reading state if available
         if (bookData.currentChapter !== undefined && bookData.currentChapter !== null) {
           const { setReaderState } = useReaderStateStore.getState();
-          setReaderState(
-            bookData.currentChapter,
-            bookData.currentPage || 1
-          );
+          setReaderState(bookData.currentChapter, bookData.currentPage || 1);
         }
 
         // Load book ZIP
@@ -62,7 +59,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
 
   const { isMobile } = useBreakpoints();
 
-  const isSingleMode = isMobile || rendererMode === "single";
+  const isSingleMode = isMobile || rendererMode === 'single';
 
   return (
     <>
@@ -73,7 +70,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
           <DoubleColumnRenderer />
         )
       ) : (
-        <div className="h-full w-full bg-slate-50"></div>
+        <div className='h-full w-full bg-slate-50'></div>
       )}
     </>
   );
