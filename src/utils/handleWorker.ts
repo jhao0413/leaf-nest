@@ -157,7 +157,7 @@ const addBook = async (db: OpfsDatabase, book: BookBasicInfoType) => {
 const getBookById = async (db: OpfsDatabase, id: string) => {
   try {
     db.exec({
-      sql: `select * from books where id = ?;`,
+      sql: 'select * from books where id = ?;',
       bind: [id],
       rowMode: 'object',
       callback: (row) => {
@@ -224,7 +224,7 @@ const getBookIndex = async (db: OpfsDatabase, bookId: string) => {
   try {
     let indexData = null;
     db.exec({
-      sql: `SELECT index_data FROM book_text_index WHERE book_id = ?;`,
+      sql: 'SELECT index_data FROM book_text_index WHERE book_id = ?;',
       bind: [bookId],
       rowMode: 'object',
       callback: (row) => {
@@ -268,7 +268,7 @@ const saveBookIndex = async (db: OpfsDatabase, data: { bookId: string; indexes: 
 const deleteBookIndex = async (db: OpfsDatabase, bookId: string) => {
   try {
     db.exec({
-      sql: `DELETE FROM book_text_index WHERE book_id = ?;`,
+      sql: 'DELETE FROM book_text_index WHERE book_id = ?;',
       bind: [bookId]
     });
     postMessage({ success: true, action: 'deleteBookIndex' });

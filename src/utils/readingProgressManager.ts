@@ -124,10 +124,6 @@ export class ReadingProgressManager {
           percentage
         }
       });
-
-      console.log(
-        `[Progress] Saved: Chapter ${chapter}, Page ${page}, Anchor: "${textAnchor.substring(0, 20)}...", ${percentage}%`
-      );
     };
 
     if (immediate) {
@@ -215,7 +211,6 @@ export class ReadingProgressManager {
         }
       }
 
-      console.log(`[Progress] Text anchor not found, falling back to page number`);
       return null;
     } catch (error) {
       console.error('Error finding page by text anchor:', error);
