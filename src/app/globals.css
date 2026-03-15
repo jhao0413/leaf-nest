@@ -153,6 +153,31 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  .reader-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .reader-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .reader-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 3px;
+  }
+
+  .reader-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.3);
+  }
+
+  .dark .reader-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .dark .reader-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
 }
 
 @layer base {

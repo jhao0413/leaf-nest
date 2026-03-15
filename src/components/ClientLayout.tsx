@@ -15,7 +15,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
       {/* Main Content Wrapper */}
       <div className='flex flex-col flex-1 h-full overflow-hidden relative'>
         {/* Content Area */}
-        <main className='flex-1 overflow-y-auto overflow-x-hidden relative scroll-smooth'>
+        <main className={`flex-1 overflow-x-hidden relative ${isReaderRoute ? 'overflow-y-hidden' : 'overflow-y-auto scroll-smooth'}`}>
           <div className={`${isReaderRoute ? 'w-full h-full' : 'max-w-7xl mx-auto w-full p-6'}`}>
             {children}
           </div>

@@ -36,6 +36,8 @@ const EpubReader: React.FC = () => {
   const progressManagerRef = useRef<ReadingProgressManager | null>(null);
   const workerRef = useRef<Worker | null>(null);
   const isFirstLoadRef = useRef(true);
+  const latestBookInfoRef = useRef(bookInfo);
+  const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
 
   // Initialize worker and progress manager
   useEffect(() => {
@@ -57,19 +59,28 @@ const EpubReader: React.FC = () => {
     }
   }, [bookInfo.currentChapter, setCurrentChapter]);
 
+  useEffect(() => {
+    latestBookInfoRef.current = bookInfo;
+  }, [bookInfo]);
+
+  useEffect(() => {
+    latestStyleRef.current = { currentFontConfig, theme, rendererMode };
+  }, [currentFontConfig, theme, rendererMode]);
+
   // Save progress on unmount (only when component unmounts, not on chapter change)
   useEffect(() => {
     return () => {
       // Use latest values via ref to avoid stale closure
       const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
       const { currentChapter: latestChapter } = useReaderStateStore.getState();
-      if (renderer?.contentWindow && bookInfo.id && progressManagerRef.current) {
+      const latestBookInfo = latestBookInfoRef.current;
+      if (renderer?.contentWindow && latestBookInfo.id && progressManagerRef.current) {
         progressManagerRef.current.saveProgress(
-          bookInfo.id,
+          latestBookInfo.id,
           latestChapter,
           1, // Single column mode always uses page 1
           renderer.contentWindow,
-          bookInfo,
+          latestBookInfo,
           'single',
           0,
           true
@@ -86,7 +97,18 @@ const EpubReader: React.FC = () => {
         currentChapter
       );
       const updatedChapter = await parseAndProcessChapter(chapterContent, bookZip, basePath);
-      const renderer = writeToIframe(updatedChapter, currentFontConfig, theme, rendererMode, 0);
+      const {
+        currentFontConfig: latestFontConfig,
+        theme: latestTheme,
+        rendererMode: latestRendererMode
+      } = latestStyleRef.current;
+      const renderer = writeToIframe(
+        updatedChapter,
+        latestFontConfig,
+        latestTheme,
+        latestRendererMode,
+        0
+      );
       const iframeDoc =
         renderer.contentDocument || (renderer.contentWindow && renderer.contentWindow.document);
       if (iframeDoc) {
@@ -185,54 +207,55 @@ const EpubReader: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <div>
+    <div className='single-column-reader'>
       <div className='w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800'></div>
-      <div className='w-1/2 h-14 bg-white border-b-2 flex fixed items-center pl-4 z-20 inset-x-0 m-auto dark:bg-neutral-900'>
-        <div className='flex w-full justify-between items-center pr-4'>
-          <div className='flex items-center cursor-pointer' onClick={onOpen}>
-            <BookOpen size={20} />
-            <p
-              className={`font-bold text-lg font-lxgw max-w-lg truncate ${
-                bookInfo.language === 'zh' ? '' : 'italic'
-              }`}
-              title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
-            >
-              {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
-            </p>
+      <div className='w-1/2 h-screen mx-auto flex flex-col relative z-10'>
+        <div className='w-full h-14 bg-white border-b-2 flex items-center pl-4 shrink-0 dark:bg-neutral-900'>
+          <div className='flex w-full justify-between items-center pr-4'>
+            <div className='flex items-center cursor-pointer' onClick={onOpen}>
+              <BookOpen size={20} />
+              <p
+                className={`font-bold text-lg font-lxgw max-w-lg truncate ${
+                  bookInfo.language === 'zh' ? '' : 'italic'
+                }`}
+                title={bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
+              >
+                {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
+              </p>
+            </div>
+            <div>
+              <LocaleSwitcher />
+              <Button
+                className='ml-4 bg-white dark:bg-neutral-900'
+                isIconOnly
+                variant='bordered'
+                radius='sm'
+                onPress={() => router.push('/')}
+              >
+                <House size={16} className='dark:bg-neutral-900' />
+              </Button>
+            </div>
           </div>
-          <div>
-            <LocaleSwitcher />
+        </div>
+        <div className='flex-1 overflow-y-auto bg-white flex flex-col reader-scrollbar dark:bg-neutral-900'>
+          <iframe id='epub-renderer' className='w-full z-10 px-14 shrink-0 dark:bg-neutral-900'></iframe>
+          <div className='w-full z-10 h-20 flex justify-around items-start shrink-0'>
             <Button
-              className='ml-4 bg-white dark:bg-neutral-900'
-              isIconOnly
               variant='bordered'
-              radius='sm'
-              onPress={() => router.push('/')}
+              className='text-base rounded-md w-40 dark:bg-neutral-900'
+              onPress={handlePrevChapter}
             >
-              <House size={16} className='dark:bg-neutral-900' />
+              {t('previous')}
+            </Button>
+            <Button
+              variant='bordered'
+              className='text-base rounded-md w-40 dark:bg-neutral-900'
+              onPress={handleNextChapter}
+            >
+              {t('next')}
             </Button>
           </div>
         </div>
-      </div>
-      <div className='w-1/2 h-full min-h-[100vh] mx-auto bg-white relative pt-14 flex flex-col dark:bg-neutral-900'>
-        <iframe id='epub-renderer' className='w-full z-10 px-14 grow dark:bg-neutral-900'></iframe>
-        <div className='w-full z-10 h-20 flex justify-around items-start'>
-          <Button
-            variant='bordered'
-            className='text-base rounded-md w-40 dark:bg-neutral-900'
-            onPress={handlePrevChapter}
-          >
-            {t('previous')}
-          </Button>
-          <Button
-            variant='bordered'
-            className='text-base rounded-md w-40 dark:bg-neutral-900'
-            onPress={handleNextChapter}
-          >
-            {t('next')}
-          </Button>
-        </div>
-
         <div className='fixed right-[20%] bottom-[40%] z-50'>
           <Toolbar />
         </div>

@@ -47,15 +47,6 @@ const EpubReader: React.FC = () => {
   const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
   const setCurrentPageIndex = useReaderStateStore((state) => state.setCurrentPageIndex);
 
-  const goToLastPageRef = useRef(false);
-  const pageWidthRef = useRef(0);
-  const pageCountRef = useRef(0);
-  const progressManagerRef = useRef<ReadingProgressManager | null>(null);
-  const workerRef = useRef<Worker | null>(null);
-  const isFirstLoadRef = useRef(true);
-  const loadVersionRef = useRef(0);
-  const [isRestoring, setIsRestoring] = useState(true);
-
   // font and theme
   const currentFontConfig = useRendererConfigStore((state) => state.rendererConfig);
   const { theme } = useTheme();
@@ -64,6 +55,17 @@ const EpubReader: React.FC = () => {
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const bookZip = useBookZipStore((state) => state.bookZip);
   const rendererMode = useRendererModeStore((state) => state.rendererMode);
+
+  const goToLastPageRef = useRef(false);
+  const pageWidthRef = useRef(0);
+  const pageCountRef = useRef(0);
+  const progressManagerRef = useRef<ReadingProgressManager | null>(null);
+  const workerRef = useRef<Worker | null>(null);
+  const isFirstLoadRef = useRef(true);
+  const loadVersionRef = useRef(0);
+  const latestBookInfoRef = useRef(bookInfo);
+  const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
+  const [isRestoring, setIsRestoring] = useState(true);
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
 
@@ -99,6 +101,14 @@ const EpubReader: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    latestBookInfoRef.current = bookInfo;
+  }, [bookInfo]);
+
+  useEffect(() => {
+    latestStyleRef.current = { currentFontConfig, theme, rendererMode };
+  }, [currentFontConfig, theme, rendererMode]);
+
   // Save progress on unmount (only when component unmounts, not on page change)
   useEffect(() => {
     return () => {
@@ -106,13 +116,14 @@ const EpubReader: React.FC = () => {
       const rendererWindow = getRendererWindow();
       const { currentChapter: latestChapter, currentPageIndex: latestPage } =
         useReaderStateStore.getState();
-      if (rendererWindow && bookInfo.id && progressManagerRef.current) {
+      const latestBookInfo = latestBookInfoRef.current;
+      if (rendererWindow && latestBookInfo.id && progressManagerRef.current) {
         progressManagerRef.current.saveProgress(
-          bookInfo.id,
+          latestBookInfo.id,
           latestChapter,
           latestPage,
           rendererWindow,
-          bookInfo,
+          latestBookInfo,
           'double',
           0,
           true
@@ -151,11 +162,17 @@ const EpubReader: React.FC = () => {
         return;
       }
 
+      const {
+        currentFontConfig: latestFontConfig,
+        theme: latestTheme,
+        rendererMode: latestRendererMode
+      } = latestStyleRef.current;
+
       const renderer = writeToIframe(
         updatedChapter,
-        currentFontConfig,
-        theme,
-        rendererMode,
+        latestFontConfig,
+        latestTheme,
+        latestRendererMode,
         COLUMN_GAP
       );
       const iframeDoc =
