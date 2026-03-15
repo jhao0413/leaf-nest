@@ -84,7 +84,7 @@ const FontConfig: React.FC = ({}) => {
               style={{ fontFamily: font.value }}
               onClick={() => onFontFamilyChange(font.value)}
             >
-              {font.name}
+              {font.value === 'sans' ? t('defaultFont') : font.name}
             </Button>
           ))}
         </div>

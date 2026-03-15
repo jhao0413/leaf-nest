@@ -3,13 +3,20 @@
     "title": "EPUB Reader Parser",
     "introduction": "This is a simple, open-source EPUB reader and parser that enables you to upload an EPUB file and read its content directly in your browser.",
     "example": "Example EPUB files download",
-    "selectEpub": "Select Epub"
+    "selectEpub": "Select Epub",
+    "myBooks": "My Books",
+    "import": "Import",
+    "delete": "Delete",
+    "manage": "Manage",
+    "cancel": "Cancel",
+    "emptyState": "No books yet, click Import to add"
   },
   "Renderer": {
     "previous": "Previous",
     "next": "Next",
     "fontSize": "Font Size",
-    "fontFamily": "Font Family"
+    "fontFamily": "Font Family",
+    "defaultFont": "Default Font"
   },
   "SingleColumnRenderer": {
     "previous": "Previous",
@@ -33,5 +40,20 @@
     "noResultsFound": "No content found containing \"{query}\"",
     "tryOtherKeywords": "Please try other keywords",
     "searchInBook": "Search keywords in the book"
+  },
+  "Sidebar": {
+    "home": "Home",
+    "notes": "Notes",
+    "settings": "Settings",
+    "builtWith": "Built with LeafNest"
+  },
+  "Settings": {
+    "title": "Settings",
+    "language": "Language",
+    "languageDesc": "Choose your preferred display language"
+  },
+  "NotesPage": {
+    "title": "Reading Notes",
+    "placeholder": "Your reading notes will be displayed here..."
   }
 }

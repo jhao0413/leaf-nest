@@ -13,10 +13,12 @@ import { Checkbox } from '@heroui/checkbox';
 import epubStructureParser from '@/utils/epubStructureParser';
 import { getFileBinary } from '@/utils/utils';
 import { Input } from '@heroui/input';
+import { useTranslations } from 'next-intl';
 
 export default function Home() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
+  const t = useTranslations('HomePage');
 
   // Stores
   const bookInfoList = useBookInfoListStore((state) => state.bookInfoList);
@@ -135,7 +137,7 @@ export default function Home() {
     <div className='flex flex-col h-full'>
       {/* Top Toolbar */}
       <div className='flex justify-between items-center mb-6 px-2 pt-2'>
-        <h2 className='text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200'>My Books</h2>
+        <h2 className='text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200'>{t('myBooks')}</h2>
         <div className='flex gap-3'>
           {/* Import / Delete Button */}
           <div
@@ -152,7 +154,7 @@ export default function Home() {
           >
             {manageMode ? <Trash2 size={18} /> : <BookDown size={18} />}
             <span className='font-lxgw text-sm font-medium'>
-              {manageMode ? 'Delete' : 'Import'}
+              {manageMode ? t('delete') : t('import')}
             </span>
             {!manageMode && (
               <Input
@@ -176,14 +178,14 @@ export default function Home() {
           >
             {manageMode ? <X size={18} /> : <Pencil size={18} />}
             <span className='font-lxgw text-sm font-medium'>
-              {manageMode ? 'Cancel' : 'Manage'}
+              {manageMode ? t('cancel') : t('manage')}
             </span>
           </div>
         </div>
       </div>
 
       {/* Book Grid */}
-      <div className='flex flex-wrap content-start gap-6'>
+      <div className='flex flex-wrap content-start gap-4'>
         {bookInfoList.map((book, index) => (
           <Card
             isFooterBlurred
@@ -241,7 +243,7 @@ export default function Home() {
         {bookInfoList.length === 0 && (
           <div className='w-full h-[50vh] flex flex-col items-center justify-center text-gray-400 font-lxgw'>
             <BookDown size={48} className='mb-4 opacity-50' />
-            <p>暂无书籍，点击右上角导入</p>
+            <p>{t('emptyState')}</p>
           </div>
         )}
       </div>

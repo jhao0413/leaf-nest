@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { Home, NotebookPen } from 'lucide-react';
+import { Home, NotebookPen, Settings } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -56,19 +57,26 @@ const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
 export const Sidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations('Sidebar');
 
   const menuItems = [
     {
-      label: '首页',
+      label: t('home'),
       icon: <Home size={20} />,
       path: '/',
       isActive: pathname === '/'
     },
     {
-      label: '笔记',
+      label: t('notes'),
       icon: <NotebookPen size={20} />,
       path: '/notes',
       isActive: pathname?.startsWith('/notes')
+    },
+    {
+      label: t('settings'),
+      icon: <Settings size={20} />,
+      path: '/settings',
+      isActive: pathname?.startsWith('/settings')
     }
   ];
 
@@ -99,7 +107,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer/Decorative (Optional) */}
-      <div className='p-4 text-xs text-center text-gray-400/60 font-lxgw'>Built with LeafNest</div>
+      <div className='p-4 text-xs text-center text-gray-400/60 font-lxgw'>{t('builtWith')}</div>
     </div>
   );
 };
