@@ -5,7 +5,6 @@ import { Button } from '@heroui/button';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useRendererConfigStore } from '@/store/fontConfigStore';
-import LocaleSwitcher from '@/components/LocaleSwitcher';
 import { BookOpen, House } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Toolbar } from '@/components/Renderer/Toolbar/Index';
@@ -224,9 +223,8 @@ const EpubReader: React.FC = () => {
               </p>
             </div>
             <div>
-              <LocaleSwitcher />
               <Button
-                className='ml-4 bg-white dark:bg-neutral-900'
+                className='bg-white dark:bg-neutral-900'
                 isIconOnly
                 variant='bordered'
                 radius='sm'
