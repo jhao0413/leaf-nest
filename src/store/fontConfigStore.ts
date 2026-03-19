@@ -15,7 +15,7 @@ type rendererConfigStore = {
 
 export const useRendererConfigStore = create<rendererConfigStore>((set) => ({
   rendererConfig: {
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: 'sans',
     fontUrl: '',
     fontFormat: '',

@@ -65,7 +65,7 @@ const FontConfig: React.FC = ({}) => {
           label={t('fontSize')}
           showSteps={true}
           maxValue={26}
-          minValue={18}
+          minValue={16}
           value={rendererConfig.fontSize}
           getValue={(fontSize) => `${fontSize}px`}
           startContent={<AArrowDown className='text-2xl' />}
