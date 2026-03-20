@@ -54,6 +54,30 @@
   },
   "NotesPage": {
     "title": "读书笔记",
-    "placeholder": "这里将显示你的读书笔记..."
+    "placeholder": "这里将显示你的读书笔记...",
+    "noHighlights": "暂无划线笔记",
+    "noHighlightsDesc": "阅读时选中文字即可创建标注",
+    "noteCount": "{count} 条笔记",
+    "progressLabel": "阅读进度",
+    "chapterProgress": "第 {chapterNumber} 章",
+    "chapterUnknown": "未阅读过",
+    "collapsedHint": "点击展开查看该书笔记",
+    "backToBooks": "返回书籍列表",
+    "bookNotFound": "未找到该书",
+    "loading": "加载中..."
+  },
+  "Highlights": {
+    "highlight": "高亮",
+    "underline": "下划线",
+    "addNote": "添加笔记",
+    "addThought": "写想法",
+    "editThought": "编辑想法",
+    "save": "保存",
+    "deleteHighlight": "删除",
+    "confirmDelete": "确定删除这条标注？",
+    "confirm": "确定",
+    "cancel": "取消",
+    "notePlaceholder": "写下你的笔记...",
+    "chapter": "第 {chapterNumber} 章"
   }
 }

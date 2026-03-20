@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 type rendererConfigType = {
   fontSize: number;
@@ -13,16 +14,21 @@ type rendererConfigStore = {
   setRendererConfig: (config: rendererConfigType) => void;
 };
 
-export const useRendererConfigStore = create<rendererConfigStore>((set) => ({
-  rendererConfig: {
-    fontSize: 18,
-    fontFamily: 'sans',
-    fontUrl: '',
-    fontFormat: '',
-    lineHeight: 1.5
-  },
-  setRendererConfig: (config: rendererConfigType) => set({ rendererConfig: config })
-}));
+export const useRendererConfigStore = create<rendererConfigStore>()(
+  persist(
+    (set) => ({
+      rendererConfig: {
+        fontSize: 18,
+        fontFamily: 'sans',
+        fontUrl: '',
+        fontFormat: '',
+        lineHeight: 1.5
+      },
+      setRendererConfig: (config: rendererConfigType) => set({ rendererConfig: config })
+    }),
+    { name: 'renderer-config' }
+  )
+);
 
 export interface Font {
   name: string;

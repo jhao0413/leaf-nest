@@ -49,6 +49,9 @@ export const useTextNavigation = () => {
         if (parent?.classList?.contains('epub-highlight')) {
           return NodeFilter.FILTER_REJECT;
         }
+        if (parent?.classList?.contains('epub-user-highlight')) {
+          return NodeFilter.FILTER_REJECT;
+        }
         return NodeFilter.FILTER_ACCEPT;
       }
     });

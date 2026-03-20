@@ -30,6 +30,10 @@ import { SearchModal } from './SearchModal';
 import { useRouter } from 'next/navigation';
 import { BookInfoModal } from '../BookInfoModal';
 import { ReadingProgressManager } from '@/utils/readingProgressManager';
+import { useTextSelection } from '@/hooks/useTextSelection';
+import { useChapterHighlightStore } from '@/store/highlightStore';
+import { applyHighlights, removeHighlightFromDOM } from '@/utils/highlightRenderer';
+import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
 const COLUMN_GAP = 100;
 
 const EpubReader: React.FC = () => {
@@ -66,8 +70,18 @@ const EpubReader: React.FC = () => {
   const latestBookInfoRef = useRef(bookInfo);
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
   const [isRestoring, setIsRestoring] = useState(true);
+  const [iframeReady, setIframeReady] = useState(false);
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
+  const { selectionInfo, popupPosition, clickedHighlightId, clickedHighlightPosition, clearSelection } =
+    useTextSelection(iframeReady);
+  const {
+    chapterHighlights,
+    setChapterHighlights,
+    addChapterHighlight,
+    removeChapterHighlight,
+    updateChapterHighlight
+  } = useChapterHighlightStore();
 
   const handleTextSearchWithPositions = useCallback(
     (searchText: string, positions: TextPosition[]) => {
@@ -95,11 +109,55 @@ const EpubReader: React.FC = () => {
     workerRef.current = worker;
     progressManagerRef.current = new ReadingProgressManager(worker);
 
+    worker.onmessage = (event: MessageEvent) => {
+      const { action, success, data } = event.data;
+      if (!success) return;
+
+      if (action === 'getHighlightsByChapter') {
+        setChapterHighlights(data);
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          applyHighlights(iframeDoc, data);
+        }
+      }
+      if (action === 'addHighlight') {
+        addChapterHighlight(data);
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          applyHighlights(iframeDoc, [data]);
+        }
+      }
+      if (action === 'deleteHighlight') {
+        removeChapterHighlight(data.id);
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          removeHighlightFromDOM(iframeDoc, data.id);
+        }
+      }
+      if (action === 'updateHighlightColor') {
+        updateChapterHighlight(data.id, { color: data.color });
+
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          const highlights = useChapterHighlightStore.getState().chapterHighlights;
+          const updated = highlights.find((h) => h.id === data.id);
+          if (updated) {
+            removeHighlightFromDOM(iframeDoc, data.id);
+            applyHighlights(iframeDoc, [updated]);
+          }
+        }
+      }
+    };
+
     return () => {
       progressManagerRef.current?.cleanup();
       worker.terminate();
     };
-  }, []);
+  }, [setChapterHighlights, addChapterHighlight, removeChapterHighlight, updateChapterHighlight]);
 
   useEffect(() => {
     latestBookInfoRef.current = bookInfo;
@@ -196,6 +254,13 @@ const EpubReader: React.FC = () => {
         handleTextSearchWithPositions,
         onPageReady
       );
+
+      // Load and apply highlights for this chapter
+      workerRef.current?.postMessage({
+        action: 'getHighlightsByChapter',
+        data: { bookId: bookInfo.id, chapterIndex: currentChapter }
+      });
+      setIframeReady(true);
     };
     if (Object.keys(bookZip.files).length === 0) return;
     processChapter();
@@ -365,6 +430,62 @@ const EpubReader: React.FC = () => {
     onSearch: onOpenSearch
   });
 
+  const handleCreateHighlight = useCallback(
+    (color: string, style: 'highlight' | 'underline' | 'note', note: string) => {
+      if (!selectionInfo || !bookInfo.id) return;
+
+      workerRef.current?.postMessage({
+        action: 'addHighlight',
+        data: {
+          bookId: bookInfo.id,
+          chapterIndex: currentChapter,
+          selectedText: selectionInfo.selectedText,
+          contextBefore: selectionInfo.contextBefore,
+          contextAfter: selectionInfo.contextAfter,
+          color,
+          style,
+          note
+        }
+      });
+
+      // Clear the iframe selection
+      const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+      renderer?.contentDocument?.getSelection()?.removeAllRanges();
+      clearSelection();
+    },
+    [selectionInfo, bookInfo.id, currentChapter, clearSelection]
+  );
+
+  const handleDeleteHighlight = useCallback(
+    (id: string) => {
+      workerRef.current?.postMessage({
+        action: 'deleteHighlight',
+        data: { id }
+      });
+      clearSelection();
+    },
+    [clearSelection]
+  );
+
+  const handleUpdateColor = useCallback((id: string, color: string) => {
+    workerRef.current?.postMessage({
+      action: 'updateHighlightColor',
+      data: { id, color }
+    });
+    clearSelection();
+  }, [clearSelection]);
+
+  const handleUpdateNote = useCallback((id: string, note: string) => {
+    workerRef.current?.postMessage({
+      action: 'updateHighlightNote',
+      data: { id, note }
+    });
+  }, []);
+
+  const clickedHighlight = clickedHighlightId
+    ? chapterHighlights.find((h) => h.id === clickedHighlightId)
+    : null;
+
   return (
     <div className='w-full h-full bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800'>
       <div className='flex w-4/5 h-12 justify-between items-center'>
@@ -412,6 +533,25 @@ const EpubReader: React.FC = () => {
             </div>
           )}
           <iframe id='epub-renderer' style={{ width: '100%', height: '100%' }}></iframe>
+
+          {popupPosition && selectionInfo && (
+            <CreateHighlightPopup
+              position={popupPosition}
+              onCreateHighlight={handleCreateHighlight}
+              onClose={clearSelection}
+            />
+          )}
+
+          {clickedHighlightPosition && clickedHighlight && (
+            <EditHighlightPopup
+              position={clickedHighlightPosition}
+              highlight={clickedHighlight}
+              onUpdateNote={handleUpdateNote}
+              onUpdateColor={handleUpdateColor}
+              onDelete={handleDeleteHighlight}
+              onClose={clearSelection}
+            />
+          )}
           <div className='w-full flex justify-between'>
             <Button
               radius='full'

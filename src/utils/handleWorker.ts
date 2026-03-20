@@ -39,6 +39,22 @@ onmessage = async (event) => {
       );
     `);
 
+    // Create highlights table
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS highlights (
+        id VARCHAR(40) PRIMARY KEY,
+        book_id VARCHAR(40) NOT NULL,
+        chapter_index INTEGER NOT NULL,
+        selected_text TEXT NOT NULL,
+        context_before VARCHAR(100),
+        context_after VARCHAR(100),
+        color VARCHAR(20) DEFAULT 'yellow',
+        style VARCHAR(20) DEFAULT 'highlight',
+        note TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     // Migrate database to add reading progress fields
     migrateDatabase(db);
   } else {
@@ -73,6 +89,27 @@ onmessage = async (event) => {
       break;
     case 'updateReadingProgress':
       await updateReadingProgress(db, event.data.data);
+      break;
+    case 'addHighlight':
+      await addHighlight(db, event.data.data);
+      break;
+    case 'getHighlightsByChapter':
+      await getHighlightsByChapter(db, event.data.data);
+      break;
+    case 'deleteHighlight':
+      await deleteHighlight(db, event.data.data);
+      break;
+    case 'updateHighlightNote':
+      await updateHighlightNote(db, event.data.data);
+      break;
+    case 'updateHighlightColor':
+      await updateHighlightColor(db, event.data.data);
+      break;
+    case 'getHighlightsByBook':
+      await getHighlightsByBook(db, event.data.data);
+      break;
+    case 'getAllHighlights':
+      await getAllHighlights(db);
       break;
     default:
       break;
@@ -174,6 +211,9 @@ const getBookById = async (db: OpfsDatabase, id: string) => {
 const deleteBook = async (db: OpfsDatabase, ids: string[]) => {
   try {
     console.log(ids);
+    db.exec({
+      sql: `DELETE FROM highlights WHERE book_id IN ('${ids.join("','")}')`
+    });
     db.exec({
       sql: `delete from books where id in ('${ids.join("','")}');`
     });
@@ -308,5 +348,139 @@ const updateReadingProgress = async (
   } catch (err) {
     console.error('Error updating reading progress:', err);
     postMessage({ success: false, action: 'updateReadingProgress', error: err });
+  }
+};
+
+const addHighlight = async (
+  db: OpfsDatabase,
+  data: {
+    bookId: string;
+    chapterIndex: number;
+    selectedText: string;
+    contextBefore: string;
+    contextAfter: string;
+    color: string;
+    style: string;
+    note: string;
+  }
+) => {
+  try {
+    const id = uuidv4();
+    db.exec({
+      sql: `INSERT INTO highlights (id, book_id, chapter_index, selected_text, context_before, context_after, color, style, note)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      bind: [
+        id,
+        data.bookId,
+        data.chapterIndex,
+        data.selectedText,
+        data.contextBefore,
+        data.contextAfter,
+        data.color,
+        data.style,
+        data.note || ''
+      ]
+    });
+    postMessage({ success: true, action: 'addHighlight', data: { ...data, id } });
+  } catch (err) {
+    console.error('Error adding highlight:', err);
+    postMessage({ success: false, action: 'addHighlight', error: err });
+  }
+};
+
+const getHighlightsByChapter = async (
+  db: OpfsDatabase,
+  data: { bookId: string; chapterIndex: number }
+) => {
+  try {
+    const highlights: object[] = [];
+    db.exec({
+      sql: 'SELECT * FROM highlights WHERE book_id = ? AND chapter_index = ? ORDER BY created_at',
+      bind: [data.bookId, data.chapterIndex],
+      rowMode: 'object',
+      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+    });
+    postMessage({ success: true, action: 'getHighlightsByChapter', data: highlights });
+  } catch (err) {
+    console.error('Error getting highlights by chapter:', err);
+    postMessage({ success: false, action: 'getHighlightsByChapter', error: err });
+  }
+};
+
+const deleteHighlight = async (db: OpfsDatabase, data: { id: string }) => {
+  try {
+    db.exec({
+      sql: 'DELETE FROM highlights WHERE id = ?',
+      bind: [data.id]
+    });
+    postMessage({ success: true, action: 'deleteHighlight', data: { id: data.id } });
+  } catch (err) {
+    console.error('Error deleting highlight:', err);
+    postMessage({ success: false, action: 'deleteHighlight', error: err });
+  }
+};
+
+const updateHighlightNote = async (db: OpfsDatabase, data: { id: string; note: string }) => {
+  try {
+    db.exec({
+      sql: 'UPDATE highlights SET note = ? WHERE id = ?',
+      bind: [data.note, data.id]
+    });
+    postMessage({ success: true, action: 'updateHighlightNote', data });
+  } catch (err) {
+    console.error('Error updating highlight note:', err);
+    postMessage({ success: false, action: 'updateHighlightNote', error: err });
+  }
+};
+
+const updateHighlightColor = async (db: OpfsDatabase, data: { id: string; color: string }) => {
+  try {
+    db.exec({
+      sql: 'UPDATE highlights SET color = ? WHERE id = ?',
+      bind: [data.color, data.id]
+    });
+    postMessage({ success: true, action: 'updateHighlightColor', data });
+  } catch (err) {
+    console.error('Error updating highlight color:', err);
+    postMessage({ success: false, action: 'updateHighlightColor', error: err });
+  }
+};
+
+const getHighlightsByBook = async (db: OpfsDatabase, data: { bookId: string }) => {
+  try {
+    const highlights: object[] = [];
+    db.exec({
+      sql: `SELECT h.*, b.name as book_name, b.cover_blob as book_cover_blob,
+            b.current_chapter as book_current_chapter, b.current_page as book_current_page, b.percentage as book_percentage
+            FROM highlights h
+            LEFT JOIN books b ON h.book_id = b.id
+            WHERE h.book_id = ?
+            ORDER BY h.created_at DESC`,
+      bind: [data.bookId],
+      rowMode: 'object',
+      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+    });
+    postMessage({ success: true, action: 'getHighlightsByBook', data: highlights });
+  } catch (err) {
+    console.error('Error getting highlights by book:', err);
+    postMessage({ success: false, action: 'getHighlightsByBook', error: err });
+  }
+};
+
+const getAllHighlights = async (db: OpfsDatabase) => {
+  try {
+    const highlights: object[] = [];
+    db.exec({
+      sql: `SELECT h.*, b.name as book_name, b.cover_blob as book_cover_blob
+            , b.current_chapter as book_current_chapter, b.current_page as book_current_page, b.percentage as book_percentage
+            FROM highlights h LEFT JOIN books b ON h.book_id = b.id
+            ORDER BY h.created_at DESC`,
+      rowMode: 'object',
+      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+    });
+    postMessage({ success: true, action: 'getAllHighlights', data: highlights });
+  } catch (err) {
+    console.error('Error getting all highlights:', err);
+    postMessage({ success: false, action: 'getAllHighlights', error: err });
   }
 };

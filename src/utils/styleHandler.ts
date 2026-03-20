@@ -76,6 +76,14 @@ export const applyFontAndThemeStyles = (
           max-width: ${imgMaxWidth}px;
           height: auto;
         }
+
+        .epub-user-highlight {
+          cursor: pointer;
+          transition: opacity 0.2s;
+        }
+        .epub-user-highlight:hover {
+          opacity: 0.7;
+        }
       `;
 
   if (style) {

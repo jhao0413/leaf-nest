@@ -54,6 +54,30 @@
   },
   "NotesPage": {
     "title": "Reading Notes",
-    "placeholder": "Your reading notes will be displayed here..."
+    "placeholder": "Your reading notes will be displayed here...",
+    "noHighlights": "No highlights yet",
+    "noHighlightsDesc": "Select text while reading to create highlights",
+    "noteCount": "{count} notes",
+    "progressLabel": "Progress",
+    "chapterProgress": "Chapter {chapterNumber}",
+    "chapterUnknown": "Not started",
+    "collapsedHint": "Click to expand to view this book's notes",
+    "backToBooks": "Back to books",
+    "bookNotFound": "Book not found",
+    "loading": "Loading..."
+  },
+  "Highlights": {
+    "highlight": "Highlight",
+    "underline": "Underline",
+    "addNote": "Add note",
+    "addThought": "Write thought",
+    "editThought": "Edit thought",
+    "save": "Save",
+    "deleteHighlight": "Delete",
+    "confirmDelete": "Delete this highlight?",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "notePlaceholder": "Write a note...",
+    "chapter": "Chapter {chapterNumber}"
   }
 }
