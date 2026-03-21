@@ -1,6 +1,8 @@
 # Leaf Nest
 
-A modern, browser-based EPUB reader application with local storage support.
+Leaf Nest is a browser-based EPUB reader and note-taking app, designed for private reading workflows with local-first storage.
+
+English | [简体中文](README.zh-CN.md)
 
 ## Screenshots
 
@@ -8,14 +10,17 @@ A modern, browser-based EPUB reader application with local storage support.
 
 ## Features
 
-- 📚 **Browser-based Storage**: All books stored locally using SQLite WASM with OPFS
-- 🌍 **Bilingual Support**: English and Chinese interface
-- 📖 **Multiple Reading Modes**: Single column and double column layouts
-- 🎨 **Customizable Reading Experience**: Font size, family, line height, and theme settings
-- 🔍 **Full-text Search**: Search across all chapters in your books
-- 📍 **Reading Progress**: Automatic tracking and restoration of reading position
-- 📱 **Responsive Design**: Optimized for both desktop and mobile devices
-- 🌙 **Dark/Light Theme**: Built-in theme switching
+- 📚 **EPUB import + library management**: Import `.epub` files in the browser, show covers + metadata, and support batch delete with manage mode.
+- 📖 **Two reading layouts**: Automatic mobile single-column mode and desktop double-column mode, switchable at runtime.
+- 📑 **Chapter navigation + progress persistence**: Restore exact chapter/page and text anchor from SQLite-stored state.
+- 🎨 **Reading customization**: Font size, font family, line-height/formatting, theme (light/dark), and layout mode controls.
+- 🔍 **In-book full-text search**: Build per-book text index, cache it locally, and jump to match positions.
+- 🖊️ **Notes & highlights**: Highlight or underline selected text and attach notes; edit note content and color; delete entries.
+- 📚 **Reading Notes view**: Central notes list with per-book grouping and quick jump back to reader.
+- 🌍 **Bilingual UI**: English / 简体中文 with persistence.
+- 🎮 **Reader ergonomics**: Keyboard shortcuts for navigation (arrows/space) and search shortcut (`Ctrl/Cmd + K`).
+- 🧵 **Performance-first architecture**: SQLite WASM + OPFS + Web Worker to avoid main-thread blocking.
+- 📱 **Responsive interface**: Sidebar reader pages and toolbar adapt to desktop/mobile usage.
 
 ## Tech Stack
 
@@ -26,6 +31,7 @@ A modern, browser-based EPUB reader application with local storage support.
 - **Internationalization**: next-intl
 - **Theme**: next-themes
 - **Package Manager**: pnpm 9.0.0
+- **Core Libraries**: JSZip, lucide-react, framer-motion/motion, lodash, uuid
 
 ## Getting Started
 
@@ -73,38 +79,47 @@ leaf-nest/
 ├── src/
 │   ├── app/                 # Next.js App Router
 │   │   ├── reader/[id]/     # Reader page
+│   │   ├── notes/           # Notes list and per-book notes pages
+│   │   ├── settings/        # Language and global settings
 │   │   └── layout.tsx       # Root layout
 │   ├── components/          # React components
 │   │   ├── Renderer/        # EPUB renderers (single/double column)
+│   │   │   ├── SearchModal.tsx       # Full-book search modal
+│   │   │   ├── Toolbar/              # Reader toolbar controls
+│   │   │   └── HighlightPopup.tsx     # Highlight create/edit overlays
 │   │   └── ui/              # UI components
+│   ├── hooks/               # Custom React hooks
 │   ├── store/               # Zustand stores
 │   ├── utils/               # Utility functions
-│   │   ├── handleWorker.ts  # Web Worker for database operations
+│   │   ├── handleWorker.ts  # Web Worker for SQLite operations
 │   │   ├── chapterLoader.ts # Chapter content loading
-│   │   └── readingProgressManager.ts
-│   ├── hooks/               # Custom React hooks
+│   │   ├── fullBookTextIndexer.ts # Full-book full-text indexer
+│   │   ├── readingProgressManager.ts # Debounced progress persistence
+│   │   └── highlightRenderer.ts       # Render highlights into reader iframe
 │   ├── i18n/                # Internationalization config
 │   └── messages/            # Translation files (en, zh)
 ├── public/                  # Static assets
 └── next.config.mjs          # Next.js configuration
 ```
 
-## Key Features Explained
+## Implementation Notes
 
 ### Database & Storage
 
-The application uses SQLite WASM with Origin Private File System (OPFS) for persistent browser storage:
+The app runs SQLite WASM against Origin Private File System (OPFS) so books, progress, highlights, and search indexes remain in-browser:
 
 - **books**: Book metadata, file blobs, covers, table of contents, and reading progress
-- **book_text_index**: Full-text search indexes
+- **book_text_index**: Full-text search cache (chapter-level text index)
+- **highlights**: Color/position/notes for selected text
 
-All database operations run in Web Workers to prevent blocking the main thread.
+Database reads/writes are processed in a dedicated Web Worker.
 
 ### EPUB Rendering
 
-- Two rendering modes: SingleColumnRenderer (mobile) and DoubleColumnRenderer (desktop)
-- Iframe-based rendering with image loading optimization
-- Automatic pagination and page calculation
+- SingleColumnRenderer and DoubleColumnRenderer are both iframe-based and support responsive behavior.
+- Double-column mode pre-renders page width/position data for horizontal page navigation.
+- A lightweight chapter-to-chapter render pipeline handles parsing, font/theme application, and image-ready pagination.
+- Menu + TOC panel supports quick chapter jump.
 
 ### Reading Progress
 
@@ -116,10 +131,19 @@ The ReadingProgressManager automatically saves:
 - Reading percentage
 - Last read timestamp
 
-## License
+### Notes
 
-MIT
+- Highlights can be created with color and style variants and can be edited/deleted.
+- Notes are synchronized per chapter in the same local DB and shown in a dedicated notes center.
+- Deleting a book also deletes its related highlights and index data.
 
-## Author
+### Full-text Search
 
-Jhao <jhao413@qq.com>
+- Reader can trigger full-book indexing (background) and query across all indexed chapters.
+- Search results show surrounding context and jump directly to the matched chapter/page.
+
+### Shortcuts
+
+- Arrow keys and space bar for navigation in reader.
+- `Ctrl/Cmd + K` opens search on supporting platforms.
+
