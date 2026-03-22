@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Trash2, PenLine, Highlighter, Underline } from 'lucide-react';
 import { Highlight } from '@/store/highlightStore';
@@ -218,30 +218,21 @@ function useAdjustedPosition(
   ref: React.RefObject<HTMLDivElement | null>,
   position: PopupPosition
 ): PopupPosition {
-  const [adjusted, setAdjusted] = useState(position);
+  if (typeof window === 'undefined' || !ref.current) return position;
 
-  useEffect(() => {
-    if (!ref.current) {
-      setAdjusted(position);
-      return;
-    }
+  const rect = ref.current.getBoundingClientRect();
+  let x = position.x;
+  let y = position.y;
 
-    const rect = ref.current.getBoundingClientRect();
-    let x = position.x;
-    let y = position.y;
+  // Prevent overflow on left/right
+  const halfWidth = rect.width / 2;
+  if (x - halfWidth < 8) x = halfWidth + 8;
+  if (x + halfWidth > window.innerWidth - 8) x = window.innerWidth - halfWidth - 8;
 
-    // Prevent overflow on left/right
-    const halfWidth = rect.width / 2;
-    if (x - halfWidth < 8) x = halfWidth + 8;
-    if (x + halfWidth > window.innerWidth - 8) x = window.innerWidth - halfWidth - 8;
+  // If popup would go above viewport, show below selection instead
+  if (y - rect.height < 8) {
+    y = position.y + 40;
+  }
 
-    // If popup would go above viewport, show below selection instead
-    if (y - rect.height < 8) {
-      y = position.y + 40;
-    }
-
-    setAdjusted({ x, y });
-  }, [ref, position]);
-
-  return adjusted;
+  return { x, y };
 }

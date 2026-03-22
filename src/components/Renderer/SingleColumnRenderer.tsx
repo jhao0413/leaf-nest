@@ -124,6 +124,36 @@ const EpubReader: React.FC = () => {
     latestStyleRef.current = { currentFontConfig, theme, rendererMode };
   }, [currentFontConfig, theme, rendererMode]);
 
+  const handleIframeLoad = useCallback((renderer: HTMLIFrameElement) => {
+    renderer.style.visibility = 'hidden';
+
+    const handleLoad = () => {
+      const iframeDoc = renderer.contentDocument;
+
+      if (!iframeDoc || !renderer.contentWindow) {
+        throw new Error('Iframe document not found');
+      }
+
+      renderer.style.height = '0px';
+      if (iframeDoc.body) {
+        renderer.style.visibility = 'visible';
+        const body = iframeDoc.body;
+        const html = iframeDoc.documentElement;
+        const height = Math.max(
+          body.scrollHeight,
+          body.offsetHeight,
+          html.clientHeight,
+          html.scrollHeight,
+          html.offsetHeight
+        );
+        renderer.style.height = `${height + 40}px`;
+        renderer.removeEventListener('load', handleLoad);
+      }
+    };
+
+    renderer.addEventListener('load', handleLoad);
+  }, []);
+
   // Save progress on unmount (only when component unmounts, not on chapter change)
   useEffect(() => {
     return () => {
@@ -185,7 +215,7 @@ const EpubReader: React.FC = () => {
       });
       setIframeReady(true);
     });
-  }, [bookInfo, bookZip, currentChapter]);
+  }, [bookInfo, bookZip, currentChapter, handleIframeLoad]);
 
   useEffect(() => {
     const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
@@ -195,35 +225,6 @@ const EpubReader: React.FC = () => {
 
     applyFontAndThemeStyles(currentFontConfig, theme, rendererMode, 0);
   }, [currentFontConfig, theme, rendererMode]);
-
-  const handleIframeLoad = (renderer: HTMLIFrameElement) => {
-    renderer.style.visibility = 'hidden';
-    const handleLoad = () => {
-      const iframeDoc = renderer.contentDocument;
-
-      if (!iframeDoc || !renderer.contentWindow) {
-        throw new Error('Iframe document not found');
-      }
-
-      renderer.style.height = '0px';
-      if (iframeDoc.body) {
-        renderer.style.visibility = 'visible';
-        const body = iframeDoc.body;
-        const html = iframeDoc.documentElement;
-        const height = Math.max(
-          body.scrollHeight,
-          body.offsetHeight,
-          html.clientHeight,
-          html.scrollHeight,
-          html.offsetHeight
-        );
-        renderer.style.height = `${height + 40}px`;
-        renderer.removeEventListener('load', handleLoad);
-      }
-    };
-
-    renderer.addEventListener('load', handleLoad);
-  };
 
   const handlePrevChapter = () => {
     // Save progress immediately when switching chapter

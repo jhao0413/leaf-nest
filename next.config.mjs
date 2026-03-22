@@ -25,7 +25,7 @@ const nextConfig = {
       }
     ];
   },
-  webpack: (config, { isServer, webpack }) => {
+  webpack: (config, { isServer }) => {
     if (!isServer) {
       config.output.globalObject = 'self';
 

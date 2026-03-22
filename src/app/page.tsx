@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardFooter } from '@heroui/card';
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { Image } from '@heroui/image';
 import { Info, BookDown, Pencil, Trash2, X } from 'lucide-react';
 import { BookBasicInfoType, useBookInfoListStore } from '@/store/bookInfoStore';
@@ -44,8 +44,10 @@ export default function Home() {
   }, [worker]);
 
   // Worker Message Handler
-  if (worker) {
-    worker.onmessage = (event) => {
+  useEffect(() => {
+    if (!worker) return;
+
+    const handleMessage = (event: MessageEvent) => {
       if (
         event.data.success &&
         (event.data.action === 'addBook' || event.data.action === 'deleteBook')
@@ -56,14 +58,23 @@ export default function Home() {
         setManageMode(false);
       } else if (event.data.success && event.data.action === 'query') {
         // Update store with query results
-        event.data.data.map((item: BookBasicInfoType) => {
-          if (!item.coverBlob) return;
-          item.coverUrl = URL.createObjectURL(new Blob([item.coverBlob], { type: 'image/jpeg' }));
-        });
-        setBookInfoList(event.data.data);
+        const bookList = (event.data.data as BookBasicInfoType[]).map((item) => ({
+          ...item,
+          coverUrl: item.coverBlob
+            ? URL.createObjectURL(new Blob([item.coverBlob], { type: 'image/jpeg' }))
+            : item.coverUrl
+        }));
+
+        setBookInfoList(bookList);
       }
     };
-  }
+
+    worker.addEventListener('message', handleMessage);
+
+    return () => {
+      worker.removeEventListener('message', handleMessage);
+    };
+  }, [worker, setBookInfoList, setSelectedBookIds, setManageMode]);
 
   // File Import Handlers
   const handleButtonClick = () => {
@@ -117,19 +128,10 @@ export default function Home() {
   };
 
   // Book Info Modal
-  const bookInfoRef = useRef<BookBasicInfoType>({
-    name: '',
-    creator: '',
-    publisher: '',
-    identifier: '',
-    pubdate: '',
-    coverPath: '',
-    toc: [] as { text: string; path: string; file: string }[],
-    language: ''
-  });
+  const [modalBookInfo, setModalBookInfo] = useState<BookBasicInfoType | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const openBookinfoModal = (book: BookBasicInfoType) => {
-    bookInfoRef.current = book;
+    setModalBookInfo(book);
     onOpen();
   };
 
@@ -248,7 +250,9 @@ export default function Home() {
         )}
       </div>
 
-      <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={bookInfoRef.current} />
+      {modalBookInfo && (
+        <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={modalBookInfo} />
+      )}
     </div>
   );
 }

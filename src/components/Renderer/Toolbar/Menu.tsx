@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MenuIcon } from '@/components/ui/menu';
@@ -10,24 +10,24 @@ import { useTheme } from 'next-themes';
 
 const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const mode = useRendererModeStore((state) => state.rendererMode);
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
+  const coverUrl = useMemo(() => {
+    if (!bookInfo.coverBlob) return null;
+    return URL.createObjectURL(new Blob([bookInfo.coverBlob], { type: 'image/jpeg' }));
+  }, [bookInfo.coverBlob]);
+  const mode = useRendererModeStore((state) => state.rendererMode);
   const currentChapter = useReaderStateStore((state) => state.currentChapter);
   const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
   const setCurrentPageIndex = useReaderStateStore((state) => state.setCurrentPageIndex);
   const { theme } = useTheme();
 
   useEffect(() => {
-    if (bookInfo.coverBlob) {
-      const url = URL.createObjectURL(new Blob([bookInfo.coverBlob], { type: 'image/jpeg' }));
-      setCoverUrl(url);
-
+    if (coverUrl) {
       return () => {
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(coverUrl);
       };
     }
-  }, [bookInfo]);
+  }, [coverUrl]);
 
   const handleMenuClick = () => {
     setIsOpen(!isOpen);

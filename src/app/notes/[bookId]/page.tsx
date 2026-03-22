@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { Trash2, BookOpen, Highlighter, ChevronLeft, Loader2 } from 'lucide-react';
@@ -40,12 +41,27 @@ export default function BookNotesPage() {
   const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
 
   const [loading, setLoading] = useState(true);
-  const [workerRef, setWorkerRef] = useState<Worker | null>(null);
+  const workerRef = useRef<Worker | null>(null);
   const [highlights, setHighlights] = useState<HighlightWithBook[]>([]);
   const [bookName, setBookName] = useState('Unknown');
   const [bookCoverBlob, setBookCoverBlob] = useState<Uint8Array | null>(null);
   const [currentChapter, setCurrentChapterFromDb] = useState<number | undefined>(undefined);
   const [percentage, setPercentage] = useState<number | undefined>(undefined);
+  const bookCoverUrl = useMemo(
+    () =>
+      bookCoverBlob
+        ? URL.createObjectURL(new Blob([bookCoverBlob as BlobPart], { type: 'image/jpeg' }))
+        : null,
+    [bookCoverBlob]
+  );
+
+  useEffect(() => {
+    return () => {
+      if (bookCoverUrl) {
+        URL.revokeObjectURL(bookCoverUrl);
+      }
+    };
+  }, [bookCoverUrl]);
 
   const loadHighlights = useCallback((worker: Worker, id: string) => {
     worker.postMessage({ action: 'getHighlightsByBook', data: { bookId: id } });
@@ -55,7 +71,7 @@ export default function BookNotesPage() {
     if (!bookId) return;
 
     const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
-    setWorkerRef(worker);
+    workerRef.current = worker;
 
     worker.onmessage = (event: MessageEvent) => {
       const { action, success, data } = event.data;
@@ -85,11 +101,14 @@ export default function BookNotesPage() {
     };
 
     loadHighlights(worker, bookId);
-    return () => worker.terminate();
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
   }, [bookId, loadHighlights]);
 
   const handleDelete = (id: string) => {
-    workerRef?.postMessage({ action: 'deleteHighlight', data: { id } });
+    workerRef.current?.postMessage({ action: 'deleteHighlight', data: { id } });
   };
 
   const handleNavigate = (chapterIndex: number) => {
@@ -178,12 +197,15 @@ export default function BookNotesPage() {
 
         <div className='bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4 mb-4'>
           <div className='flex items-start gap-3'>
-            {bookCoverBlob ? (
-              <img
-                src={URL.createObjectURL(new Blob([bookCoverBlob as BlobPart]))}
+            {bookCoverUrl ? (
+              <Image
+                src={bookCoverUrl}
                 alt={bookName}
                 title={bookName}
+                width={48}
+                height={64}
                 className='w-12 h-16 object-cover rounded-md shadow-sm'
+                unoptimized
               />
             ) : (
               <div className='w-12 h-16 bg-gray-200 dark:bg-neutral-700 rounded-md flex items-center justify-center'>

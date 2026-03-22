@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { BookOpen, ChevronRight, Highlighter, Loader2 } from 'lucide-react';
@@ -9,6 +10,7 @@ interface GroupedHighlights {
   bookId: string;
   bookName: string;
   bookCoverBlob: Uint8Array | null;
+  bookCoverUrl?: string;
   noteCount: number;
   currentChapter?: number;
   percentage?: number;
@@ -40,18 +42,26 @@ export default function NotesPage() {
       if (action === 'getAllHighlights') {
         const groupMap = new Map<string, GroupedHighlights>();
         for (const h of data) {
-          if (!groupMap.has(h.bookId)) {
+        if (!groupMap.has(h.bookId)) {
             groupMap.set(h.bookId, {
               bookId: h.bookId,
               bookName: h.bookName || 'Unknown',
               bookCoverBlob: h.bookCoverBlob,
+              bookCoverUrl: h.bookCoverBlob
+                ? URL.createObjectURL(new Blob([h.bookCoverBlob], { type: 'image/jpeg' }))
+                : undefined,
               noteCount: 0,
               currentChapter: h.bookCurrentChapter,
               percentage: h.bookPercentage
             });
           }
           const group = groupMap.get(h.bookId);
-          if (group) group.noteCount += 1;
+          if (group) {
+            group.noteCount += 1;
+            if (!group.bookCoverUrl && group.bookCoverBlob) {
+              group.bookCoverUrl = URL.createObjectURL(new Blob([group.bookCoverBlob], { type: 'image/jpeg' }));
+            }
+          }
         }
         setBooks(Array.from(groupMap.values()));
         setLoading(false);
@@ -132,12 +142,15 @@ export default function NotesPage() {
             onClick={() => goToBookNotes(book.bookId)}
           >
             <div className='flex items-start gap-3'>
-              {book.bookCoverBlob ? (
-                <img
-                  src={URL.createObjectURL(new Blob([book.bookCoverBlob as BlobPart]))}
+              {book.bookCoverUrl ? (
+                <Image
+                  src={book.bookCoverUrl}
                   alt={book.bookName}
                   title={book.bookName}
+                  width={40}
+                  height={56}
                   className='w-10 h-14 object-cover rounded-md shadow-sm'
+                  unoptimized
                 />
               ) : (
                 <div className='w-10 h-14 bg-gray-200 dark:bg-neutral-700 rounded-md flex items-center justify-center'>
