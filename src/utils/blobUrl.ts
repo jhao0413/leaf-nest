@@ -1,10 +1,13 @@
 type BinaryLike = ArrayBuffer | SharedArrayBuffer | Uint8Array | null;
 
-const toArrayBuffer = (binary: Exclude<BinaryLike, null>) => {
+const toArrayBuffer = (binary: Exclude<BinaryLike, null>): ArrayBuffer => {
   if (binary instanceof ArrayBuffer) return binary;
 
-  const normalized = binary instanceof Uint8Array ? binary : new Uint8Array(binary);
-  return new Uint8Array(normalized).buffer;
+  if (binary instanceof Uint8Array) {
+    return Uint8Array.from(binary).buffer;
+  }
+
+  return Uint8Array.from(new Uint8Array(binary)).buffer;
 };
 
 export const createBlobUrlFromBinary = (binary?: BinaryLike, type = 'image/jpeg') => {
