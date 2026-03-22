@@ -12,6 +12,7 @@ import { loadZip } from '@/utils/zipUtils';
 import { useEffect } from 'react';
 import React from 'react';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -36,9 +37,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
         const bookData = event.data.data;
 
         // Process cover and TOC
-        bookData.coverUrl = URL.createObjectURL(
-          new Blob([bookData.coverBlob], { type: 'image/jpeg' })
-        );
+        bookData.coverUrl = createBlobUrlFromBinary(bookData.coverBlob) || '';
         bookData.toc = JSON.parse(bookData.toc);
 
         // Set book info

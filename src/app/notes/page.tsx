@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { BookOpen, ChevronRight, Highlighter, Loader2 } from 'lucide-react';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 interface GroupedHighlights {
   bookId: string;
@@ -48,7 +49,7 @@ export default function NotesPage() {
               bookName: h.bookName || 'Unknown',
               bookCoverBlob: h.bookCoverBlob,
               bookCoverUrl: h.bookCoverBlob
-                ? URL.createObjectURL(new Blob([h.bookCoverBlob], { type: 'image/jpeg' }))
+                ? createBlobUrlFromBinary(h.bookCoverBlob)
                 : undefined,
               noteCount: 0,
               currentChapter: h.bookCurrentChapter,
@@ -59,7 +60,7 @@ export default function NotesPage() {
           if (group) {
             group.noteCount += 1;
             if (!group.bookCoverUrl && group.bookCoverBlob) {
-              group.bookCoverUrl = URL.createObjectURL(new Blob([group.bookCoverBlob], { type: 'image/jpeg' }));
+              group.bookCoverUrl = createBlobUrlFromBinary(group.bookCoverBlob);
             }
           }
         }

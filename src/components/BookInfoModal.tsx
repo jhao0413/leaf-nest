@@ -5,6 +5,7 @@ import { Tooltip } from '@heroui/tooltip';
 import { useTranslations } from 'next-intl';
 import { BookBasicInfoType } from '@/store/bookInfoStore';
 import dayjs from 'dayjs';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 interface BookInfoModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
                     width={340}
                     height={480}
                     src={
-                      bookInfo.coverBlob ? URL.createObjectURL(new Blob([bookInfo.coverBlob])) : ''
+                      bookInfo.coverBlob ? createBlobUrlFromBinary(bookInfo.coverBlob) : ''
                     }
                   />
                 </div>

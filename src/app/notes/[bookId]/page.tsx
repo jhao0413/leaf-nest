@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter, useParams } from 'next/navigation';
 import { Trash2, BookOpen, Highlighter, ChevronLeft, Loader2 } from 'lucide-react';
 import { useReaderStateStore } from '@/store/readerStateStore';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 interface HighlightWithBook {
   id: string;
@@ -49,9 +50,7 @@ export default function BookNotesPage() {
   const [percentage, setPercentage] = useState<number | undefined>(undefined);
   const bookCoverUrl = useMemo(
     () =>
-      bookCoverBlob
-        ? URL.createObjectURL(new Blob([bookCoverBlob as BlobPart], { type: 'image/jpeg' }))
-        : null,
+      bookCoverBlob ? createBlobUrlFromBinary(bookCoverBlob) : null,
     [bookCoverBlob]
   );
 

@@ -14,6 +14,7 @@ import epubStructureParser from '@/utils/epubStructureParser';
 import { getFileBinary } from '@/utils/utils';
 import { Input } from '@heroui/input';
 import { useTranslations } from 'next-intl';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 export default function Home() {
   const router = useRouter();
@@ -61,7 +62,7 @@ export default function Home() {
         const bookList = (event.data.data as BookBasicInfoType[]).map((item) => ({
           ...item,
           coverUrl: item.coverBlob
-            ? URL.createObjectURL(new Blob([item.coverBlob], { type: 'image/jpeg' }))
+            ? createBlobUrlFromBinary(item.coverBlob)
             : item.coverUrl
         }));
 

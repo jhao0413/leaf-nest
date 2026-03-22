@@ -7,13 +7,14 @@ import { useRendererModeStore } from '@/store/rendererModeStore';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useTheme } from 'next-themes';
+import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const coverUrl = useMemo(() => {
     if (!bookInfo.coverBlob) return null;
-    return URL.createObjectURL(new Blob([bookInfo.coverBlob], { type: 'image/jpeg' }));
+    return createBlobUrlFromBinary(bookInfo.coverBlob);
   }, [bookInfo.coverBlob]);
   const mode = useRendererModeStore((state) => state.rendererMode);
   const currentChapter = useReaderStateStore((state) => state.currentChapter);
