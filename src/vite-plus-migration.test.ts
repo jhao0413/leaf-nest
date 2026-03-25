@@ -70,6 +70,45 @@ describe('vite+ migration', () => {
     expect(fs.existsSync(path.join(repoRoot, '.prettierrc.json'))).toBe(false);
   });
 
+  it('pins vercel deployment to vite with static output and spa rewrites', () => {
+    const vercelConfigPath = path.join(repoRoot, 'vercel.json');
+
+    expect(fs.existsSync(vercelConfigPath)).toBe(true);
+
+    const vercelConfig = JSON.parse(fs.readFileSync(vercelConfigPath, 'utf8')) as {
+      framework?: string | null;
+      buildCommand?: string | null;
+      outputDirectory?: string;
+      rewrites?: Array<{ source: string; destination: string }>;
+      headers?: Array<{ source: string; headers: Array<{ key: string; value: string }> }>;
+    };
+
+    expect(vercelConfig.framework).toBe('vite');
+    expect(vercelConfig.buildCommand).toBe('pnpm build');
+    expect(vercelConfig.outputDirectory).toBe('dist');
+    expect(vercelConfig.rewrites).toContainEqual({
+      source: '/(.*)',
+      destination: '/index.html'
+    });
+    expect(vercelConfig.headers).toContainEqual({
+      source: '/(.*)',
+      headers: [
+        {
+          key: 'Cross-Origin-Opener-Policy',
+          value: 'same-origin'
+        },
+        {
+          key: 'Cross-Origin-Embedder-Policy',
+          value: 'require-corp'
+        },
+        {
+          key: 'Cross-Origin-Resource-Policy',
+          value: 'cross-origin'
+        }
+      ]
+    });
+  });
+
   it('removes next-specific runtime remnants from source and ignore rules', () => {
     const providersSource = fs.readFileSync(
       path.join(repoRoot, 'src', 'app', 'providers.tsx'),
