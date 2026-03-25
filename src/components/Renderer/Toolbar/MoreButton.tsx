@@ -23,15 +23,15 @@ export const MoreButton = () => {
   }, [isToolbarExpanded]);
 
   return (
-    <div className='sm:hidden'>
+    <div className="sm:hidden">
       <Button
-        className='more-button ml-2 bg-white dark:bg-neutral-900'
+        className="more-button ml-2 bg-white dark:bg-neutral-900"
         isIconOnly
-        variant='bordered'
-        radius='sm'
+        variant="bordered"
+        radius="sm"
         onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
       >
-        <MoreVertical size={16} className='dark:bg-neutral-900' />
+        <MoreVertical size={16} className="dark:bg-neutral-900" />
       </Button>
       <div
         className={

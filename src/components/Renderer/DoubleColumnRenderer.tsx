@@ -2,13 +2,13 @@
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, House, Search, Loader2 } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from '@/i18n';
 import { Button } from '@heroui/button';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useRendererConfigStore } from '@/store/fontConfigStore';
 import { Toolbar } from '@/components/Renderer/Toolbar/Index';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/theme';
 import { useBookZipStore } from '@/store/bookZipStore';
 import { loadChapterContent } from '@/utils/chapterLoader';
 import { parseAndProcessChapter } from '@/utils/chapterParser';
@@ -27,13 +27,14 @@ import { TextPosition, TextPositionMapper } from '@/utils/textPositionMapper';
 import { Input } from '@heroui/input';
 import { Kbd } from '@heroui/kbd';
 import { SearchModal } from './SearchModal';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { BookInfoModal } from '../BookInfoModal';
 import { ReadingProgressManager } from '@/utils/readingProgressManager';
 import { useTextSelection } from '@/hooks/useTextSelection';
 import { useChapterHighlightStore } from '@/store/highlightStore';
 import { applyHighlights, removeHighlightFromDOM } from '@/utils/highlightRenderer';
 import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
+import { createHandleWorker } from '@/utils/createHandleWorker';
 const COLUMN_GAP = 100;
 
 const EpubReader: React.FC = () => {
@@ -73,8 +74,13 @@ const EpubReader: React.FC = () => {
   const [iframeReady, setIframeReady] = useState(false);
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
-  const { selectionInfo, popupPosition, clickedHighlightId, clickedHighlightPosition, clearSelection } =
-    useTextSelection(iframeReady);
+  const {
+    selectionInfo,
+    popupPosition,
+    clickedHighlightId,
+    clickedHighlightPosition,
+    clearSelection
+  } = useTextSelection(iframeReady);
   const {
     chapterHighlights,
     setChapterHighlights,
@@ -105,7 +111,7 @@ const EpubReader: React.FC = () => {
 
   // Initialize worker and progress manager
   useEffect(() => {
-    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
+    const worker = createHandleWorker();
     workerRef.current = worker;
     progressManagerRef.current = new ReadingProgressManager(worker);
 
@@ -467,13 +473,16 @@ const EpubReader: React.FC = () => {
     [clearSelection]
   );
 
-  const handleUpdateColor = useCallback((id: string, color: string) => {
-    workerRef.current?.postMessage({
-      action: 'updateHighlightColor',
-      data: { id, color }
-    });
-    clearSelection();
-  }, [clearSelection]);
+  const handleUpdateColor = useCallback(
+    (id: string, color: string) => {
+      workerRef.current?.postMessage({
+        action: 'updateHighlightColor',
+        data: { id, color }
+      });
+      clearSelection();
+    },
+    [clearSelection]
+  );
 
   const handleUpdateNote = useCallback((id: string, note: string) => {
     workerRef.current?.postMessage({
@@ -487,9 +496,14 @@ const EpubReader: React.FC = () => {
     : null;
 
   return (
-    <div className='w-full h-full bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800'>
-      <div className='flex w-4/5 h-12 justify-between items-center'>
-        <div className='flex items-center cursor-pointer' onClick={onOpen}>
+    <div className="w-full h-full bg-gray-100 flex justify-center items-center flex-col dark:bg-neutral-800">
+      <div className="flex w-4/5 h-12 justify-between items-center">
+        <button
+          type="button"
+          className="flex items-center"
+          onClick={onOpen}
+          aria-label="Open book details"
+        >
           <BookOpen size={20} />
           <p
             className={`font-bold text-lg font-lxgw max-w-lg truncate ${
@@ -499,13 +513,13 @@ const EpubReader: React.FC = () => {
           >
             {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
           </p>
-        </div>
-        <div className='flex'>
+        </button>
+        <div className="flex">
           <Input
-            className='w-40 mr-4'
-            color='default'
-            radius='full'
-            variant='bordered'
+            className="w-40 mr-4"
+            color="default"
+            radius="full"
+            variant="bordered"
             placeholder={'Search'}
             onClick={onOpenSearch}
             startContent={<Search size={16} />}
@@ -513,26 +527,30 @@ const EpubReader: React.FC = () => {
           />
           {/* <LocaleSwitcher /> */}
           <Button
-            className='ml-4 bg-white dark:bg-neutral-900'
+            className="ml-4 bg-white dark:bg-neutral-900"
             isIconOnly
-            variant='shadow'
-            radius='sm'
+            variant="shadow"
+            radius="sm"
             onPress={() => router.push('/')}
           >
-            <House size={16} className='dark:bg-neutral-900' />
+            <House size={16} className="dark:bg-neutral-900" />
           </Button>
         </div>
       </div>
 
       {/* renderer */}
-      <div className='w-4/5 h-[86vh] bg-white p-14 mt-4 rounded-2xl dark:bg-neutral-900'>
-        <div className='h-full relative'>
+      <div className="w-4/5 h-[86vh] bg-white p-14 mt-4 rounded-2xl dark:bg-neutral-900">
+        <div className="h-full relative">
           {isRestoring && (
-            <div className='absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900 z-10'>
-              <Loader2 className='w-8 h-8 animate-spin text-gray-400' />
+            <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900 z-10">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
             </div>
           )}
-          <iframe id='epub-renderer' style={{ width: '100%', height: '100%' }}></iframe>
+          <iframe
+            id="epub-renderer"
+            style={{ width: '100%', height: '100%' }}
+            title={`${bookInfo.name || 'Book'} reader content`}
+          ></iframe>
 
           {popupPosition && selectionInfo && (
             <CreateHighlightPopup
@@ -552,27 +570,27 @@ const EpubReader: React.FC = () => {
               onClose={clearSelection}
             />
           )}
-          <div className='w-full flex justify-between'>
+          <div className="w-full flex justify-between">
             <Button
-              radius='full'
-              variant='bordered'
-              className='bg-white border-2 border-inherit dark:bg-neutral-900'
+              radius="full"
+              variant="bordered"
+              className="bg-white border-2 border-inherit dark:bg-neutral-900"
               onPress={handlePrevPage}
             >
               <ChevronLeft size={16} />
               {t('previous')}
             </Button>
             <Button
-              radius='full'
-              variant='bordered'
-              className='bg-white border-2 border-inherit dark:bg-neutral-900'
+              radius="full"
+              variant="bordered"
+              className="bg-white border-2 border-inherit dark:bg-neutral-900"
               onPress={handleNextPage}
             >
               {t('next')}
               <ChevronRight size={16} />
             </Button>
           </div>
-          <div className='absolute right-[-140px] top-0 bottom-0 flex flex-col justify-center items-center'>
+          <div className="absolute right-[-140px] top-0 bottom-0 flex flex-col justify-center items-center">
             <Toolbar />
           </div>
         </div>

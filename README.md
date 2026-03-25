@@ -24,12 +24,13 @@ English | [简体中文](README.zh-CN.md)
 
 ## Tech Stack
 
-- **Framework**: Next.js 15.0.7 (React 19 RC)
+- **Framework**: Vite+ + React Router + React 19
 - **Database**: SQLite WASM (OPFS) for client-side storage
 - **State Management**: Zustand
 - **Styling**: Tailwind CSS 4.x + HeroUI
-- **Internationalization**: next-intl
-- **Theme**: next-themes
+- **Code Quality**: Oxlint + Oxfmt via Vite+
+- **Internationalization**: Client-side i18n provider
+- **Theme**: Custom client-side theme provider
 - **Package Manager**: pnpm 9.0.0
 - **Core Libraries**: JSZip, lucide-react, framer-motion/motion, lodash, uuid
 
@@ -37,7 +38,7 @@ English | [简体中文](README.zh-CN.md)
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 22.12+
 - pnpm 9.0.0
 
 ### Installation
@@ -57,19 +58,22 @@ pnpm install
 pnpm dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open the local URL printed by `vp dev` (by default [http://localhost:5173](http://localhost:5173)) in your browser.
 
 ### Build for Production
 
 ```bash
 pnpm build
-pnpm start
+pnpm preview
 ```
 
 ### Code Quality
 
 ```bash
 pnpm lint
+pnpm fmt
+pnpm check
+pnpm test
 ```
 
 ## Project Structure
@@ -77,11 +81,12 @@ pnpm lint
 ```
 leaf-nest/
 ├── src/
-│   ├── app/                 # Next.js App Router
+│   ├── main.tsx             # Vite+ entrypoint
+│   ├── App.tsx              # BrowserRouter + route shell
+│   ├── app/                 # Route components consumed by React Router
 │   │   ├── reader/[id]/     # Reader page
 │   │   ├── notes/           # Notes list and per-book notes pages
-│   │   ├── settings/        # Language and global settings
-│   │   └── layout.tsx       # Root layout
+│   │   └── settings/        # Language and global settings
 │   ├── components/          # React components
 │   │   ├── Renderer/        # EPUB renderers (single/double column)
 │   │   │   ├── SearchModal.tsx       # Full-book search modal
@@ -89,6 +94,7 @@ leaf-nest/
 │   │   │   └── HighlightPopup.tsx     # Highlight create/edit overlays
 │   │   └── ui/              # UI components
 │   ├── hooks/               # Custom React hooks
+│   ├── i18n/                # Client-side i18n provider + locale config
 │   ├── store/               # Zustand stores
 │   ├── utils/               # Utility functions
 │   │   ├── handleWorker.ts  # Web Worker for SQLite operations
@@ -96,11 +102,18 @@ leaf-nest/
 │   │   ├── fullBookTextIndexer.ts # Full-book full-text indexer
 │   │   ├── readingProgressManager.ts # Debounced progress persistence
 │   │   └── highlightRenderer.ts       # Render highlights into reader iframe
-│   ├── i18n/                # Internationalization config
 │   └── messages/            # Translation files (en, zh)
 ├── public/                  # Static assets
-└── next.config.mjs          # Next.js configuration
+├── public/_headers          # Cross-origin isolation headers for static hosts that support it
+└── vite.config.ts           # Vite+ / Vite shared configuration
 ```
+
+## Deployment Notes
+
+- Production hosting must rewrite application routes such as `/notes/123` and `/reader/abc` back to `index.html`.
+- The app requires `Cross-Origin-Opener-Policy`, `Cross-Origin-Embedder-Policy`, and `Cross-Origin-Resource-Policy` for the SQLite WASM/OPFS workflow.
+- `vite.config.ts` applies these headers in dev and preview.
+- `public/_headers` is included for static hosts that support header files. If your host does not, configure equivalent response headers at the platform layer.
 
 ## Implementation Notes
 
@@ -146,4 +159,3 @@ The ReadingProgressManager automatically saves:
 
 - Arrow keys and space bar for navigation in reader.
 - `Ctrl/Cmd + K` opens search on supporting platforms.
-

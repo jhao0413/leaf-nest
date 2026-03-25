@@ -1,14 +1,15 @@
 'use client';
 
 import { HeroUIProvider } from '@heroui/system';
-import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { I18nProvider } from '@/i18n';
+import { ThemeProvider } from '@/theme';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <HeroUIProvider>
-      <NextThemesProvider attribute='class' defaultTheme='light'>
-        {children}
-      </NextThemesProvider>
-    </HeroUIProvider>
+    <I18nProvider>
+      <HeroUIProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+      </HeroUIProvider>
+    </I18nProvider>
   );
 }

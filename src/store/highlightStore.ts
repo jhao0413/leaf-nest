@@ -18,7 +18,10 @@ interface ChapterHighlightStore {
   setChapterHighlights: (highlights: Highlight[]) => void;
   addChapterHighlight: (highlight: Highlight) => void;
   removeChapterHighlight: (id: string) => void;
-  updateChapterHighlight: (id: string, patch: Partial<Pick<Highlight, 'color' | 'note' | 'style'>>) => void;
+  updateChapterHighlight: (
+    id: string,
+    patch: Partial<Pick<Highlight, 'color' | 'note' | 'style'>>
+  ) => void;
 }
 
 export const useChapterHighlightStore = create<ChapterHighlightStore>((set) => ({

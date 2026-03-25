@@ -4,11 +4,11 @@ import { useRendererModeStore } from '@/store/rendererModeStore';
 import { Button } from '@heroui/button';
 import { Slider } from '@heroui/slider';
 import { ALargeSmall, AArrowDown, AArrowUp } from 'lucide-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from '@/i18n';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 
-const FontConfig: React.FC = ({}) => {
+const FontConfig: React.FC = () => {
   const t = useTranslations('Renderer');
   const [isOpen, setIsOpen] = useState(false);
   const mode = useRendererModeStore((state) => state.rendererMode);
@@ -45,12 +45,14 @@ const FontConfig: React.FC = ({}) => {
 
   const overlay = (
     <>
-      <div
+      <button
+        type="button"
         className={`fixed top-0 left-0 w-screen h-screen bg-black bg-zinc-500/50 z-20 transition-opacity duration-500 ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={handleOverlayClick}
-      ></div>
+        aria-label="Close font settings"
+      />
       <div
         className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] ${
           mode === 'single' ? 'right-0 sm:right-1/4' : 'right-[10%]'
@@ -59,26 +61,26 @@ const FontConfig: React.FC = ({}) => {
         } shadow-md`}
       >
         <Slider
-          size='lg'
+          size="lg"
           step={2}
-          color='foreground'
+          color="foreground"
           label={t('fontSize')}
           showSteps={true}
           maxValue={26}
           minValue={16}
           value={rendererConfig.fontSize}
           getValue={(fontSize) => `${fontSize}px`}
-          startContent={<AArrowDown className='text-2xl' />}
-          endContent={<AArrowUp className='text-2xl' />}
-          className='max-w-md'
+          startContent={<AArrowDown className="text-2xl" />}
+          endContent={<AArrowUp className="text-2xl" />}
+          className="max-w-md"
           onChange={(value) => onFontSizeChange(Number(value))}
         />
-        <p className='mt-2'>{t('fontFamily')}</p>
-        <div className='grid gap-2 grid-cols-2'>
+        <p className="mt-2">{t('fontFamily')}</p>
+        <div className="grid gap-2 grid-cols-2">
           {cuurentFontFamilies.map((font) => (
             <Button
               key={font.value}
-              variant='bordered'
+              variant="bordered"
               color={rendererConfig.fontFamily === font.value ? 'primary' : 'default'}
               className={`min-w-36 bg-white dark:bg-neutral-700 p-1 rounded-md mt-2 font-${font.value} text-base`}
               style={{ fontFamily: font.value }}
@@ -94,12 +96,15 @@ const FontConfig: React.FC = ({}) => {
 
   return (
     <>
-      <div
-        className='w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900'
+      <button
+        type="button"
+        className="w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center z-10 dark:bg-neutral-900"
         onClick={handleMenuClick}
+        aria-label={isOpen ? 'Close font settings' : 'Open font settings'}
+        title={isOpen ? 'Close font settings' : 'Open font settings'}
       >
         <ALargeSmall />
-      </div>
+      </button>
       {createPortal(overlay, document.body)}
     </>
   );

@@ -10,8 +10,9 @@ export function useTextSelection(iframeReady: boolean) {
   const [selectionInfo, setSelectionInfo] = useState<SerializedSelection | null>(null);
   const [popupPosition, setPopupPosition] = useState<PopupPosition | null>(null);
   const [clickedHighlightId, setClickedHighlightId] = useState<string | null>(null);
-  const [clickedHighlightPosition, setClickedHighlightPosition] =
-    useState<PopupPosition | null>(null);
+  const [clickedHighlightPosition, setClickedHighlightPosition] = useState<PopupPosition | null>(
+    null
+  );
 
   const clearSelection = useCallback(() => {
     setSelectionInfo(null);

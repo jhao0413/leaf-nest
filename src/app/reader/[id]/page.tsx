@@ -10,12 +10,13 @@ import { useFullBookSearchStore } from '@/store/fullBookSearchStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { loadZip } from '@/utils/zipUtils';
 import { useEffect } from 'react';
-import React from 'react';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { createBlobUrlFromBinary } from '@/utils/blobUrl';
+import { createHandleWorker } from '@/utils/createHandleWorker';
+import { useParams } from '@/navigation';
 
-export default function ReaderPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = React.use(params);
+export default function ReaderPage() {
+  const { id = '' } = useParams<{ id: string }>();
   const rendererMode = useRendererModeStore((state) => state.rendererMode);
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const setBookInfo = useBookInfoStore((state) => state.setBookInfo);
@@ -23,7 +24,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
   const setWorker = useFullBookSearchStore((state) => state.setWorker);
 
   useEffect(() => {
-    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
+    const worker = createHandleWorker();
 
     // Set worker for full book search indexer
     setWorker(worker);
@@ -69,7 +70,7 @@ export default function ReaderPage({ params }: { params: Promise<{ id: string }>
           <DoubleColumnRenderer />
         )
       ) : (
-        <div className='h-full w-full bg-slate-50'></div>
+        <div className="h-full w-full bg-slate-50"></div>
       )}
     </>
   );

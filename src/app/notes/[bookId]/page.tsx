@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from 'next/navigation';
+import Image from '@/components/AppImage';
+import { useTranslations } from '@/i18n';
+import { useRouter, useParams } from '@/navigation';
 import { Trash2, BookOpen, Highlighter, ChevronLeft, Loader2 } from 'lucide-react';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { createBlobUrlFromBinary } from '@/utils/blobUrl';
+import { createHandleWorker } from '@/utils/createHandleWorker';
 
 interface HighlightWithBook {
   id: string;
@@ -38,7 +39,12 @@ export default function BookNotesPage() {
   const ht = useTranslations('Highlights');
   const router = useRouter();
   const params = useParams();
-  const bookId = typeof params?.bookId === 'string' ? params.bookId : Array.isArray(params?.bookId) ? params.bookId[0] : '';
+  const bookId =
+    typeof params?.bookId === 'string'
+      ? params.bookId
+      : Array.isArray(params?.bookId)
+        ? params.bookId[0]
+        : '';
   const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
 
   const [loading, setLoading] = useState(true);
@@ -49,8 +55,7 @@ export default function BookNotesPage() {
   const [currentChapter, setCurrentChapterFromDb] = useState<number | undefined>(undefined);
   const [percentage, setPercentage] = useState<number | undefined>(undefined);
   const bookCoverUrl = useMemo(
-    () =>
-      bookCoverBlob ? createBlobUrlFromBinary(bookCoverBlob) : null,
+    () => (bookCoverBlob ? createBlobUrlFromBinary(bookCoverBlob) : null),
     [bookCoverBlob]
   );
 
@@ -69,7 +74,7 @@ export default function BookNotesPage() {
   useEffect(() => {
     if (!bookId) return;
 
-    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
+    const worker = createHandleWorker();
     workerRef.current = worker;
 
     worker.onmessage = (event: MessageEvent) => {
@@ -136,43 +141,43 @@ export default function BookNotesPage() {
 
   if (!bookId) {
     return (
-      <div className='flex flex-col items-center justify-center h-full text-center p-8'>
-        <p className='text-gray-500 font-lxgw'>{t('bookNotFound')}</p>
+      <div className="flex flex-col items-center justify-center h-full text-center p-8">
+        <p className="text-gray-500 font-lxgw">{t('bookNotFound')}</p>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className='flex flex-col h-full p-4 md:p-6 xl:p-8'>
-        <div className='max-w-4xl w-full mx-auto'>
-          <div className='flex items-center gap-2 mb-6'>
-            <Loader2 size={20} className='animate-spin text-gray-400' />
-            <p className='text-sm text-gray-500 font-lxgw'>{t('loading')}</p>
+      <div className="flex flex-col h-full p-4 md:p-6 xl:p-8">
+        <div className="max-w-4xl w-full mx-auto">
+          <div className="flex items-center gap-2 mb-6">
+            <Loader2 size={20} className="animate-spin text-gray-400" />
+            <p className="text-sm text-gray-500 font-lxgw">{t('loading')}</p>
           </div>
 
-          <div className='bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4 mb-4'>
-            <div className='flex items-start gap-3 animate-pulse'>
-              <div className='w-12 h-16 bg-gray-200 dark:bg-neutral-700 rounded-md' />
-              <div className='flex-1 min-w-0 space-y-2'>
-                <div className='h-7 bg-gray-200 dark:bg-neutral-700 rounded w-3/5' />
-                <div className='h-3 bg-gray-200 dark:bg-neutral-700 rounded w-1/4' />
-                <div className='h-3 bg-gray-200 dark:bg-neutral-700 rounded w-2/5' />
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4 mb-4">
+            <div className="flex items-start gap-3 animate-pulse">
+              <div className="w-12 h-16 bg-gray-200 dark:bg-neutral-700 rounded-md" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-7 bg-gray-200 dark:bg-neutral-700 rounded w-3/5" />
+                <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-1/4" />
+                <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-2/5" />
               </div>
             </div>
           </div>
 
-          <div className='bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden animate-pulse'>
-            <div className='divide-y divide-gray-50 dark:divide-neutral-700'>
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden animate-pulse">
+            <div className="divide-y divide-gray-50 dark:divide-neutral-700">
               {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className='flex gap-3 p-4'>
-                  <div className='w-1 rounded-full shrink-0 bg-gray-200 dark:bg-neutral-700' />
-                  <div className='flex-1 min-w-0 space-y-2'>
-                    <div className='h-4 bg-gray-200 dark:bg-neutral-700 rounded w-11/12' />
-                    <div className='h-3 bg-gray-200 dark:bg-neutral-700 rounded w-5/12' />
-                    <div className='h-3 bg-gray-200 dark:bg-neutral-700 rounded w-1/3' />
+                <div key={index} className="flex gap-3 p-4">
+                  <div className="w-1 rounded-full shrink-0 bg-gray-200 dark:bg-neutral-700" />
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="h-4 bg-gray-200 dark:bg-neutral-700 rounded w-11/12" />
+                    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-5/12" />
+                    <div className="h-3 bg-gray-200 dark:bg-neutral-700 rounded w-1/3" />
                   </div>
-                  <div className='w-7 h-7 bg-gray-200 dark:bg-neutral-700 rounded-lg shrink-0' />
+                  <div className="w-7 h-7 bg-gray-200 dark:bg-neutral-700 rounded-lg shrink-0" />
                 </div>
               ))}
             </div>
@@ -183,19 +188,19 @@ export default function BookNotesPage() {
   }
 
   return (
-    <div className='flex flex-col h-full p-4 md:p-6 xl:p-8'>
-      <div className='max-w-4xl w-full mx-auto'>
+    <div className="flex flex-col h-full p-4 md:p-6 xl:p-8">
+      <div className="max-w-4xl w-full mx-auto">
         <button
-          type='button'
-          className='inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6'
+          type="button"
+          className="inline-flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-6"
           onClick={() => router.push('/notes')}
         >
           <ChevronLeft size={16} />
-          <span className='font-lxgw'>{t('backToBooks')}</span>
+          <span className="font-lxgw">{t('backToBooks')}</span>
         </button>
 
-        <div className='bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4 mb-4'>
-          <div className='flex items-start gap-3'>
+        <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 p-4 mb-4">
+          <div className="flex items-start gap-3">
             {bookCoverUrl ? (
               <Image
                 src={bookCoverUrl}
@@ -203,54 +208,66 @@ export default function BookNotesPage() {
                 title={bookName}
                 width={48}
                 height={64}
-                className='w-12 h-16 object-cover rounded-md shadow-sm'
+                className="w-12 h-16 object-cover rounded-md shadow-sm"
                 unoptimized
               />
             ) : (
-              <div className='w-12 h-16 bg-gray-200 dark:bg-neutral-700 rounded-md flex items-center justify-center'>
-                <BookOpen size={18} className='text-gray-400' />
+              <div className="w-12 h-16 bg-gray-200 dark:bg-neutral-700 rounded-md flex items-center justify-center">
+                <BookOpen size={18} className="text-gray-400" />
               </div>
             )}
-            <div className='min-w-0 flex-1'>
-              <h1
-                className='text-2xl font-bold font-lxgw leading-snug truncate'
-                title={bookName}
-              >
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl font-bold font-lxgw leading-snug truncate" title={bookName}>
                 {bookName}
               </h1>
-              <p className='text-sm text-gray-500 dark:text-gray-400 mt-1'>{t('noteCount', { count: highlights.length })}</p>
-              <p className='text-sm text-gray-600 dark:text-gray-300 mt-1.5'>{formatProgress()}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {t('noteCount', { count: highlights.length })}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1.5">{formatProgress()}</p>
             </div>
           </div>
         </div>
 
         {highlights.length === 0 ? (
-          <div className='flex flex-col items-center justify-center py-20 text-center'>
-            <Highlighter size={42} className='text-gray-300 dark:text-gray-600 mb-3' />
-            <p className='text-gray-500 font-lxgw'>{t('noHighlights')}</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <Highlighter size={42} className="text-gray-300 dark:text-gray-600 mb-3" />
+            <p className="text-gray-500 font-lxgw">{t('noHighlights')}</p>
           </div>
         ) : (
-          <div className='bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden'>
-            <div className='divide-y divide-gray-50 dark:divide-neutral-700'>
+          <div className="bg-white dark:bg-neutral-800 rounded-2xl shadow-sm border border-gray-100 dark:border-neutral-700 overflow-hidden">
+            <div className="divide-y divide-gray-50 dark:divide-neutral-700">
               {highlights.map((item) => (
                 <div
                   key={item.id}
-                  className='flex gap-3 p-4 hover:bg-gray-50 dark:hover:bg-neutral-750 cursor-pointer items-start'
-                  onClick={() => handleNavigate(item.chapterIndex)}
+                  className="flex gap-3 p-4 hover:bg-gray-50 dark:hover:bg-neutral-750 items-start"
                 >
-                  <div className={`w-1 rounded-full shrink-0 ${colorBarMap[item.color] || colorBarMap.yellow}`} />
-                  <div className='flex-1 min-w-0'>
-                    <p className='text-sm text-gray-800 dark:text-gray-200 leading-relaxed'>&ldquo;{item.selectedText}&rdquo;</p>
-                    {item.note && <p className='text-sm text-gray-500 dark:text-gray-400 mt-1.5 italic'>{item.note}</p>}
-                    <p className='text-xs text-gray-400 dark:text-gray-500 mt-2'>
+                  <div
+                    className={`w-1 rounded-full shrink-0 ${colorBarMap[item.color] || colorBarMap.yellow}`}
+                  />
+                  <button
+                    type="button"
+                    className="flex-1 min-w-0 text-left"
+                    onClick={() => handleNavigate(item.chapterIndex)}
+                  >
+                    <p className="text-sm text-gray-800 dark:text-gray-200 leading-relaxed">
+                      &ldquo;{item.selectedText}&rdquo;
+                    </p>
+                    {item.note && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1.5 italic">
+                        {item.note}
+                      </p>
+                    )}
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                       {ht('chapter', { chapterNumber: item.chapterIndex + 1 })}
                     </p>
-                    <p className='text-xs text-gray-400 dark:text-gray-500'>{formatDate(item.createdAt)}</p>
-                  </div>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      {formatDate(item.createdAt)}
+                    </p>
+                  </button>
                   <button
-                    className='shrink-0 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 opacity-70 hover:opacity-100 transition-all self-start'
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    type="button"
+                    className="shrink-0 p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950 opacity-70 hover:opacity-100 transition-all self-start"
+                    onClick={() => {
                       handleDelete(item.id);
                     }}
                     title={ht('deleteHighlight')}

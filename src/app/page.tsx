@@ -5,7 +5,7 @@ import { useMemo, useEffect, useRef, useState } from 'react';
 import { Image } from '@heroui/image';
 import { Info, BookDown, Pencil, Trash2, X } from 'lucide-react';
 import { BookBasicInfoType, useBookInfoListStore } from '@/store/bookInfoStore';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { BookInfoModal } from '@/components/BookInfoModal';
 import { useDisclosure } from '@heroui/modal';
 import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeStore';
@@ -13,8 +13,9 @@ import { Checkbox } from '@heroui/checkbox';
 import epubStructureParser from '@/utils/epubStructureParser';
 import { getFileBinary } from '@/utils/utils';
 import { Input } from '@heroui/input';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from '@/i18n';
 import { createBlobUrlFromBinary } from '@/utils/blobUrl';
+import { createHandleWorker } from '@/utils/createHandleWorker';
 
 export default function Home() {
   const router = useRouter();
@@ -32,7 +33,7 @@ export default function Home() {
   // Worker Initialization
   const worker = useMemo<Worker | null>(() => {
     if (typeof window !== 'undefined') {
-      return new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
+      return createHandleWorker();
     }
     return null;
   }, []);
@@ -61,9 +62,7 @@ export default function Home() {
         // Update store with query results
         const bookList = (event.data.data as BookBasicInfoType[]).map((item) => ({
           ...item,
-          coverUrl: item.coverBlob
-            ? createBlobUrlFromBinary(item.coverBlob)
-            : item.coverUrl
+          coverUrl: item.coverBlob ? createBlobUrlFromBinary(item.coverBlob) : item.coverUrl
         }));
 
         setBookInfoList(bookList);
@@ -137,115 +136,127 @@ export default function Home() {
   };
 
   return (
-    <div className='flex flex-col h-full'>
+    <div className="flex flex-col h-full">
       {/* Top Toolbar */}
-      <div className='flex justify-between items-center mb-6 px-2 pt-2'>
-        <h2 className='text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200'>{t('myBooks')}</h2>
-        <div className='flex gap-3'>
+      <div className="flex justify-between items-center mb-6 px-2 pt-2">
+        <h2 className="text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200">
+          {t('myBooks')}
+        </h2>
+        <div className="flex gap-3">
           {/* Import / Delete Button */}
-          <div
+          {!manageMode && (
+            <Input
+              id="picture"
+              type="file"
+              accept=".epub"
+              ref={inputRef}
+              className="hidden"
+              onChange={handleFileChange}
+            />
+          )}
+          <button
+            type="button"
             className={`
-                group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300
-                border border-white/20 shadow-sm backdrop-blur-md
-                ${
-                  manageMode
-                    ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400'
-                    : 'bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
-                }
-              `}
+              group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
+              border border-white/20 shadow-sm backdrop-blur-md
+              ${
+                manageMode
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400'
+                  : 'bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+              }
+            `}
             onClick={manageMode ? handleDelete : handleButtonClick}
           >
             {manageMode ? <Trash2 size={18} /> : <BookDown size={18} />}
-            <span className='font-lxgw text-sm font-medium'>
+            <span className="font-lxgw text-sm font-medium">
               {manageMode ? t('delete') : t('import')}
             </span>
-            {!manageMode && (
-              <Input
-                id='picture'
-                type='file'
-                accept='.epub'
-                ref={inputRef}
-                className='hidden'
-                onChange={handleFileChange}
-              />
-            )}
-          </div>
+          </button>
 
           {/* Manage / Cancel Button */}
-          <div
-            className='group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md'
+          <button
+            type="button"
+            className="group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md"
             onClick={() => {
               setManageMode(!manageMode);
               if (manageMode) setSelectedBookIds([]); // Clear selection when cancelling
             }}
           >
             {manageMode ? <X size={18} /> : <Pencil size={18} />}
-            <span className='font-lxgw text-sm font-medium'>
+            <span className="font-lxgw text-sm font-medium">
               {manageMode ? t('cancel') : t('manage')}
             </span>
-          </div>
+          </button>
         </div>
       </div>
 
       {/* Book Grid */}
-      <div className='flex flex-wrap content-start gap-4'>
+      <div className="flex flex-wrap content-start gap-4">
         {bookInfoList.map((book, index) => (
           <Card
             isFooterBlurred
-            radius='lg'
+            radius="lg"
             key={book.id || index}
-            className='w-[160px] h-[240px] border-none bg-transparent shadow-none hover:scale-105 transition-transform duration-300 group'
+            className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:scale-105 transition-transform duration-300 group"
           >
-            <div className='relative w-full h-full rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow'>
-              {book.coverUrl ? (
-                <Image
-                  removeWrapper
-                  alt={book.name}
-                  className='z-0 w-full h-full object-cover'
-                  src={book.coverUrl}
-                  onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
-                />
-              ) : (
-                <div
-                  className='w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center cursor-pointer'
-                  onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
-                >
-                  <span className='text-gray-400 font-lxgw p-4 text-center text-sm'>
-                    {book.name}
-                  </span>
-                </div>
-              )}
+            <div className="relative w-full h-full rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow">
+              <button
+                type="button"
+                className="w-full h-full"
+                onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
+                disabled={manageMode}
+                aria-label={`Open ${book.name}`}
+              >
+                {book.coverUrl ? (
+                  <Image
+                    removeWrapper
+                    alt={book.name}
+                    className="z-0 w-full h-full object-cover"
+                    src={book.coverUrl}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                    <span className="text-gray-400 font-lxgw p-4 text-center text-sm">
+                      {book.name}
+                    </span>
+                  </div>
+                )}
+              </button>
             </div>
 
-            <CardFooter className='justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50'>
-              <div className='w-[calc(100%-24px)]'>
-                <p className='text-black/80 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw'>
+            <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
+              <div className="w-[calc(100%-24px)]">
+                <p className="text-black/80 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
                   {book.name}
                 </p>
               </div>
 
               {manageMode ? (
                 <Checkbox
-                  size='sm'
-                  radius='sm'
-                  color='danger'
+                  size="sm"
+                  radius="sm"
+                  color="danger"
                   classNames={{ wrapper: 'mr-0' }}
                   onValueChange={(isSelected) => onSelectBook(book.id, isSelected)}
                 />
               ) : (
-                <Info
-                  size={16}
-                  className='text-black/60 cursor-pointer hover:text-black'
+                <button
+                  type="button"
+                  className="text-black/60 hover:text-black"
                   onClick={() => openBookinfoModal(book)}
-                />
+                  aria-label={`Open details for ${book.name}`}
+                  title={book.name}
+                >
+                  <Info size={16} />
+                </button>
               )}
             </CardFooter>
           </Card>
         ))}
 
         {bookInfoList.length === 0 && (
-          <div className='w-full h-[50vh] flex flex-col items-center justify-center text-gray-400 font-lxgw'>
-            <BookDown size={48} className='mb-4 opacity-50' />
+          <div className="w-full h-[50vh] flex flex-col items-center justify-center text-gray-400 font-lxgw">
+            <BookDown size={48} className="mb-4 opacity-50" />
             <p>{t('emptyState')}</p>
           </div>
         )}

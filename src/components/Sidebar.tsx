@@ -1,9 +1,9 @@
 'use client';
 
-import Image from 'next/image';
+import Image from '@/components/AppImage';
 import { Home, NotebookPen, Settings } from 'lucide-react';
-import { usePathname, useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { usePathname, useRouter } from '@/navigation';
+import { useTranslations } from '@/i18n';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -14,10 +14,11 @@ interface SidebarItemProps {
 
 const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
       className={`
-        relative flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-all duration-300 group
+        relative flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group text-left
         ${
           isActive
             ? 'text-slate-900 dark:text-slate-100'
@@ -25,10 +26,10 @@ const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
         }
       `}
     >
-      <div className='relative flex items-center justify-center w-9 h-9'>
+      <div className="relative flex items-center justify-center w-9 h-9">
         {/* The "Ink Blot" Background (Blurred & Irregular) - Only visible when active */}
         {isActive && (
-          <div className='absolute inset-0 bg-blue-400/30 dark:bg-blue-400/40 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-md scale-125' />
+          <div className="absolute inset-0 bg-blue-400/30 dark:bg-blue-400/40 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-md scale-125" />
         )}
 
         {/* The Icon (Sharp) */}
@@ -50,7 +51,7 @@ const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
       >
         {label}
       </span>
-    </div>
+    </button>
   );
 };
 
@@ -81,20 +82,20 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className='h-full w-64 flex flex-col border-r border-white/20 bg-white/30 dark:bg-black/20 backdrop-blur-md shadow-xl z-50 transition-all'>
+    <div className="h-full w-64 flex flex-col border-r border-white/20 bg-white/30 dark:bg-black/20 backdrop-blur-md shadow-xl z-50 transition-all">
       {/* Logo Section */}
-      <div className='p-6 flex items-center gap-3'>
-        <div className='relative w-10 h-10 overflow-hidden rounded-xl shadow-sm'>
+      <div className="p-6 flex items-center gap-3">
+        <div className="relative w-10 h-10 overflow-hidden rounded-xl shadow-sm">
           {/* Fallback or actual logo */}
-          <Image src='/logo.png' alt='LeafNest' fill className='object-cover' />
+          <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
         </div>
-        <h1 className='text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300'>
+        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300">
           LeafNest
         </h1>
       </div>
 
       {/* Navigation Items */}
-      <div className='flex-1 px-4 py-4 flex flex-col gap-2'>
+      <div className="flex-1 px-4 py-4 flex flex-col gap-2">
         {menuItems.map((item) => (
           <SidebarItem
             key={item.path}
@@ -107,7 +108,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Footer/Decorative (Optional) */}
-      <div className='p-4 text-xs text-center text-gray-400/60 font-lxgw'>{t('builtWith')}</div>
+      <div className="p-4 text-xs text-center text-gray-400/60 font-lxgw">{t('builtWith')}</div>
     </div>
   );
 };

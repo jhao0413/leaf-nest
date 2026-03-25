@@ -2,11 +2,19 @@
   "name": "leaf-nest",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
+  "author": "Jhao <jhao413@qq.com>",
+  "repository": "git@github.com:jhao0413/leaf-nest.git",
+  "type": "module",
+  "main": "index.js",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
+    "lint": "vp lint",
+    "fmt": "vp fmt",
+    "check": "vp check",
+    "test": "vp test"
   },
   "dependencies": {
     "@heroui/button": "2.2.26",
@@ -31,31 +39,28 @@
     "lodash": "^4.17.21",
     "lucide-react": "^0.468.0",
     "motion": "^11.13.1",
-    "next": "16.2.1",
-    "next-intl": "^4.8.2",
-    "next-themes": "^0.4.4",
     "react": "19.1.1",
     "react-dom": "19.1.1",
+    "react-router-dom": "^7.9.4",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.0.3",
     "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.13",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/lodash": "^4.17.13",
     "@types/node": "^20",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
-    "eslint": "^9.34.0",
-    "eslint-config-next": "16.2.1",
+    "jsdom": "^26.1.0",
     "postcss": "^8",
-    "prettier": "^3.8.1",
     "tailwindcss": "^4.1.13",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.1.14",
+    "vite-plus": "0.1.14",
+    "vitest": "npm:@voidzero-dev/vite-plus-test@0.1.14"
   },
-  "main": "index.js",
-  "repository": "git@github.com:jhao0413/leaf-nest.git",
-  "author": "Jhao <jhao413@qq.com>",
-  "license": "MIT",
   "packageManager": "pnpm@9.0.0"
 }

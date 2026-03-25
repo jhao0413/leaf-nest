@@ -6,7 +6,7 @@ import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useRendererConfigStore } from '@/store/fontConfigStore';
 import { BookOpen, House } from 'lucide-react';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/theme';
 import { Toolbar } from '@/components/Renderer/Toolbar/Index';
 import { applyFontAndThemeStyles } from '@/utils/styleHandler';
 import { useRendererModeStore } from '@/store/rendererModeStore';
@@ -14,16 +14,17 @@ import { loadChapterContent } from '@/utils/chapterLoader';
 import { useBookZipStore } from '@/store/bookZipStore';
 import { parseAndProcessChapter } from '@/utils/chapterParser';
 import { waitForImagesAndCalculatePages, writeToIframe } from '@/utils/iframeHandler';
-import { useTranslations } from 'next-intl';
+import { useTranslations } from '@/i18n';
 import { useDisclosure } from '@heroui/modal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/navigation';
 import { BookInfoModal } from '../BookInfoModal';
 import { ReadingProgressManager } from '@/utils/readingProgressManager';
 import { useTextSelection } from '@/hooks/useTextSelection';
 import { useChapterHighlightStore } from '@/store/highlightStore';
 import { applyHighlights, removeHighlightFromDOM } from '@/utils/highlightRenderer';
 import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
+import { createHandleWorker } from '@/utils/createHandleWorker';
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
@@ -42,8 +43,13 @@ const EpubReader: React.FC = () => {
   const latestBookInfoRef = useRef(bookInfo);
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
   const [iframeReady, setIframeReady] = useState(false);
-  const { selectionInfo, popupPosition, clickedHighlightId, clickedHighlightPosition, clearSelection } =
-    useTextSelection(iframeReady);
+  const {
+    selectionInfo,
+    popupPosition,
+    clickedHighlightId,
+    clickedHighlightPosition,
+    clearSelection
+  } = useTextSelection(iframeReady);
   const {
     chapterHighlights,
     setChapterHighlights,
@@ -54,7 +60,7 @@ const EpubReader: React.FC = () => {
 
   // Initialize worker and progress manager
   useEffect(() => {
-    const worker = new Worker(new URL('@/utils/handleWorker.ts', import.meta.url));
+    const worker = createHandleWorker();
     workerRef.current = worker;
     progressManagerRef.current = new ReadingProgressManager(worker);
 
@@ -300,13 +306,16 @@ const EpubReader: React.FC = () => {
     [clearSelection]
   );
 
-  const handleUpdateColor = useCallback((id: string, color: string) => {
-    workerRef.current?.postMessage({
-      action: 'updateHighlightColor',
-      data: { id, color }
-    });
-    clearSelection();
-  }, [clearSelection]);
+  const handleUpdateColor = useCallback(
+    (id: string, color: string) => {
+      workerRef.current?.postMessage({
+        action: 'updateHighlightColor',
+        data: { id, color }
+      });
+      clearSelection();
+    },
+    [clearSelection]
+  );
 
   const handleUpdateNote = useCallback((id: string, note: string) => {
     workerRef.current?.postMessage({
@@ -327,12 +336,17 @@ const EpubReader: React.FC = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   return (
-    <div className='single-column-reader'>
-      <div className='w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800'></div>
-      <div className='w-1/2 h-screen mx-auto flex flex-col relative z-10'>
-        <div className='w-full h-14 bg-white border-b-2 flex items-center pl-4 shrink-0 dark:bg-neutral-900'>
-          <div className='flex w-full justify-between items-center pr-4'>
-            <div className='flex items-center cursor-pointer' onClick={onOpen}>
+    <div className="single-column-reader">
+      <div className="w-full h-screen bg-gray-100 flex justify-center fixed z-0 dark:bg-neutral-800"></div>
+      <div className="w-1/2 h-screen mx-auto flex flex-col relative z-10">
+        <div className="w-full h-14 bg-white border-b-2 flex items-center pl-4 shrink-0 dark:bg-neutral-900">
+          <div className="flex w-full justify-between items-center pr-4">
+            <button
+              type="button"
+              className="flex items-center"
+              onClick={onOpen}
+              aria-label="Open book details"
+            >
               <BookOpen size={20} />
               <p
                 className={`font-bold text-lg font-lxgw max-w-lg truncate ${
@@ -342,22 +356,26 @@ const EpubReader: React.FC = () => {
               >
                 {bookInfo.language === 'zh' ? `《${bookInfo.name}》` : bookInfo.name}
               </p>
-            </div>
+            </button>
             <div>
               <Button
-                className='bg-white dark:bg-neutral-900'
+                className="bg-white dark:bg-neutral-900"
                 isIconOnly
-                variant='bordered'
-                radius='sm'
+                variant="bordered"
+                radius="sm"
                 onPress={() => router.push('/')}
               >
-                <House size={16} className='dark:bg-neutral-900' />
+                <House size={16} className="dark:bg-neutral-900" />
               </Button>
             </div>
           </div>
         </div>
-        <div className='flex-1 overflow-y-auto bg-white flex flex-col reader-scrollbar dark:bg-neutral-900'>
-          <iframe id='epub-renderer' className='w-full z-10 px-14 shrink-0 dark:bg-neutral-900'></iframe>
+        <div className="flex-1 overflow-y-auto bg-white flex flex-col reader-scrollbar dark:bg-neutral-900">
+          <iframe
+            id="epub-renderer"
+            className="w-full z-10 px-14 shrink-0 dark:bg-neutral-900"
+            title={`${bookInfo.name || 'Book'} reader content`}
+          ></iframe>
 
           {popupPosition && selectionInfo && (
             <CreateHighlightPopup
@@ -377,24 +395,24 @@ const EpubReader: React.FC = () => {
               onClose={clearSelection}
             />
           )}
-          <div className='w-full z-10 h-20 flex justify-around items-start shrink-0'>
+          <div className="w-full z-10 h-20 flex justify-around items-start shrink-0">
             <Button
-              variant='bordered'
-              className='text-base rounded-md w-40 dark:bg-neutral-900'
+              variant="bordered"
+              className="text-base rounded-md w-40 dark:bg-neutral-900"
               onPress={handlePrevChapter}
             >
               {t('previous')}
             </Button>
             <Button
-              variant='bordered'
-              className='text-base rounded-md w-40 dark:bg-neutral-900'
+              variant="bordered"
+              className="text-base rounded-md w-40 dark:bg-neutral-900"
               onPress={handleNextChapter}
             >
               {t('next')}
             </Button>
           </div>
         </div>
-        <div className='fixed right-[20%] bottom-[40%] z-50'>
+        <div className="fixed right-[20%] bottom-[40%] z-50">
           <Toolbar />
         </div>
       </div>

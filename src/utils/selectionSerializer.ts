@@ -13,23 +13,13 @@ export function serializeSelection(
 
   const range = selection.getRangeAt(0);
 
-  const contextBefore = collectTextBefore(
-    iframeDoc,
-    range.startContainer,
-    range.startOffset,
-    50
-  );
+  const contextBefore = collectTextBefore(iframeDoc, range.startContainer, range.startOffset, 50);
   const contextAfter = collectTextAfter(iframeDoc, range.endContainer, range.endOffset, 50);
 
   return { selectedText, contextBefore, contextAfter };
 }
 
-function collectTextBefore(
-  doc: Document,
-  node: Node,
-  offset: number,
-  maxChars: number
-): string {
+function collectTextBefore(doc: Document, node: Node, offset: number, maxChars: number): string {
   let collected = '';
 
   // Collect from current text node before offset
@@ -56,12 +46,7 @@ function collectTextBefore(
   return collected.slice(-maxChars);
 }
 
-function collectTextAfter(
-  doc: Document,
-  node: Node,
-  offset: number,
-  maxChars: number
-): string {
+function collectTextAfter(doc: Document, node: Node, offset: number, maxChars: number): string {
   let collected = '';
 
   // Collect from current text node after offset

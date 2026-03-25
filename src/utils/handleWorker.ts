@@ -398,7 +398,9 @@ const getHighlightsByChapter = async (
       sql: 'SELECT * FROM highlights WHERE book_id = ? AND chapter_index = ? ORDER BY created_at',
       bind: [data.bookId, data.chapterIndex],
       rowMode: 'object',
-      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+      callback: (row) => {
+        highlights.push(convertKeysToCamelCase(row));
+      }
     });
     postMessage({ success: true, action: 'getHighlightsByChapter', data: highlights });
   } catch (err) {
@@ -458,7 +460,9 @@ const getHighlightsByBook = async (db: OpfsDatabase, data: { bookId: string }) =
             ORDER BY h.created_at DESC`,
       bind: [data.bookId],
       rowMode: 'object',
-      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+      callback: (row) => {
+        highlights.push(convertKeysToCamelCase(row));
+      }
     });
     postMessage({ success: true, action: 'getHighlightsByBook', data: highlights });
   } catch (err) {
@@ -476,7 +480,9 @@ const getAllHighlights = async (db: OpfsDatabase) => {
             FROM highlights h LEFT JOIN books b ON h.book_id = b.id
             ORDER BY h.created_at DESC`,
       rowMode: 'object',
-      callback: (row) => { highlights.push(convertKeysToCamelCase(row)); }
+      callback: (row) => {
+        highlights.push(convertKeysToCamelCase(row));
+      }
     });
     postMessage({ success: true, action: 'getAllHighlights', data: highlights });
   } catch (err) {
