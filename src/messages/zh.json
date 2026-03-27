@@ -50,7 +50,10 @@
   "Settings": {
     "title": "设置",
     "language": "语言",
-    "languageDesc": "选择你偏好的显示语言"
+    "languageDesc": "选择你偏好的显示语言",
+    "about": "关于",
+    "aboutDesc": "了解 LeafNest 项目并查看源码",
+    "github": "GitHub"
   },
   "NotesPage": {
     "title": "读书笔记",

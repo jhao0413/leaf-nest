@@ -50,7 +50,10 @@
   "Settings": {
     "title": "Settings",
     "language": "Language",
-    "languageDesc": "Choose your preferred display language"
+    "languageDesc": "Choose your preferred display language",
+    "about": "About",
+    "aboutDesc": "Learn more about LeafNest and view the source code",
+    "github": "GitHub"
   },
   "NotesPage": {
     "title": "Reading Notes",

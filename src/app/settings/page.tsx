@@ -4,7 +4,9 @@ import { useTranslations, useLocale } from '@/i18n';
 import { useTransition } from 'react';
 import { setUserLocale } from '@/hooks/useLocale';
 import { Locale } from '@/i18n/config';
-import { Globe } from 'lucide-react';
+import { ExternalLink, Globe, Info } from 'lucide-react';
+
+const PROJECT_GITHUB_URL = 'https://github.com/jhao0413/leaf-nest';
 
 export default function SettingsPage() {
   const t = useTranslations('Settings');
@@ -74,6 +76,28 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+              <Info size={18} className="text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <div>
+              <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">{t('about')}</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-lxgw">{t('aboutDesc')}</p>
+            </div>
+          </div>
+
+          <a
+            href={PROJECT_GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 bg-white/30 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/10 transition-all duration-300"
+          >
+            <span className="font-lxgw text-sm font-medium">{t('github')}</span>
+            <ExternalLink size={16} />
+          </a>
         </div>
       </div>
     </div>
