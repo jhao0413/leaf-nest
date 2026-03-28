@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "types": ["node"],
+    "outDir": "dist-server",
+    "baseUrl": "."
+  },
+  "include": ["server/src/**/*.ts"],
+  "exclude": ["node_modules", "dist-server"]
+}
