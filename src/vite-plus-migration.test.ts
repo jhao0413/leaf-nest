@@ -17,13 +17,19 @@ describe('vite+ migration', () => {
 
     expect(packageJson.type).toBe('module');
     expect(packageJson.scripts).toMatchObject({
-      dev: 'vp dev',
-      build: 'vp build',
+      dev: 'concurrently -n web,api "pnpm dev:web" "pnpm dev:api"',
+      'dev:web': 'vp dev',
+      'dev:api': 'tsx watch server/src/index.ts',
+      build: 'pnpm build:web && pnpm build:api',
+      'build:web': 'vp build',
+      'build:api': 'tsc -p tsconfig.server.json',
       preview: 'vp preview',
       lint: 'vp lint',
       fmt: 'vp fmt',
       check: 'vp check',
-      test: 'vp test'
+      test: 'pnpm test:web && pnpm test:api',
+      'test:web': 'vp test',
+      'test:api': 'node node_modules/vitest/vitest.mjs run --config vitest.server.config.ts'
     });
 
     expect(packageJson.devDependencies?.vite).toMatch(/^npm:@voidzero-dev\/vite-plus-core@/);
@@ -90,23 +96,11 @@ describe('vite+ migration', () => {
       source: '/(.*)',
       destination: '/index.html'
     });
-    expect(vercelConfig.headers).toContainEqual({
-      source: '/(.*)',
-      headers: [
-        {
-          key: 'Cross-Origin-Opener-Policy',
-          value: 'same-origin'
-        },
-        {
-          key: 'Cross-Origin-Embedder-Policy',
-          value: 'require-corp'
-        },
-        {
-          key: 'Cross-Origin-Resource-Policy',
-          value: 'cross-origin'
-        }
-      ]
-    });
+    expect(vercelConfig.headers).toBeUndefined();
+  });
+
+  it('removes cross-origin isolation header artifacts from static hosting config', () => {
+    expect(fs.existsSync(path.join(repoRoot, 'public', '_headers'))).toBe(false);
   });
 
   it('removes next-specific runtime remnants from source and ignore rules', () => {

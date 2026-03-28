@@ -82,5 +82,20 @@
     "cancel": "Cancel",
     "notePlaceholder": "Write a note...",
     "chapter": "Chapter {chapterNumber}"
+  },
+  "Auth": {
+    "signInTitle": "Sign in to your library",
+    "signUpTitle": "Create your account",
+    "description": "Use email and password to keep your books, progress, and highlights in sync.",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "signInAction": "Sign in",
+    "signUpAction": "Sign up",
+    "switchToSignUp": "No account yet? Create one",
+    "switchToSignIn": "Already have an account? Sign in",
+    "signInFailed": "Sign-in failed. Check your email and password.",
+    "signUpFailed": "Sign-up failed. Check your details and try again.",
+    "loadingSession": "Checking your session..."
   }
 }

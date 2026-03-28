@@ -11,9 +11,26 @@ import { useReaderStateStore } from '@/store/readerStateStore';
 import { loadZip } from '@/utils/zipUtils';
 import { useEffect } from 'react';
 import { useBreakpoints } from '@/hooks/useBreakpoints';
-import { createBlobUrlFromBinary } from '@/utils/blobUrl';
-import { createHandleWorker } from '@/utils/createHandleWorker';
 import { useParams } from '@/navigation';
+import { booksRepository } from '@/lib/repositories/booksRepository';
+import { remoteBookBinarySource } from '@/lib/binary/remoteBookBinarySource';
+import { AuthGate } from '@/components/AuthGate';
+import { useSessionStore } from '@/lib/auth/sessionStore';
+
+const emptyBookInfo = {
+  name: '',
+  creator: '',
+  publisher: '',
+  identifier: '',
+  pubdate: '',
+  coverBlob: new ArrayBuffer(0),
+  coverPath: '',
+  coverUrl: '',
+  toc: [],
+  blob: new ArrayBuffer(0),
+  language: '',
+  size: ''
+};
 
 export default function ReaderPage() {
   const { id = '' } = useParams<{ id: string }>();
@@ -21,48 +38,52 @@ export default function ReaderPage() {
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const setBookInfo = useBookInfoStore((state) => state.setBookInfo);
   const setBookZip = useBookZipStore((state) => state.setBookZip);
-  const setWorker = useFullBookSearchStore((state) => state.setWorker);
+  const clearIndex = useFullBookSearchStore((state) => state.clearIndex);
+  const sessionStatus = useSessionStore((state) => state.status);
 
   useEffect(() => {
-    const worker = createHandleWorker();
-
-    // Set worker for full book search indexer
-    setWorker(worker);
-
-    // Clear old book data first to prevent loading stale content
+    clearIndex();
+    setBookInfo(emptyBookInfo);
     setBookZip(new JSZip());
 
-    worker.postMessage({ action: 'getBookById', data: { id } });
-    worker.onmessage = async (event) => {
-      if (event.data.success && event.data.action === 'getBookById') {
-        const bookData = event.data.data;
+    if (sessionStatus !== 'authenticated') {
+      const { setReaderState } = useReaderStateStore.getState();
+      setReaderState(0, 1);
+      return;
+    }
 
-        // Process cover and TOC
-        bookData.coverUrl = createBlobUrlFromBinary(bookData.coverBlob) || '';
-        bookData.toc = JSON.parse(bookData.toc);
+    let isActive = true;
 
-        // Set book info
-        setBookInfo(bookData);
+    const loadBook = async () => {
+      const [bookData, bookBlob] = await Promise.all([
+        booksRepository.getBook(id),
+        remoteBookBinarySource.getBookBlob(id)
+      ]);
 
-        // Restore reading state if available
-        if (bookData.currentChapter !== undefined && bookData.currentChapter !== null) {
-          const { setReaderState } = useReaderStateStore.getState();
-          setReaderState(bookData.currentChapter, bookData.currentPage || 1);
-        }
-
-        // Load book ZIP
-        setBookZip(await loadZip(bookData.fileBlob));
+      if (!isActive) {
+        return;
       }
+
+      setBookInfo(bookData);
+
+      const { setReaderState } = useReaderStateStore.getState();
+      setReaderState(bookData.currentChapter ?? 0, bookData.currentPage ?? 1);
+      setBookZip(await loadZip(bookBlob));
     };
-    return () => worker.terminate();
-  }, [id, setBookInfo, setBookZip, setWorker]);
+
+    void loadBook();
+
+    return () => {
+      isActive = false;
+    };
+  }, [clearIndex, id, sessionStatus, setBookInfo, setBookZip]);
 
   const { isMobile } = useBreakpoints();
 
   const isSingleMode = isMobile || rendererMode === 'single';
 
   return (
-    <>
+    <AuthGate>
       {bookInfo.name ? (
         isSingleMode ? (
           <SingleColumnRenderer />
@@ -72,6 +93,6 @@ export default function ReaderPage() {
       ) : (
         <div className="h-full w-full bg-slate-50"></div>
       )}
-    </>
+    </AuthGate>
   );
 }

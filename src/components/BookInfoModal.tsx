@@ -15,6 +15,7 @@ interface BookInfoModalProps {
 
 export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, bookInfo }) => {
   const tModal = useTranslations('BookInfoModal');
+  const coverUrl = bookInfo.coverUrl || (bookInfo.coverBlob ? createBlobUrlFromBinary(bookInfo.coverBlob) : '');
 
   return (
     <Modal backdrop="blur" size="2xl" isOpen={isOpen} onClose={onClose} className="pb-6">
@@ -35,7 +36,7 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
                     alt="Event image"
                     width={340}
                     height={480}
-                    src={bookInfo.coverBlob ? createBlobUrlFromBinary(bookInfo.coverBlob) : ''}
+                    src={coverUrl}
                   />
                 </div>
 

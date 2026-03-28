@@ -24,7 +24,8 @@ import { useTextSelection } from '@/hooks/useTextSelection';
 import { useChapterHighlightStore } from '@/store/highlightStore';
 import { applyHighlights, removeHighlightFromDOM } from '@/utils/highlightRenderer';
 import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
-import { createHandleWorker } from '@/utils/createHandleWorker';
+import { readingRepository } from '@/lib/repositories/readingRepository';
+import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
@@ -38,7 +39,6 @@ const EpubReader: React.FC = () => {
   const rendererMode = useRendererModeStore((state) => state.rendererMode);
 
   const progressManagerRef = useRef<ReadingProgressManager | null>(null);
-  const workerRef = useRef<Worker | null>(null);
   const isFirstLoadRef = useRef(true);
   const latestBookInfoRef = useRef(bookInfo);
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
@@ -58,61 +58,16 @@ const EpubReader: React.FC = () => {
     updateChapterHighlight
   } = useChapterHighlightStore();
 
-  // Initialize worker and progress manager
+  // Initialize progress manager
   useEffect(() => {
-    const worker = createHandleWorker();
-    workerRef.current = worker;
-    progressManagerRef.current = new ReadingProgressManager(worker);
-
-    worker.onmessage = (event: MessageEvent) => {
-      const { action, success, data } = event.data;
-      if (!success) return;
-
-      if (action === 'getHighlightsByChapter') {
-        setChapterHighlights(data);
-        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
-        const iframeDoc = renderer?.contentDocument;
-        if (iframeDoc) {
-          applyHighlights(iframeDoc, data);
-        }
-      }
-      if (action === 'addHighlight') {
-        addChapterHighlight(data);
-        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
-        const iframeDoc = renderer?.contentDocument;
-        if (iframeDoc) {
-          applyHighlights(iframeDoc, [data]);
-        }
-      }
-      if (action === 'deleteHighlight') {
-        removeChapterHighlight(data.id);
-        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
-        const iframeDoc = renderer?.contentDocument;
-        if (iframeDoc) {
-          removeHighlightFromDOM(iframeDoc, data.id);
-        }
-      }
-      if (action === 'updateHighlightColor') {
-        updateChapterHighlight(data.id, { color: data.color });
-
-        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
-        const iframeDoc = renderer?.contentDocument;
-        if (iframeDoc) {
-          const highlights = useChapterHighlightStore.getState().chapterHighlights;
-          const updated = highlights.find((h) => h.id === data.id);
-          if (updated) {
-            removeHighlightFromDOM(iframeDoc, data.id);
-            applyHighlights(iframeDoc, [updated]);
-          }
-        }
-      }
-    };
+    progressManagerRef.current = new ReadingProgressManager(async (data) => {
+      await readingRepository.saveProgress(data);
+    });
 
     return () => {
       progressManagerRef.current?.cleanup();
-      worker.terminate();
     };
-  }, [setChapterHighlights, addChapterHighlight, removeChapterHighlight, updateChapterHighlight]);
+  }, []);
 
   // Restore reading progress on first load
   useEffect(() => {
@@ -213,15 +168,23 @@ const EpubReader: React.FC = () => {
       return handleIframeLoad(renderer);
     };
     if (Object.keys(bookZip.files).length === 0) return;
-    processChapter().then(() => {
-      // Load and apply highlights for this chapter
-      workerRef.current?.postMessage({
-        action: 'getHighlightsByChapter',
-        data: { bookId: bookInfo.id, chapterIndex: currentChapter }
-      });
+    processChapter().then(async () => {
+      if (bookInfo.id) {
+        const items = await highlightsRepository.listByBook(bookInfo.id, {
+          chapterIndex: currentChapter
+        });
+        setChapterHighlights(items);
+
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          applyHighlights(iframeDoc, items);
+        }
+      }
+
       setIframeReady(true);
     });
-  }, [bookInfo, bookZip, currentChapter, handleIframeLoad]);
+  }, [bookInfo, bookZip, currentChapter, handleIframeLoad, setChapterHighlights]);
 
   useEffect(() => {
     const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
@@ -274,9 +237,8 @@ const EpubReader: React.FC = () => {
     (color: string, style: 'highlight' | 'underline' | 'note', note: string) => {
       if (!selectionInfo || !bookInfo.id) return;
 
-      workerRef.current?.postMessage({
-        action: 'addHighlight',
-        data: {
+      void highlightsRepository
+        .create({
           bookId: bookInfo.id,
           chapterIndex: currentChapter,
           selectedText: selectionInfo.selectedText,
@@ -285,44 +247,64 @@ const EpubReader: React.FC = () => {
           color,
           style,
           note
-        }
-      });
+        })
+        .then((item) => {
+          addChapterHighlight(item);
+          const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+          const iframeDoc = renderer?.contentDocument;
 
-      const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
-      renderer?.contentDocument?.getSelection()?.removeAllRanges();
-      clearSelection();
+          if (iframeDoc) {
+            applyHighlights(iframeDoc, [item]);
+            iframeDoc.getSelection()?.removeAllRanges();
+          }
+        })
+        .finally(() => {
+          clearSelection();
+        });
     },
-    [selectionInfo, bookInfo.id, currentChapter, clearSelection]
+    [addChapterHighlight, bookInfo.id, clearSelection, currentChapter, selectionInfo]
   );
 
   const handleDeleteHighlight = useCallback(
     (id: string) => {
-      workerRef.current?.postMessage({
-        action: 'deleteHighlight',
-        data: { id }
+      void highlightsRepository.remove(id).then(() => {
+        removeChapterHighlight(id);
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+
+        if (iframeDoc) {
+          removeHighlightFromDOM(iframeDoc, id);
+        }
+
+        clearSelection();
       });
-      clearSelection();
     },
-    [clearSelection]
+    [clearSelection, removeChapterHighlight]
   );
 
   const handleUpdateColor = useCallback(
     (id: string, color: string) => {
-      workerRef.current?.postMessage({
-        action: 'updateHighlightColor',
-        data: { id, color }
+      void highlightsRepository.update(id, { color }).then((updated) => {
+        updateChapterHighlight(id, { color: updated.color, note: updated.note });
+
+        const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+        const iframeDoc = renderer?.contentDocument;
+        if (iframeDoc) {
+          removeHighlightFromDOM(iframeDoc, id);
+          applyHighlights(iframeDoc, [updated]);
+        }
+
+        clearSelection();
       });
-      clearSelection();
     },
-    [clearSelection]
+    [clearSelection, updateChapterHighlight]
   );
 
   const handleUpdateNote = useCallback((id: string, note: string) => {
-    workerRef.current?.postMessage({
-      action: 'updateHighlightNote',
-      data: { id, note }
+    void highlightsRepository.update(id, { note }).then((updated) => {
+      updateChapterHighlight(id, { note: updated.note });
     });
-  }, []);
+  }, [updateChapterHighlight]);
 
   const clickedHighlight = clickedHighlightId
     ? chapterHighlights.find((h) => h.id === clickedHighlightId)

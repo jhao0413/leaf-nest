@@ -82,5 +82,20 @@
     "cancel": "取消",
     "notePlaceholder": "写下你的笔记...",
     "chapter": "第 {chapterNumber} 章"
+  },
+  "Auth": {
+    "signInTitle": "登录你的书库",
+    "signUpTitle": "创建账号",
+    "description": "使用邮箱密码登录，书籍、进度和标注都会保存到云端。",
+    "name": "昵称",
+    "email": "邮箱",
+    "password": "密码",
+    "signInAction": "登录",
+    "signUpAction": "注册",
+    "switchToSignUp": "还没有账号？立即注册",
+    "switchToSignIn": "已有账号？直接登录",
+    "signInFailed": "登录失败，请检查邮箱和密码",
+    "signUpFailed": "注册失败，请检查输入信息",
+    "loadingSession": "正在检查登录状态..."
   }
 }

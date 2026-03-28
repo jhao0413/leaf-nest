@@ -1,7 +1,7 @@
 'use client';
 
 import { Card, CardFooter } from '@heroui/card';
-import { useMemo, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Image } from '@heroui/image';
 import { Info, BookDown, Pencil, Trash2, X } from 'lucide-react';
 import { BookBasicInfoType, useBookInfoListStore } from '@/store/bookInfoStore';
@@ -11,16 +11,28 @@ import { useDisclosure } from '@heroui/modal';
 import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeStore';
 import { Checkbox } from '@heroui/checkbox';
 import epubStructureParser from '@/utils/epubStructureParser';
-import { getFileBinary } from '@/utils/utils';
-import { Input } from '@heroui/input';
 import { useTranslations } from '@/i18n';
-import { createBlobUrlFromBinary } from '@/utils/blobUrl';
-import { createHandleWorker } from '@/utils/createHandleWorker';
+import { AuthGate } from '@/components/AuthGate';
+import { booksRepository } from '@/lib/repositories/booksRepository';
+import { useSessionStore } from '@/lib/auth/sessionStore';
+
+function createCoverFile(bookInfo: BookBasicInfoType) {
+  if (!bookInfo.coverBlob) {
+    return null;
+  }
+
+  const filename = bookInfo.coverPath.split('/').pop() || 'cover.bin';
+
+  return new File([bookInfo.coverBlob], filename, {
+    type: 'application/octet-stream'
+  });
+}
 
 export default function Home() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations('HomePage');
+  const sessionStatus = useSessionStore((state) => state.status);
 
   // Stores
   const bookInfoList = useBookInfoListStore((state) => state.bookInfoList);
@@ -30,51 +42,32 @@ export default function Home() {
   const selectedBookIds = useSelectedBookIdsStore((state) => state.selectedBookIds);
   const setSelectedBookIds = useSelectedBookIdsStore((state) => state.setSelectedBookIds);
 
-  // Worker Initialization
-  const worker = useMemo<Worker | null>(() => {
-    if (typeof window !== 'undefined') {
-      return createHandleWorker();
-    }
-    return null;
-  }, []);
-
-  // Worker Query on Mount
   useEffect(() => {
-    if (worker) {
-      worker.postMessage({ action: 'query' });
+    if (sessionStatus === 'anonymous') {
+      setBookInfoList([]);
+      return;
     }
-  }, [worker]);
 
-  // Worker Message Handler
-  useEffect(() => {
-    if (!worker) return;
+    if (sessionStatus !== 'authenticated') {
+      return;
+    }
 
-    const handleMessage = (event: MessageEvent) => {
-      if (
-        event.data.success &&
-        (event.data.action === 'addBook' || event.data.action === 'deleteBook')
-      ) {
-        // Refresh list after add/delete
-        worker.postMessage({ action: 'query' });
-        setSelectedBookIds([]);
-        setManageMode(false);
-      } else if (event.data.success && event.data.action === 'query') {
-        // Update store with query results
-        const bookList = (event.data.data as BookBasicInfoType[]).map((item) => ({
-          ...item,
-          coverUrl: item.coverBlob ? createBlobUrlFromBinary(item.coverBlob) : item.coverUrl
-        }));
+    let isActive = true;
 
-        setBookInfoList(bookList);
+    const loadBooks = async () => {
+      const items = await booksRepository.listBooks();
+
+      if (isActive) {
+        setBookInfoList(items);
       }
     };
 
-    worker.addEventListener('message', handleMessage);
+    void loadBooks();
 
     return () => {
-      worker.removeEventListener('message', handleMessage);
+      isActive = false;
     };
-  }, [worker, setBookInfoList, setSelectedBookIds, setManageMode]);
+  }, [sessionStatus, setBookInfoList]);
 
   // File Import Handlers
   const handleButtonClick = () => {
@@ -88,33 +81,30 @@ export default function Home() {
     if (!files?.length) return;
     const file = files[0];
 
-    if (file && worker) {
-      const fileSizeInBytes = file.size;
-      const fileSizeInMB = (fileSizeInBytes / (1024 * 1024)).toFixed(2);
-      const fileBlob = await getFileBinary(file);
+    if (file) {
       const bookParserInfo = await epubStructureParser(file);
-
-      worker.postMessage({
-        action: 'addBook',
-        data: {
-          ...bookParserInfo,
-          blob: fileBlob,
-          size: `${parseFloat(fileSizeInMB)} MB`
-        }
+      const book = await booksRepository.uploadBook({
+        file,
+        cover: createCoverFile(bookParserInfo),
+        metadata: bookParserInfo
       });
+
+      setBookInfoList([book, ...bookInfoList]);
+      setManageMode(false);
+      setSelectedBookIds([]);
     }
-    // Reset input so same file can be selected again if needed
+
     event.target.value = '';
   };
 
   // Delete Handler
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (selectedBookIds.length === 0) return;
 
-    worker?.postMessage({
-      action: 'deleteBook',
-      data: selectedBookIds
-    });
+    await Promise.all(selectedBookIds.map((bookId) => booksRepository.deleteBook(bookId)));
+    setBookInfoList(bookInfoList.filter((book) => !book.id || !selectedBookIds.includes(book.id)));
+    setSelectedBookIds([]);
+    setManageMode(false);
   };
 
   // Selection Handler
@@ -136,135 +126,138 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Top Toolbar */}
-      <div className="flex justify-between items-center mb-6 px-2 pt-2">
-        <h2 className="text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200">
-          {t('myBooks')}
-        </h2>
-        <div className="flex gap-3">
-          {/* Import / Delete Button */}
-          {!manageMode && (
-            <Input
-              id="picture"
-              type="file"
-              accept=".epub"
-              ref={inputRef}
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          )}
-          <button
-            type="button"
-            className={`
-              group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
-              border border-white/20 shadow-sm backdrop-blur-md
-              ${
-                manageMode
-                  ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400'
-                  : 'bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
-              }
-            `}
-            onClick={manageMode ? handleDelete : handleButtonClick}
-          >
-            {manageMode ? <Trash2 size={18} /> : <BookDown size={18} />}
-            <span className="font-lxgw text-sm font-medium">
-              {manageMode ? t('delete') : t('import')}
-            </span>
-          </button>
+    <AuthGate>
+      <div className="flex flex-col h-full">
+        {/* Top Toolbar */}
+        <div className="flex justify-between items-center mb-6 px-2 pt-2">
+          <h2 className="text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200">
+            {t('myBooks')}
+          </h2>
+          <div className="flex gap-3">
+            {/* Import / Delete Button */}
+            {!manageMode && (
+              <input
+                id="picture"
+                type="file"
+                accept=".epub"
+                ref={inputRef}
+                className="hidden"
+                aria-label="Upload EPUB"
+                onChange={handleFileChange}
+              />
+            )}
+            <button
+              type="button"
+              className={`
+                group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
+                border border-white/20 shadow-sm backdrop-blur-md
+                ${
+                  manageMode
+                    ? 'bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400'
+                    : 'bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10'
+                }
+              `}
+              onClick={manageMode ? handleDelete : handleButtonClick}
+            >
+              {manageMode ? <Trash2 size={18} /> : <BookDown size={18} />}
+              <span className="font-lxgw text-sm font-medium">
+                {manageMode ? t('delete') : t('import')}
+              </span>
+            </button>
 
-          {/* Manage / Cancel Button */}
-          <button
-            type="button"
-            className="group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md"
-            onClick={() => {
-              setManageMode(!manageMode);
-              if (manageMode) setSelectedBookIds([]); // Clear selection when cancelling
-            }}
-          >
-            {manageMode ? <X size={18} /> : <Pencil size={18} />}
-            <span className="font-lxgw text-sm font-medium">
-              {manageMode ? t('cancel') : t('manage')}
-            </span>
-          </button>
+            {/* Manage / Cancel Button */}
+            <button
+              type="button"
+              className="group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md"
+              onClick={() => {
+                setManageMode(!manageMode);
+                if (manageMode) setSelectedBookIds([]); // Clear selection when cancelling
+              }}
+            >
+              {manageMode ? <X size={18} /> : <Pencil size={18} />}
+              <span className="font-lxgw text-sm font-medium">
+                {manageMode ? t('cancel') : t('manage')}
+              </span>
+            </button>
+          </div>
         </div>
-      </div>
 
-      {/* Book Grid */}
-      <div className="flex flex-wrap content-start gap-4">
-        {bookInfoList.map((book, index) => (
-          <Card
-            isFooterBlurred
-            radius="lg"
-            key={book.id || index}
-            className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:scale-105 transition-transform duration-300 group"
-          >
-            <div className="relative w-full h-full rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow">
-              <button
-                type="button"
-                className="w-full h-full"
-                onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
-                disabled={manageMode}
-                aria-label={`Open ${book.name}`}
-              >
-                {book.coverUrl ? (
-                  <Image
-                    removeWrapper
-                    alt={book.name}
-                    className="z-0 w-full h-full object-cover"
-                    src={book.coverUrl}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                    <span className="text-gray-400 font-lxgw p-4 text-center text-sm">
-                      {book.name}
-                    </span>
-                  </div>
-                )}
-              </button>
-            </div>
-
-            <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
-              <div className="w-[calc(100%-24px)]">
-                <p className="text-black/80 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
-                  {book.name}
-                </p>
-              </div>
-
-              {manageMode ? (
-                <Checkbox
-                  size="sm"
-                  radius="sm"
-                  color="danger"
-                  classNames={{ wrapper: 'mr-0' }}
-                  onValueChange={(isSelected) => onSelectBook(book.id, isSelected)}
-                />
-              ) : (
+        {/* Book Grid */}
+        <div className="flex flex-wrap content-start gap-4">
+          {bookInfoList.map((book, index) => (
+            <Card
+              isFooterBlurred
+              radius="lg"
+              key={book.id || index}
+              className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:scale-105 transition-transform duration-300 group"
+            >
+              <div className="relative w-full h-full rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow">
                 <button
                   type="button"
-                  className="text-black/60 hover:text-black"
-                  onClick={() => openBookinfoModal(book)}
-                  aria-label={`Open details for ${book.name}`}
-                  title={book.name}
+                  className="w-full h-full"
+                  onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
+                  disabled={manageMode}
+                  aria-label={`Open ${book.name}`}
                 >
-                  <Info size={16} />
+                  {book.coverUrl ? (
+                    <Image
+                      removeWrapper
+                      alt={book.name}
+                      className="z-0 w-full h-full object-cover"
+                      src={book.coverUrl}
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+                      <span className="text-gray-400 font-lxgw p-4 text-center text-sm">
+                        {book.name}
+                      </span>
+                    </div>
+                  )}
                 </button>
-              )}
-            </CardFooter>
-          </Card>
-        ))}
+              </div>
 
-        {bookInfoList.length === 0 && (
-          <div className="w-full h-[50vh] flex flex-col items-center justify-center text-gray-400 font-lxgw">
-            <BookDown size={48} className="mb-4 opacity-50" />
-            <p>{t('emptyState')}</p>
-          </div>
+              <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
+                <div className="w-[calc(100%-24px)]">
+                  <p className="text-black/80 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
+                    {book.name}
+                  </p>
+                </div>
+
+                {manageMode ? (
+                  <Checkbox
+                    size="sm"
+                    radius="sm"
+                    color="danger"
+                    classNames={{ wrapper: 'mr-0' }}
+                    onValueChange={(isSelected) => onSelectBook(book.id, isSelected)}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    className="text-black/60 hover:text-black"
+                    onClick={() => openBookinfoModal(book)}
+                    aria-label={`Open details for ${book.name}`}
+                    title={book.name}
+                  >
+                    <Info size={16} />
+                  </button>
+                )}
+              </CardFooter>
+            </Card>
+          ))}
+
+          {bookInfoList.length === 0 && (
+            <div className="w-full h-[50vh] flex flex-col items-center justify-center text-gray-400 font-lxgw">
+              <BookDown size={48} className="mb-4 opacity-50" />
+              <p>{t('emptyState')}</p>
+            </div>
+          )}
+        </div>
+
+        {modalBookInfo && (
+          <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={modalBookInfo} />
         )}
       </div>
-
-      {modalBookInfo && (
-        <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={modalBookInfo} />
-      )}
-    </div>
+    </AuthGate>
   );
 }

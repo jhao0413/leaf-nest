@@ -13,9 +13,10 @@ const Menu: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const bookInfo = useBookInfoStore((state) => state.bookInfo);
   const coverUrl = useMemo(() => {
+    if (bookInfo.coverUrl) return bookInfo.coverUrl;
     if (!bookInfo.coverBlob) return null;
     return createBlobUrlFromBinary(bookInfo.coverBlob);
-  }, [bookInfo.coverBlob]);
+  }, [bookInfo.coverBlob, bookInfo.coverUrl]);
   const mode = useRendererModeStore((state) => state.rendererMode);
   const currentChapter = useReaderStateStore((state) => state.currentChapter);
   const setCurrentChapter = useReaderStateStore((state) => state.setCurrentChapter);
@@ -23,7 +24,7 @@ const Menu: React.FC = () => {
   const { theme } = useTheme();
 
   useEffect(() => {
-    if (coverUrl) {
+    if (coverUrl && coverUrl.startsWith('blob:')) {
       return () => {
         URL.revokeObjectURL(coverUrl);
       };

@@ -8,12 +8,14 @@ export interface ReadingProgressData {
   percentage: number;
 }
 
+type SaveProgressHandler = (data: ReadingProgressData) => Promise<unknown>;
+
 export class ReadingProgressManager {
-  private worker: Worker | null = null;
+  private saveProgressHandler: SaveProgressHandler;
   private saveTimeout: NodeJS.Timeout | null = null;
 
-  constructor(worker: Worker) {
-    this.worker = worker;
+  constructor(saveProgressHandler: SaveProgressHandler) {
+    this.saveProgressHandler = saveProgressHandler;
   }
 
   /**
@@ -109,20 +111,17 @@ export class ReadingProgressManager {
     }
 
     const doSave = () => {
-      if (!this.worker || !iframeWindow) return;
+      if (!iframeWindow) return;
 
       const textAnchor = this.extractTextAnchor(iframeWindow);
       const percentage = this.calculatePercentage(chapter, page, bookInfo.toc.length, mode);
 
-      this.worker.postMessage({
-        action: 'updateReadingProgress',
-        data: {
+      void this.saveProgressHandler({
           bookId,
           currentChapter: chapter,
           currentPage: page,
           textAnchor,
           percentage
-        }
       });
     };
 

@@ -1,5 +1,7 @@
 # Leaf Nest
 
+> **Notice**: This app reads locally imported EPUB files only — no URLs, web links, online catalogs, or remote sources of any kind are supported or fetched. The author does not condone any use that violates the rights of authors, publishers, or other rights holders. Built for personal learning; not for commercial use or profit.
+
 Leaf Nest is a browser-based EPUB reader and note-taking app, designed for private reading workflows with local-first storage.
 
 English | [简体中文](README.zh-CN.md)
@@ -12,20 +14,22 @@ English | [简体中文](README.zh-CN.md)
 
 - 📚 **EPUB import + library management**: Import `.epub` files in the browser, show covers + metadata, and support batch delete with manage mode.
 - 📖 **Two reading layouts**: Automatic mobile single-column mode and desktop double-column mode, switchable at runtime.
-- 📑 **Chapter navigation + progress persistence**: Restore exact chapter/page and text anchor from SQLite-stored state.
+- 📑 **Chapter navigation + progress persistence**: Restore chapter/page and text anchor from the synced reading state.
 - 🎨 **Reading customization**: Font size, font family, line-height/formatting, theme (light/dark), and layout mode controls.
 - 🔍 **In-book full-text search**: Build per-book text index, cache it locally, and jump to match positions.
 - 🖊️ **Notes & highlights**: Highlight or underline selected text and attach notes; edit note content and color; delete entries.
 - 📚 **Reading Notes view**: Central notes list with per-book grouping and quick jump back to reader.
 - 🌍 **Bilingual UI**: English / 简体中文 with persistence.
 - 🎮 **Reader ergonomics**: Keyboard shortcuts for navigation (arrows/space) and search shortcut (`Ctrl/Cmd + K`).
-- 🧵 **Performance-first architecture**: SQLite WASM + OPFS + Web Worker to avoid main-thread blocking.
+- ☁️ **Service-backed architecture**: Hono API + PostgreSQL + S3-compatible object storage with web-first reading flows.
 - 📱 **Responsive interface**: Sidebar reader pages and toolbar adapt to desktop/mobile usage.
 
 ## Tech Stack
 
 - **Framework**: Vite+ + React Router + React 19
-- **Database**: SQLite WASM (OPFS) for client-side storage
+- **Backend**: Hono + Better Auth + Drizzle ORM
+- **Database**: PostgreSQL
+- **Object Storage**: S3-compatible storage / MinIO / RustFS
 - **State Management**: Zustand
 - **Styling**: Tailwind CSS 4.x + HeroUI
 - **Code Quality**: Oxlint + Oxfmt via Vite+
@@ -50,6 +54,9 @@ cd leaf-nest
 
 # Install dependencies
 pnpm install
+
+# Create local environment file
+cp .env.example .env
 ```
 
 ### Development
@@ -58,7 +65,42 @@ pnpm install
 pnpm dev
 ```
 
-Open the local URL printed by `vp dev` (by default [http://localhost:5173](http://localhost:5173)) in your browser.
+This starts:
+
+- Web app on the local URL printed by `vp dev` (by default [http://localhost:5173](http://localhost:5173))
+- Hono API on [http://localhost:8787](http://localhost:8787)
+
+You can verify the backend bootstrap with [http://localhost:8787/api/health](http://localhost:8787/api/health)
+
+### Self-hosted Services
+
+```bash
+docker compose up -d postgres minio
+```
+
+Default local service ports:
+
+- PostgreSQL: `5432`
+- MinIO API: `9000`
+- MinIO Console: `9001`
+
+### Self-hosted App
+
+```bash
+docker compose up -d app
+```
+
+The container serves both the SPA and the API on [http://localhost:8787](http://localhost:8787).
+
+### Database Workflow
+
+```bash
+pnpm db:generate
+pnpm db:migrate
+```
+
+- `pnpm db:generate`: generate SQL migrations from the Drizzle schema in `server/src/db/schema`
+- `pnpm db:migrate`: apply generated migrations to the configured PostgreSQL database
 
 ### Build for Production
 
@@ -66,6 +108,25 @@ Open the local URL printed by `vp dev` (by default [http://localhost:5173](http:
 pnpm build
 pnpm preview
 ```
+
+### Environment Variables
+
+The backend bootstrap currently expects these variables in `.env`:
+
+- `APP_URL`
+- `API_PORT`
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`
+- `S3_ENDPOINT`
+- `S3_PUBLIC_ENDPOINT`
+- `S3_REGION`
+- `S3_BUCKET`
+- `S3_ACCESS_KEY_ID`
+- `S3_SECRET_ACCESS_KEY`
+- `S3_FORCE_PATH_STYLE`
+
+`docker-compose.yml` overrides `APP_URL`, `BETTER_AUTH_URL`, and `S3_ENDPOINT` for the `app` container so the backend can talk to MinIO internally while browsers keep using `localhost`.
 
 ### Code Quality
 
@@ -104,28 +165,23 @@ leaf-nest/
 │   │   └── highlightRenderer.ts       # Render highlights into reader iframe
 │   └── messages/            # Translation files (en, zh)
 ├── public/                  # Static assets
-├── public/_headers          # Cross-origin isolation headers for static hosts that support it
 └── vite.config.ts           # Vite+ / Vite shared configuration
 ```
 
 ## Deployment Notes
 
 - Production hosting must rewrite application routes such as `/notes/123` and `/reader/abc` back to `index.html`.
-- The app requires `Cross-Origin-Opener-Policy`, `Cross-Origin-Embedder-Policy`, and `Cross-Origin-Resource-Policy` for the SQLite WASM/OPFS workflow.
-- `vite.config.ts` applies these headers in dev and preview.
-- `public/_headers` is included for static hosts that support header files. If your host does not, configure equivalent response headers at the platform layer.
+- Remote object assets such as covers are expected to load cross-origin, so the frontend no longer enables cross-origin isolation headers by default.
 
 ## Implementation Notes
 
 ### Database & Storage
 
-The app runs SQLite WASM against Origin Private File System (OPFS) so books, progress, highlights, and search indexes remain in-browser:
+The app stores primary data on the backend:
 
-- **books**: Book metadata, file blobs, covers, table of contents, and reading progress
-- **book_text_index**: Full-text search cache (chapter-level text index)
-- **highlights**: Color/position/notes for selected text
-
-Database reads/writes are processed in a dedicated Web Worker.
+- **PostgreSQL**: users, books, reading progress, highlights, and related metadata
+- **S3-compatible object storage**: EPUB binaries and remote cover objects
+- **Browser state**: reader UI state and in-memory search helpers for the active session
 
 ### EPUB Rendering
 
@@ -147,7 +203,7 @@ The ReadingProgressManager automatically saves:
 ### Notes
 
 - Highlights can be created with color and style variants and can be edited/deleted.
-- Notes are synchronized per chapter in the same local DB and shown in a dedicated notes center.
+- Notes are synchronized through the backend APIs and shown in a dedicated notes center.
 - Deleting a book also deletes its related highlights and index data.
 
 ### Full-text Search

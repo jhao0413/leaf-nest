@@ -1,12 +1,26 @@
+import 'dotenv/config';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { serve } from '@hono/node-server';
-import { app } from './app';
+import { createApp } from './app.js';
+import { getEnv } from './env.js';
+import { getAuth } from './lib/auth.js';
+import { getBooksService } from './lib/books.js';
+import { getReadingService } from './lib/reading.js';
 
-const port = Number(process.env.API_PORT ?? 8787);
+const env = getEnv();
+const frontendDistDir = path.resolve(process.cwd(), 'dist');
+const app = createApp(getAuth(), {
+  books: getBooksService(),
+  reading: getReadingService()
+}, {
+  frontendDistDir: existsSync(frontendDistDir) ? frontendDistDir : undefined
+});
 
 serve(
   {
     fetch: app.fetch,
-    port
+    port: env.API_PORT
   },
   (info) => {
     console.log(`Hono API listening on http://localhost:${info.port}`);
