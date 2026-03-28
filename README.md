@@ -72,25 +72,43 @@ This starts:
 
 You can verify the backend bootstrap with [http://localhost:8787/api/health](http://localhost:8787/api/health)
 
-### Self-hosted Services
+### Self-hosted Deployment
+
+Current production deployment is self-hosting with the provided Docker image and Compose stack. Static-only hosting such as Vercel is not supported for the current architecture because the app depends on the bundled Hono API, Better Auth callbacks, PostgreSQL, and S3-compatible object storage.
+
+1. Copy `.env.example` to `.env`.
+2. For local single-host deployment, the default Compose values are ready to use.
+3. For a remote deployment, set the optional `SELF_HOST_*` variables in `.env` before starting the stack:
+   - `SELF_HOST_APP_URL`
+   - `SELF_HOST_BETTER_AUTH_URL`
+   - `SELF_HOST_S3_PUBLIC_ENDPOINT`
+   - `SELF_HOST_S3_ENDPOINT` only if the app should reach object storage through a non-default internal address
+4. Start the backing services:
 
 ```bash
 docker compose up -d postgres minio
 ```
 
-Default local service ports:
+5. Apply database migrations against the target PostgreSQL instance:
 
-- PostgreSQL: `5432`
-- MinIO API: `9000`
-- MinIO Console: `9001`
+```bash
+pnpm db:migrate
+```
 
-### Self-hosted App
+6. Start the application container:
 
 ```bash
 docker compose up -d app
 ```
 
-The container serves both the SPA and the API on [http://localhost:8787](http://localhost:8787).
+The container serves both the SPA and the API on the configured app origin. With the default local values, that is [http://localhost:8787](http://localhost:8787).
+
+Default local service ports:
+
+- PostgreSQL: `5432`
+- App: `8787`
+- MinIO API: `9000`
+- MinIO Console: `9001`
 
 ### Database Workflow
 
@@ -102,7 +120,7 @@ pnpm db:migrate
 - `pnpm db:generate`: generate SQL migrations from the Drizzle schema in `server/src/db/schema`
 - `pnpm db:migrate`: apply generated migrations to the configured PostgreSQL database
 
-### Build for Production
+### Local Production Build
 
 ```bash
 pnpm build
@@ -126,7 +144,7 @@ The backend bootstrap currently expects these variables in `.env`:
 - `S3_SECRET_ACCESS_KEY`
 - `S3_FORCE_PATH_STYLE`
 
-`docker-compose.yml` overrides `APP_URL`, `BETTER_AUTH_URL`, and `S3_ENDPOINT` for the `app` container so the backend can talk to MinIO internally while browsers keep using `localhost`.
+For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint.
 
 ### Code Quality
 
@@ -170,7 +188,8 @@ leaf-nest/
 
 ## Deployment Notes
 
-- Production hosting must rewrite application routes such as `/notes/123` and `/reader/abc` back to `index.html`.
+- The bundled Node server already falls back to `dist/index.html` for SPA routes such as `/notes/123` and `/reader/abc`.
+- Signed object URLs are generated from `S3_PUBLIC_ENDPOINT`, so that endpoint must be reachable from browsers.
 - Remote object assets such as covers are expected to load cross-origin, so the frontend no longer enables cross-origin isolation headers by default.
 
 ## Implementation Notes

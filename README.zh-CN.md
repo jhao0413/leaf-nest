@@ -72,25 +72,43 @@ pnpm dev
 
 可以通过 [http://localhost:8787/api/health](http://localhost:8787/api/health) 检查后端基础运行状态
 
-### 自部署基础服务
+### Self-host 部署
+
+当前生产部署方式以自部署为准，使用仓库内提供的 Docker 镜像和 Compose 编排。像 Vercel 这类纯静态托管不适用于现有架构，因为应用现在依赖内置的 Hono API、Better Auth 回调、PostgreSQL 和 S3 兼容对象存储。
+
+1. 复制 `.env.example` 为 `.env`。
+2. 如果是在本机单机部署，Compose 默认值可以直接使用。
+3. 如果是远程部署，在启动前于 `.env` 中设置可选的 `SELF_HOST_*` 变量：
+   - `SELF_HOST_APP_URL`
+   - `SELF_HOST_BETTER_AUTH_URL`
+   - `SELF_HOST_S3_PUBLIC_ENDPOINT`
+   - `SELF_HOST_S3_ENDPOINT` 仅在应用需要通过非默认内部地址访问对象存储时才需要设置
+4. 启动基础服务：
 
 ```bash
 docker compose up -d postgres minio
 ```
 
-默认端口：
+5. 对目标 PostgreSQL 执行数据库迁移：
 
-- PostgreSQL：`5432`
-- MinIO API：`9000`
-- MinIO Console：`9001`
+```bash
+pnpm db:migrate
+```
 
-### 自部署应用
+6. 启动应用容器：
 
 ```bash
 docker compose up -d app
 ```
 
-容器会在 [http://localhost:8787](http://localhost:8787) 同时提供前端 SPA 和 API。
+容器会在配置的应用地址同时提供前端 SPA 和 API。使用默认本地值时，对应地址是 [http://localhost:8787](http://localhost:8787)。
+
+默认本地端口：
+
+- PostgreSQL：`5432`
+- App：`8787`
+- MinIO API：`9000`
+- MinIO Console：`9001`
 
 ### 数据库工作流
 
@@ -102,7 +120,7 @@ pnpm db:migrate
 - `pnpm db:generate`：根据 `server/src/db/schema` 中的 Drizzle schema 生成 SQL migration
 - `pnpm db:migrate`：把已生成的 migration 应用到当前配置的 PostgreSQL 数据库
 
-### 构建并运行
+### 本地生产构建
 
 ```bash
 pnpm build
@@ -126,7 +144,7 @@ pnpm preview
 - `S3_SECRET_ACCESS_KEY`
 - `S3_FORCE_PATH_STYLE`
 
-`docker-compose.yml` 会为 `app` 容器覆盖 `APP_URL`、`BETTER_AUTH_URL` 和 `S3_ENDPOINT`，让后端通过容器内地址连接 MinIO，而浏览器仍使用 `localhost` 访问对象资源。
+对于 Docker Compose 部署，`app` 容器会把可选的 `SELF_HOST_*` 变量映射成运行时的 `APP_URL`、`BETTER_AUTH_URL` 与 S3 endpoint。这样本地开发默认值可以保留，而远程 self-host 时也能切到公开域名和浏览器可访问的对象存储地址。
 
 ### 代码检查
 
@@ -170,7 +188,8 @@ leaf-nest/
 
 ## 部署说明
 
-- 生产环境需要把 `/notes/123`、`/reader/abc` 这类前端路由重写回 `index.html`，否则直接刷新会返回 404。
+- 内置的 Node 服务已经会对 `/notes/123`、`/reader/abc` 这类 SPA 路由回退到 `dist/index.html`。
+- 签名对象 URL 基于 `S3_PUBLIC_ENDPOINT` 生成，因此这个地址必须能被浏览器直接访问。
 - 封面等对象资源默认按跨域远程文件加载，前端不再默认启用跨源隔离响应头。
 
 ## 功能说明

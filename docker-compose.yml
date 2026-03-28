@@ -9,10 +9,10 @@ services:
     env_file:
       - .env
     environment:
-      APP_URL: http://localhost:8787
-      BETTER_AUTH_URL: http://localhost:8787
-      S3_ENDPOINT: http://minio:9000
-      S3_PUBLIC_ENDPOINT: http://localhost:9000
+      APP_URL: ${SELF_HOST_APP_URL:-http://localhost:8787}
+      BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}
+      S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://minio:9000}
+      S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}
     ports:
       - '8787:8787'
 
