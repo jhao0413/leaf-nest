@@ -128,11 +128,13 @@ export default function Home() {
     <>
       <div className="flex flex-col h-full">
         {/* Top Toolbar */}
-        <div className="flex justify-between items-center mb-6 px-2 pt-2">
-          <h2 className="text-2xl font-bold font-lxgw text-gray-800 dark:text-gray-200">
-            {t('myBooks')}
-          </h2>
-          <div className="flex gap-3">
+        <div className="flex justify-between items-end mb-8 px-2 pt-4">
+          <div>
+            <h2 className="text-3xl font-bold font-lxgw bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+              {t('myBooks')}
+            </h2>
+          </div>
+          <div className="flex gap-3 relative z-10">
             {/* Import / Delete Button */}
             {!manageMode && (
               <input
@@ -188,9 +190,9 @@ export default function Home() {
               isFooterBlurred
               radius="lg"
               key={book.id || index}
-              className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:scale-105 transition-transform duration-300 group"
+              className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 ease-out group"
             >
-              <div className="relative w-full h-full rounded-xl overflow-hidden shadow-md group-hover:shadow-xl transition-shadow">
+              <div className="relative w-full h-full rounded-[14px] overflow-hidden shadow-md group-hover:shadow-2xl group-hover:shadow-blue-500/20 transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
                 <button
                   type="button"
                   className="w-full h-full"
@@ -215,9 +217,9 @@ export default function Home() {
                 </button>
               </div>
 
-              <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-large bottom-0 w-[calc(100%)] shadow-small z-50">
+              <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-[14px] bottom-0 w-[calc(100%)] shadow-small z-50">
                 <div className="w-[calc(100%-24px)]">
-                  <p className="text-black/80 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
+                  <p className="text-black/80 dark:text-gray-800 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
                     {book.name}
                   </p>
                 </div>
@@ -233,7 +235,7 @@ export default function Home() {
                 ) : (
                   <button
                     type="button"
-                    className="text-black/60 hover:text-black"
+                    className="text-black/60 hover:text-black dark:text-gray-700 dark:hover:text-black"
                     onClick={() => openBookinfoModal(book)}
                     aria-label={`Open details for ${book.name}`}
                     title={book.name}

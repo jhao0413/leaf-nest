@@ -79,16 +79,16 @@ export function AuthCard() {
     <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden bg-slate-50 dark:bg-neutral-950">
       {/* Animated background blobs */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[60%] animate-[pulse_8s_ease-in-out_infinite] rounded-full bg-indigo-300/40 blur-[100px] dark:bg-indigo-900/40"></div>
-        <div className="absolute top-[10%] right-[-10%] h-[70%] w-[50%] animate-[pulse_10s_ease-in-out_infinite_reverse] rounded-full bg-purple-300/40 blur-[100px] dark:bg-purple-900/40"></div>
-        <div className="absolute bottom-[-20%] left-[10%] h-[60%] w-[60%] animate-[pulse_12s_ease-in-out_infinite] rounded-full bg-pink-300/40 blur-[100px] dark:bg-pink-900/40"></div>
+        <div className="absolute top-[-20%] left-[-10%] h-[60%] w-[60%] animate-[pulse_8s_ease-in-out_infinite] rounded-full bg-blue-300/30 blur-[100px] dark:bg-blue-900/30"></div>
+        <div className="absolute top-[10%] right-[-10%] h-[70%] w-[50%] animate-[pulse_10s_ease-in-out_infinite_reverse] rounded-full bg-sky-300/40 blur-[100px] dark:bg-sky-900/40"></div>
+        <div className="absolute bottom-[-20%] left-[10%] h-[60%] w-[60%] animate-[pulse_12s_ease-in-out_infinite] rounded-full bg-cyan-300/30 blur-[100px] dark:bg-cyan-900/30"></div>
       </div>
 
       <div className="z-10 flex w-full max-w-md flex-col items-center px-4 py-10">
         <Card className="w-full border border-white/50 bg-white/60 shadow-2xl backdrop-blur-xl dark:border-neutral-700/50 dark:bg-neutral-900/60">
           <CardHeader className="flex flex-col items-start gap-2 px-8 pt-8 pb-2">
             <div className="flex w-full items-center justify-between">
-              <p className="text-xs uppercase tracking-[0.4em] text-indigo-500 font-semibold dark:text-indigo-400">
+              <p className="text-xs uppercase tracking-[0.4em] text-blue-500 font-semibold dark:text-blue-400">
                 Leaf Nest
               </p>
             </div>
@@ -165,7 +165,7 @@ export function AuthCard() {
 
               <button
                 type="button"
-                className="mt-2 text-sm text-gray-500 transition-colors hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400 font-medium"
+                className="mt-2 text-sm text-gray-500 transition-colors hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 font-medium"
                 onClick={() => {
                   setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
                   setErrorMessage(null);

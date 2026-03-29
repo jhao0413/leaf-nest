@@ -85,7 +85,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-64 flex flex-col border-r border-white/20 bg-white/30 dark:bg-black/20 backdrop-blur-md shadow-xl z-50 transition-all">
+    <div className="h-full w-64 shrink-0 flex flex-col rounded-2xl border border-white/60 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-2xl shadow-lg shadow-blue-900/5 z-50 transition-all overflow-hidden">
       {/* Logo Section */}
       <div className="p-6 flex items-center gap-3">
         <div className="relative w-10 h-10 overflow-hidden rounded-xl shadow-sm">
