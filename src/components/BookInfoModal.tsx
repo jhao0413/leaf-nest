@@ -33,10 +33,11 @@ export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, b
                 <div className="mr-10">
                   <Image
                     isBlurred
-                    alt="Event image"
-                    width={340}
-                    height={480}
+                    alt="Book cover"
+                    width={300}
+                    height={450}
                     src={coverUrl}
+                    className="object-cover"
                   />
                 </div>
 
