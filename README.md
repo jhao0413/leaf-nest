@@ -12,6 +12,7 @@ English | [简体中文](README.zh-CN.md)
 
 ## Features
 
+- 🔐 **Authentication**: Email/password sign-up and sign-in with cookie-based sessions (better-auth).
 - 📚 **EPUB import + library management**: Import `.epub` files in the browser, show covers + metadata, and support batch delete with manage mode.
 - 📖 **Two reading layouts**: Automatic mobile single-column mode and desktop double-column mode, switchable at runtime.
 - 📑 **Chapter navigation + progress persistence**: Restore chapter/page and text anchor from the synced reading state.
@@ -26,17 +27,18 @@ English | [简体中文](README.zh-CN.md)
 
 ## Tech Stack
 
-- **Framework**: Vite+ + React Router + React 19
-- **Backend**: Hono + Better Auth + Drizzle ORM
+- **Framework**: Vite+ + React Router v7 + React 19
+- **Backend**: Hono + better-auth + Drizzle ORM
 - **Database**: PostgreSQL
-- **Object Storage**: S3-compatible storage / MinIO / RustFS
-- **State Management**: Zustand
-- **Styling**: Tailwind CSS 4.x + HeroUI
+- **Object Storage**: S3-compatible storage / MinIO
+- **State Management**: Zustand v5
+- **Styling**: Tailwind CSS 4.x + HeroUI + Radix UI
+- **Validation**: Zod
 - **Code Quality**: Oxlint + Oxfmt via Vite+
 - **Internationalization**: Client-side i18n provider
 - **Theme**: Custom client-side theme provider
 - **Package Manager**: pnpm 9.0.0
-- **Core Libraries**: JSZip, lucide-react, framer-motion/motion, lodash, uuid
+- **Core Libraries**: JSZip, lucide-react, framer-motion/motion, dayjs, lodash, uuid
 
 ## Getting Started
 
@@ -162,27 +164,51 @@ leaf-nest/
 ├── src/
 │   ├── main.tsx             # Vite+ entrypoint
 │   ├── App.tsx              # BrowserRouter + route shell
+│   ├── navigation.ts        # react-router-dom wrappers
 │   ├── app/                 # Route components consumed by React Router
+│   │   ├── page.tsx         # Home (book library)
 │   │   ├── reader/[id]/     # Reader page
 │   │   ├── notes/           # Notes list and per-book notes pages
 │   │   └── settings/        # Language and global settings
 │   ├── components/          # React components
+│   │   ├── AuthCard.tsx     # Sign-in / sign-up form
+│   │   ├── AuthGate.tsx     # Auth guard wrapper
+│   │   ├── ClientLayout.tsx # Sidebar + main layout
+│   │   ├── Sidebar.tsx      # Navigation sidebar
 │   │   ├── Renderer/        # EPUB renderers (single/double column)
 │   │   │   ├── SearchModal.tsx       # Full-book search modal
 │   │   │   ├── Toolbar/              # Reader toolbar controls
-│   │   │   └── HighlightPopup.tsx     # Highlight create/edit overlays
-│   │   └── ui/              # UI components
+│   │   │   └── HighlightPopup.tsx    # Highlight create/edit overlays
+│   │   └── ui/              # Shared UI primitives
 │   ├── hooks/               # Custom React hooks
 │   ├── i18n/                # Client-side i18n provider + locale config
+│   ├── lib/                 # Client-side libraries
+│   │   ├── api/             # API client + typed contracts
+│   │   ├── auth/            # better-auth client + session store
+│   │   ├── binary/          # Book binary source abstraction (remote S3)
+│   │   └── repositories/    # Data repositories (books, highlights, reading)
+│   ├── plugins/             # HeroUI plugin config
 │   ├── store/               # Zustand stores
+│   ├── theme/               # Light/dark theme provider
 │   ├── utils/               # Utility functions
-│   │   ├── handleWorker.ts  # Web Worker for SQLite operations
-│   │   ├── chapterLoader.ts # Chapter content loading
-│   │   ├── fullBookTextIndexer.ts # Full-book full-text indexer
-│   │   ├── readingProgressManager.ts # Debounced progress persistence
+│   │   ├── chapterLoader.ts           # Chapter content loading
+│   │   ├── chapterParser.ts           # Chapter parsing
+│   │   ├── epubStructureParser.ts     # EPUB metadata + TOC parsing
+│   │   ├── fullBookTextIndexer.ts     # Full-book full-text indexer
+│   │   ├── readingProgressManager.ts  # Debounced progress persistence
 │   │   └── highlightRenderer.ts       # Render highlights into reader iframe
 │   └── messages/            # Translation files (en, zh)
+├── server/
+│   └── src/
+│       ├── index.ts         # Entry: loads env, wires services, starts Hono
+│       ├── app.ts           # Hono app factory: routes, auth, static serving
+│       ├── env.ts           # Zod-validated env schema
+│       ├── db/schema/       # Drizzle schema (auth, books, files, progress, highlights)
+│       ├── lib/             # Services (auth, books, reading, storage, db)
+│       └── routes/          # REST API routes (books, reading, health)
 ├── public/                  # Static assets
+├── docker-compose.yml       # 3-service Docker stack (app, postgres, minio)
+├── Dockerfile               # Multi-stage Node.js build
 └── vite.config.ts           # Vite+ / Vite shared configuration
 ```
 
@@ -201,6 +227,13 @@ The app stores primary data on the backend:
 - **PostgreSQL**: users, books, reading progress, highlights, and related metadata
 - **S3-compatible object storage**: EPUB binaries and remote cover objects
 - **Browser state**: reader UI state and in-memory search helpers for the active session
+
+### Authentication
+
+- Email/password sign-up and sign-in powered by better-auth with a Drizzle adapter.
+- Sessions are cookie-based and managed server-side.
+- All API routes (except `/api/health` and `/api/auth/*`) require a valid session.
+- The frontend uses `AuthGate` to show the sign-in card for unauthenticated users.
 
 ### EPUB Rendering
 
