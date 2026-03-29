@@ -6,7 +6,6 @@ import { useTranslations } from '@/i18n';
 import { useRouter } from '@/navigation';
 import { BookOpen, ChevronRight, Highlighter, Loader2 } from 'lucide-react';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
-import { AuthGate } from '@/components/AuthGate';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 
 interface GroupedHighlights {
@@ -87,7 +86,7 @@ export default function NotesPage() {
   };
 
   return (
-    <AuthGate>
+    <>
       {loading ? (
         <div className="flex flex-col h-full p-4 md:p-6 xl:p-8">
           <div className="mx-auto w-full">
@@ -170,6 +169,6 @@ export default function NotesPage() {
           </div>
         </div>
       )}
-    </AuthGate>
+    </>
   );
 }

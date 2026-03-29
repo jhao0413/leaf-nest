@@ -12,7 +12,6 @@ import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeS
 import { Checkbox } from '@heroui/checkbox';
 import epubStructureParser from '@/utils/epubStructureParser';
 import { useTranslations } from '@/i18n';
-import { AuthGate } from '@/components/AuthGate';
 import { booksRepository } from '@/lib/repositories/booksRepository';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 
@@ -126,7 +125,7 @@ export default function Home() {
   };
 
   return (
-    <AuthGate>
+    <>
       <div className="flex flex-col h-full">
         {/* Top Toolbar */}
         <div className="flex justify-between items-center mb-6 px-2 pt-2">
@@ -258,6 +257,6 @@ export default function Home() {
           <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={modalBookInfo} />
         )}
       </div>
-    </AuthGate>
+    </>
   );
 }

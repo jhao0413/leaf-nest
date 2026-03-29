@@ -1,9 +1,11 @@
 'use client';
 
 import Image from '@/components/AppImage';
-import { Home, NotebookPen, Settings } from 'lucide-react';
+import { Home, NotebookPen, Settings, LogOut } from 'lucide-react';
+import { authClient } from '@/lib/auth/client';
 import { usePathname, useRouter } from '@/navigation';
 import { useTranslations } from '@/i18n';
+import { useSessionStore } from '@/lib/auth/sessionStore';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -59,6 +61,7 @@ export const Sidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations('Sidebar');
+  const session = useSessionStore((state) => state.session);
 
   const menuItems = [
     {
@@ -107,8 +110,38 @@ export const Sidebar: React.FC = () => {
         ))}
       </div>
 
-      {/* Footer/Decorative (Optional) */}
-      <div className="p-4 text-xs text-center text-gray-400/60 font-lxgw">{t('builtWith')}</div>
+      {/* User Profile / Logout */}
+      <div className="p-4 mt-auto">
+        <div className="flex items-center gap-3 p-3 rounded-xl border border-white/20 bg-white/40 dark:border-white/10 dark:bg-black/20 backdrop-blur-md shadow-sm transition-all hover:bg-white/60 dark:hover:bg-white/5">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/60 dark:to-sky-900/40 border border-blue-200/50 dark:border-blue-700/30 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-lg shadow-sm shrink-0 transition-colors">
+            {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+          </div>
+
+          {/* User Info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-lxgw font-bold text-sm text-gray-800 dark:text-gray-200 truncate leading-tight">
+              {session?.user?.name || 'User'}
+            </p>
+            <p className="font-lxgw text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+              {session?.user?.email || ''}
+            </p>
+          </div>
+
+          {/* Logout Button */}
+          <button
+            type="button"
+            onClick={async () => {
+              await authClient.signOut();
+              window.location.reload();
+            }}
+            title={t('logout')}
+            className="p-2 -mr-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors shrink-0 outline-none focus:ring-2 focus:ring-red-500/50"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

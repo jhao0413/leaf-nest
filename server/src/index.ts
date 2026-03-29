@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './load-env.js';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { serve } from '@hono/node-server';

@@ -45,6 +45,7 @@
     "home": "Home",
     "notes": "Notes",
     "settings": "Settings",
+    "logout": "Log out",
     "builtWith": "Built with LeafNest"
   },
   "Settings": {

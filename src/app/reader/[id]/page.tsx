@@ -14,7 +14,6 @@ import { useBreakpoints } from '@/hooks/useBreakpoints';
 import { useParams } from '@/navigation';
 import { booksRepository } from '@/lib/repositories/booksRepository';
 import { remoteBookBinarySource } from '@/lib/binary/remoteBookBinarySource';
-import { AuthGate } from '@/components/AuthGate';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 
 const emptyBookInfo = {
@@ -83,7 +82,7 @@ export default function ReaderPage() {
   const isSingleMode = isMobile || rendererMode === 'single';
 
   return (
-    <AuthGate>
+    <>
       {bookInfo.name ? (
         isSingleMode ? (
           <SingleColumnRenderer />
@@ -93,6 +92,6 @@ export default function ReaderPage() {
       ) : (
         <div className="h-full w-full bg-slate-50"></div>
       )}
-    </AuthGate>
+    </>
   );
 }

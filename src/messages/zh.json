@@ -45,6 +45,7 @@
     "home": "首页",
     "notes": "笔记",
     "settings": "设置",
+    "logout": "退出登录",
     "builtWith": "由 LeafNest 驱动"
   },
   "Settings": {

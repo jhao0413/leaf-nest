@@ -9,10 +9,6 @@ const { mockListBooks } = vi.hoisted(() => ({
   mockListBooks: vi.fn()
 }));
 
-vi.mock('@/components/AuthGate', () => ({
-  AuthGate: () => <div>Auth Card</div>
-}));
-
 vi.mock('@/components/BookInfoModal', () => ({
   BookInfoModal: () => null
 }));
@@ -46,7 +42,20 @@ describe('HomePage', () => {
     mockListBooks.mockResolvedValue([]);
   });
 
-  it('shows the auth shell when the auth gate blocks access', async () => {
+  it('loads the empty library state when the session is authenticated', async () => {
+    useSessionStore.setState({
+      status: 'authenticated',
+      session: {
+        user: {
+          id: 'user-1',
+          email: 'reader@example.com',
+          name: 'Reader'
+        }
+      },
+      errorMessage: null,
+      refetchSession: undefined
+    });
+
     render(
       <I18nProvider>
         <HomePage />
@@ -54,9 +63,10 @@ describe('HomePage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Auth Card')).toBeInTheDocument();
+      expect(mockListBooks).toHaveBeenCalledTimes(1);
     });
-    expect(screen.queryByText('我的书架')).not.toBeInTheDocument();
-    expect(mockListBooks).not.toHaveBeenCalled();
+
+    expect(screen.getByText('My Books')).toBeInTheDocument();
+    expect(screen.getByText('No books yet, click Import to add')).toBeInTheDocument();
   });
 });

@@ -8,7 +8,6 @@ import { Trash2, BookOpen, Highlighter, ChevronLeft, Loader2 } from 'lucide-reac
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { booksRepository } from '@/lib/repositories/booksRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
-import { AuthGate } from '@/components/AuthGate';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 
 interface HighlightWithBook {
@@ -104,7 +103,7 @@ export default function BookNotesPage() {
   };
 
   return (
-    <AuthGate>
+    <>
       {!bookId ? (
         <div className="flex flex-col items-center justify-center h-full text-center p-8">
           <p className="text-gray-500 font-lxgw">{t('bookNotFound')}</p>
@@ -243,6 +242,6 @@ export default function BookNotesPage() {
           </div>
         </div>
       )}
-    </AuthGate>
+    </>
   );
 }
