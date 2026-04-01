@@ -63,6 +63,7 @@
 ### Task 1: 启动 Node API 运行时
 
 **Files:**
+
 - Create: `server/src/index.ts`
 - Create: `server/src/app.ts`
 - Create: `server/src/routes/health.ts`
@@ -129,6 +130,7 @@ git commit -m "feat: bootstrap hono api runtime"
 ### Task 2: 补齐自部署基础设施和环境配置
 
 **Files:**
+
 - Create: `.env.example`
 - Create: `Dockerfile`
 - Create: `docker-compose.yml`
@@ -143,8 +145,7 @@ git commit -m "feat: bootstrap hono api runtime"
 在 `server/src/env.test.ts` 中验证：
 
 ```ts
-- 缺失必要变量时抛错
-- 提供完整配置时能得到类型正确的结果
+-缺失必要变量时抛错 - 提供完整配置时能得到类型正确的结果;
 ```
 
 Run: `pnpm test:api -- server/src/env.test.ts`
@@ -156,17 +157,17 @@ Expected: FAIL，因为 `server/src/env.ts` 还不存在。
 创建 `server/src/env.ts`，解析并导出：
 
 ```ts
-APP_URL
-API_PORT
-DATABASE_URL
-BETTER_AUTH_SECRET
-BETTER_AUTH_URL
-S3_ENDPOINT
-S3_REGION
-S3_BUCKET
-S3_ACCESS_KEY_ID
-S3_SECRET_ACCESS_KEY
-S3_FORCE_PATH_STYLE
+APP_URL;
+API_PORT;
+DATABASE_URL;
+BETTER_AUTH_SECRET;
+BETTER_AUTH_URL;
+S3_ENDPOINT;
+S3_REGION;
+S3_BUCKET;
+S3_ACCESS_KEY_ID;
+S3_SECRET_ACCESS_KEY;
+S3_FORCE_PATH_STYLE;
 ```
 
 - [ ] **Step 3: 增加 Docker 与 Compose**
@@ -201,6 +202,7 @@ git commit -m "feat: add self-hosted infrastructure config"
 ### Task 3: 实现 Drizzle schema、Better Auth 和对象存储客户端
 
 **Files:**
+
 - Create: `server/src/lib/db.ts`
 - Create: `server/src/lib/auth.ts`
 - Create: `server/src/lib/storage.ts`
@@ -230,14 +232,14 @@ Expected: FAIL。
 至少创建这些表：
 
 ```ts
-users
-sessions
-accounts
-verifications
-books
-book_files
-reading_progress
-highlights
+users;
+sessions;
+accounts;
+verifications;
+books;
+book_files;
+reading_progress;
+highlights;
 ```
 
 要求：
@@ -278,6 +280,7 @@ git commit -m "feat: add drizzle schema and better auth"
 ### Task 4: 实现书籍上传、列表、详情、删除和内容访问 API
 
 **Files:**
+
 - Create: `server/src/modules/books/contracts.ts`
 - Create: `server/src/modules/books/service.ts`
 - Create: `server/src/modules/books/routes.ts`
@@ -356,6 +359,7 @@ git commit -m "feat: add books api"
 ### Task 5: 实现阅读进度和高亮批注 API
 
 **Files:**
+
 - Create: `server/src/modules/reading/contracts.ts`
 - Create: `server/src/modules/reading/service.ts`
 - Create: `server/src/modules/reading/routes.ts`
@@ -422,6 +426,7 @@ git commit -m "feat: add reading apis"
 ### Task 6: 增加前端认证状态、API Client 和访问保护壳层
 
 **Files:**
+
 - Create: `src/lib/api/contracts.ts`
 - Create: `src/lib/api/client.ts`
 - Create: `src/lib/auth/client.ts`
@@ -459,9 +464,7 @@ Expected: FAIL。
 新增 `AuthCard.tsx` 处理注册/登录表单，新增 `AuthGate.tsx` 负责：
 
 ```ts
-- 会话加载中
-- 已登录
-- 未登录
+-会话加载中 - 已登录 - 未登录;
 ```
 
 然后在 `src/app/providers.tsx` 中注入会话初始化逻辑。
@@ -486,6 +489,7 @@ git commit -m "feat: add auth and api client shell"
 ### Task 7: 建立仓储层和二进制访问抽象
 
 **Files:**
+
 - Create: `src/lib/repositories/booksRepository.ts`
 - Create: `src/lib/repositories/readingRepository.ts`
 - Create: `src/lib/repositories/highlightsRepository.ts`
@@ -516,9 +520,7 @@ Expected: FAIL。
 在三个 repository 中统一封装：
 
 ```ts
-- 书籍列表/详情/上传/删除
-- 阅读进度读取与保存
-- 高亮和批注的增删改查
+-书籍列表 / 详情 / 上传 / 删除 - 阅读进度读取与保存 - 高亮和批注的增删改查;
 ```
 
 页面和组件不得直接写 `fetch`。
@@ -551,6 +553,7 @@ git commit -m "feat: add repositories and binary source abstraction"
 ### Task 8: 将书库页迁移到云端 API
 
 **Files:**
+
 - Create: `src/components/BookAccessButton.tsx`
 - Create: `src/app/page.library.test.tsx`
 - Modify: `src/app/page.tsx`
@@ -602,6 +605,7 @@ git commit -m "feat: migrate library page to api"
 ### Task 9: 将阅读页、笔记页和高亮链路迁移到仓储层
 
 **Files:**
+
 - Modify: `src/app/reader/[id]/page.tsx`
 - Modify: `src/app/notes/page.tsx`
 - Modify: `src/app/notes/[bookId]/page.tsx`
@@ -660,6 +664,7 @@ git commit -m "feat: migrate reader and notes to api repositories"
 ### Task 10: 删除 SQLite WASM 和 worker 持久化层
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `vite.config.ts`
 - Modify: `README.md`
@@ -693,6 +698,7 @@ git commit -m "refactor: remove sqlite wasm worker layer"
 ### Task 11: 完整验证云端版 Web 流程
 
 **Files:**
+
 - Verify only; no planned code changes unless a failure is found
 
 - [ ] **Step 1: 运行前端测试**

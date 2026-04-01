@@ -174,7 +174,10 @@ export default function BookNotesPage() {
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl font-bold font-lxgw leading-snug truncate" title={bookName}>
+                  <h1
+                    className="text-2xl font-bold font-lxgw leading-snug truncate"
+                    title={bookName}
+                  >
                     {bookName}
                   </h1>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -186,7 +189,7 @@ export default function BookNotesPage() {
                 </div>
               </div>
             </div>
-            
+
             {highlights.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-20 text-center">
                 <Highlighter size={42} className="text-gray-300 dark:text-gray-600 mb-3" />

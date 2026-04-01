@@ -1,8 +1,7 @@
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useFontStore, useRendererConfigStore } from '@/store/fontConfigStore';
 import { useRendererModeStore } from '@/store/rendererModeStore';
-import { Button } from '@heroui/button';
-import { Slider } from '@heroui/slider';
+import { Button, Slider } from '@heroui/react';
 import { ALargeSmall, AArrowDown, AArrowUp } from 'lucide-react';
 import { useTranslations } from '@/i18n';
 import { useState } from 'react';
@@ -54,40 +53,48 @@ const FontConfig: React.FC = () => {
         aria-label="Close font settings"
       />
       <div
-        className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] ${
+        className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] [--accent:var(--eclipse)] [--accent-foreground:var(--snow)] [--focus:var(--eclipse)] dark:[--accent:var(--snow)] dark:[--accent-foreground:var(--eclipse)] dark:[--focus:var(--snow)] ${
           mode === 'single' ? 'right-0 sm:right-1/4' : 'right-[10%]'
         } z-30 rounded-2xl transition-opacity duration-500 transform ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         } shadow-md`}
       >
-        <Slider
-          size="lg"
-          step={2}
-          color="foreground"
-          label={t('fontSize')}
-          showSteps={true}
-          maxValue={26}
-          minValue={16}
-          value={rendererConfig.fontSize}
-          getValue={(fontSize) => `${fontSize}px`}
-          startContent={<AArrowDown className="text-2xl" />}
-          endContent={<AArrowUp className="text-2xl" />}
-          className="max-w-md"
-          onChange={(value) => onFontSizeChange(Number(value))}
-        />
+        <div className="flex items-center gap-2 mb-2">
+          <AArrowDown className="text-2xl" />
+          <Slider
+            step={2}
+            maxValue={26}
+            minValue={16}
+            value={[rendererConfig.fontSize]}
+            onChange={(value) => onFontSizeChange(Array.isArray(value) ? value[0] : value)}
+            className="max-w-md"
+          >
+            <Slider.Track>
+              <Slider.Fill />
+              <Slider.Thumb />
+            </Slider.Track>
+          </Slider>
+          <AArrowUp className="text-2xl" />
+        </div>
+        <div className="text-sm text-center mb-2">
+          {t('fontSize')}: {rendererConfig.fontSize}px
+        </div>
         <p className="mt-2">{t('fontFamily')}</p>
         <div className="grid gap-2 grid-cols-2">
           {cuurentFontFamilies.map((font) => (
-            <Button
+            <button
               key={font.value}
-              variant="bordered"
-              color={rendererConfig.fontFamily === font.value ? 'primary' : 'default'}
-              className={`min-w-36 bg-white dark:bg-neutral-700 p-1 rounded-md mt-2 font-${font.value} text-base`}
+              type="button"
+              className={`min-w-36 rounded-xl p-1 mt-2 font-${font.value} text-base ${
+                rendererConfig.fontFamily === font.value
+                  ? 'border border-neutral-900 bg-neutral-900 text-white hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:border-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 dark:focus-visible:ring-white'
+                  : 'border border-neutral-200 bg-white/85 text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700/80 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:focus-visible:ring-white'
+              }`}
               style={{ fontFamily: font.value }}
               onClick={() => onFontFamilyChange(font.value)}
             >
               {font.value === 'sans' ? t('defaultFont') : font.name}
-            </Button>
+            </button>
           ))}
         </div>
       </div>
@@ -96,15 +103,15 @@ const FontConfig: React.FC = () => {
 
   return (
     <>
-      <button
-        type="button"
-        className="w-12 h-12 mt-4 bg-white rounded-full shadow-md flex items-center justify-center z-10 dark:bg-neutral-900"
-        onClick={handleMenuClick}
+      <Button
+        className="mt-4 h-12 w-12 rounded-full bg-white shadow-md dark:bg-neutral-900"
+        isIconOnly
+        variant="outline"
+        onPress={handleMenuClick}
         aria-label={isOpen ? 'Close font settings' : 'Open font settings'}
-        title={isOpen ? 'Close font settings' : 'Open font settings'}
       >
-        <ALargeSmall />
-      </button>
+        <ALargeSmall className="!size-6" />
+      </Button>
       {createPortal(overlay, document.body)}
     </>
   );

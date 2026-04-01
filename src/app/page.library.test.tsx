@@ -4,6 +4,7 @@ import HomePage from '@/app/page';
 import { useBookInfoListStore } from '@/store/bookInfoStore';
 import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeStore';
 import { useSessionStore } from '@/lib/auth/sessionStore';
+import { createAuthenticatedSession } from '@/test/createAuthSession';
 
 const { mockListBooks, mockUploadBook, mockDeleteBook } = vi.hoisted(() => ({
   mockListBooks: vi.fn(),
@@ -56,18 +57,7 @@ describe('HomePage library flow', () => {
     useSelectedBookIdsStore.setState({ selectedBookIds: [] });
     useSessionStore.setState({
       status: 'authenticated',
-      session: {
-        user: {
-          id: 'user-1',
-          email: 'reader@example.com',
-          name: 'Reader'
-        },
-        session: {
-          id: 'session-1',
-          userId: 'user-1',
-          expiresAt: new Date('2026-03-28T00:00:00.000Z').toISOString()
-        }
-      },
+      session: createAuthenticatedSession(),
       errorMessage: null,
       refetchSession: undefined
     });

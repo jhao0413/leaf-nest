@@ -68,9 +68,17 @@ export interface ReadingService {
     bookId: string,
     input: ReadingProgressInput
   ) => Promise<ReadingProgressItem | null>;
-  listHighlights: (userId: string, bookId: string, options?: HighlightListOptions) => Promise<HighlightItem[]>;
+  listHighlights: (
+    userId: string,
+    bookId: string,
+    options?: HighlightListOptions
+  ) => Promise<HighlightItem[]>;
   listAllHighlights: (userId: string) => Promise<HighlightFeedItem[]>;
-  createHighlight: (userId: string, bookId: string, input: HighlightInput) => Promise<HighlightItem | null>;
+  createHighlight: (
+    userId: string,
+    bookId: string,
+    input: HighlightInput
+  ) => Promise<HighlightItem | null>;
   updateHighlight: (
     userId: string,
     highlightId: string,

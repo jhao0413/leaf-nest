@@ -5,6 +5,7 @@
 将当前“浏览器本地 SQLite 单机阅读器”重构为“云端主数据 + Web 在线优先 + 安卓端后续离线扩展”的架构，目标支持登录、跨设备同步、AI 问书、自部署和 NAS 场景。
 
 已确定的决策：
+
 - 后端框架：`Hono`
 - 主数据库：`Postgres`
 - ORM / Schema / Migration：`Drizzle ORM + drizzle-kit`

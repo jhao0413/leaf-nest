@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from '@/components/AppImage';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MenuIcon } from '@/components/ui/menu';
-import { Tooltip } from '@heroui/tooltip';
+import { Button, Tooltip, TooltipTrigger, TooltipContent } from '@heroui/react';
 import { useRendererModeStore } from '@/store/rendererModeStore';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
@@ -41,15 +41,15 @@ const Menu: React.FC = () => {
 
   return (
     <>
-      <button
-        type="button"
-        className="w-12 h-12 bg-white rounded-full shadow-md flex items-center justify-center cursor-pointer z-10 dark:bg-neutral-900"
-        onClick={handleMenuClick}
+      <Button
+        className="h-12 w-12 rounded-full bg-white shadow-md dark:bg-neutral-900"
+        isIconOnly
+        variant="outline"
+        onPress={handleMenuClick}
         aria-label={isOpen ? 'Close table of contents' : 'Open table of contents'}
-        title={isOpen ? 'Close table of contents' : 'Open table of contents'}
       >
         <MenuIcon isOpen={isOpen} />
-      </button>
+      </Button>
       <button
         type="button"
         className={`fixed top-0 left-0 w-screen h-screen bg-zinc-500/50 z-20 transition-opacity duration-500 ${
@@ -77,8 +77,11 @@ const Menu: React.FC = () => {
             />
           )}
           <div className="w-4/6 mx-4">
-            <Tooltip content={bookInfo.name}>
-              <h2 className="font-bold truncate w-[90%] text-lg font-lxgw">{bookInfo.name}</h2>
+            <Tooltip>
+              <TooltipTrigger>
+                <h2 className="font-bold truncate w-[90%] text-lg font-lxgw">{bookInfo.name}</h2>
+              </TooltipTrigger>
+              <TooltipContent>{bookInfo.name}</TooltipContent>
             </Tooltip>
 
             <p className="text-slate-500 dark:text-white">{bookInfo.creator}</p>

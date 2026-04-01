@@ -27,7 +27,10 @@ export const books = pgTable(
     publicationDate: date('publication_date'),
     language: text('language'),
     coverObjectKey: text('cover_object_key'),
-    toc: jsonb('toc').$type<Array<{ text: string; path: string; file: string }>>().notNull().default([]),
+    toc: jsonb('toc')
+      .$type<Array<{ text: string; path: string; file: string }>>()
+      .notNull()
+      .default([]),
     sizeBytes: bigint('size_bytes', { mode: 'number' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
@@ -77,7 +80,10 @@ export const readingProgress = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow()
   },
   (table) => ({
-    userBookUniqueIdx: uniqueIndex('reading_progress_user_book_unique').on(table.userId, table.bookId),
+    userBookUniqueIdx: uniqueIndex('reading_progress_user_book_unique').on(
+      table.userId,
+      table.bookId
+    ),
     userIdx: index('reading_progress_user_id_idx').on(table.userId),
     bookIdx: index('reading_progress_book_id_idx').on(table.bookId)
   })

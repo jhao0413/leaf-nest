@@ -38,7 +38,9 @@ const contentTypesByExtension: Record<string, string> = {
 };
 
 function getContentType(filePath: string) {
-  return contentTypesByExtension[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream';
+  return (
+    contentTypesByExtension[path.extname(filePath).toLowerCase()] ?? 'application/octet-stream'
+  );
 }
 
 async function getStaticFileResponse(frontendDistDir: string, requestPath: string) {

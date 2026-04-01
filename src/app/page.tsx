@@ -1,15 +1,12 @@
 'use client';
 
-import { Card, CardFooter } from '@heroui/card';
+import { Card, Checkbox, useOverlayState } from '@heroui/react';
 import { useEffect, useRef, useState } from 'react';
-import { Image } from '@heroui/image';
 import { Info, BookDown, Pencil, Trash2, X } from 'lucide-react';
 import { BookBasicInfoType, useBookInfoListStore } from '@/store/bookInfoStore';
 import { useRouter } from '@/navigation';
 import { BookInfoModal } from '@/components/BookInfoModal';
-import { useDisclosure } from '@heroui/modal';
 import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeStore';
-import { Checkbox } from '@heroui/checkbox';
 import epubStructureParser from '@/utils/epubStructureParser';
 import { useTranslations } from '@/i18n';
 import { booksRepository } from '@/lib/repositories/booksRepository';
@@ -118,10 +115,10 @@ export default function Home() {
 
   // Book Info Modal
   const [modalBookInfo, setModalBookInfo] = useState<BookBasicInfoType | null>(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const overlayState = useOverlayState();
   const openBookinfoModal = (book: BookBasicInfoType) => {
     setModalBookInfo(book);
-    onOpen();
+    overlayState.open();
   };
 
   return (
@@ -187,10 +184,9 @@ export default function Home() {
         <div className="flex flex-wrap content-start gap-4">
           {bookInfoList.map((book, index) => (
             <Card
-              isFooterBlurred
-              radius="lg"
+              variant="transparent"
               key={book.id || index}
-              className="w-[160px] h-[240px] border-none bg-transparent shadow-none hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 ease-out group"
+              className="w-[160px] h-[240px] border-none bg-transparent shadow-none p-0 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 ease-out group"
             >
               <div className="relative w-full h-full rounded-[14px] overflow-hidden shadow-md group-hover:shadow-2xl group-hover:shadow-blue-500/20 transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
                 <button
@@ -201,8 +197,7 @@ export default function Home() {
                   aria-label={`Open ${book.name}`}
                 >
                   {book.coverUrl ? (
-                    <Image
-                      removeWrapper
+                    <img
                       alt={book.name}
                       className="z-0 w-full h-full object-cover"
                       src={book.coverUrl}
@@ -217,25 +212,22 @@ export default function Home() {
                 </button>
               </div>
 
-              <CardFooter className="justify-between h-10 before:bg-white/70 border-white/20 border overflow-hidden py-1 absolute before:rounded-xl rounded-b-[14px] bottom-0 w-[calc(100%)] shadow-small z-50">
-                <div className="w-[calc(100%-24px)]">
-                  <p className="text-black/80 dark:text-gray-800 font-bold text-xs overflow-hidden whitespace-nowrap text-ellipsis font-lxgw">
+              <Card.Footer className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-2 rounded-b-[14px] border-t border-white/35 bg-white/80 px-3 py-2 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/55">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-xs font-semibold text-slate-900 dark:text-white/90 font-lxgw">
                     {book.name}
                   </p>
                 </div>
 
                 {manageMode ? (
                   <Checkbox
-                    size="sm"
-                    radius="sm"
-                    color="danger"
-                    classNames={{ wrapper: 'mr-0' }}
-                    onValueChange={(isSelected) => onSelectBook(book.id, isSelected)}
+                    className="mr-0"
+                    onChange={(isSelected) => onSelectBook(book.id, isSelected)}
                   />
                 ) : (
                   <button
                     type="button"
-                    className="text-black/60 hover:text-black dark:text-gray-700 dark:hover:text-black"
+                    className="shrink-0 text-slate-600 transition-colors hover:text-slate-950 dark:text-white/70 dark:hover:text-white"
                     onClick={() => openBookinfoModal(book)}
                     aria-label={`Open details for ${book.name}`}
                     title={book.name}
@@ -243,7 +235,7 @@ export default function Home() {
                     <Info size={16} />
                   </button>
                 )}
-              </CardFooter>
+              </Card.Footer>
             </Card>
           ))}
 
@@ -256,7 +248,11 @@ export default function Home() {
         </div>
 
         {modalBookInfo && (
-          <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={modalBookInfo} />
+          <BookInfoModal
+            isOpen={overlayState.isOpen}
+            onClose={overlayState.close}
+            bookInfo={modalBookInfo}
+          />
         )}
       </div>
     </>

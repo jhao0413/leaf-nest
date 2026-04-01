@@ -1,10 +1,8 @@
 import { BookOpen } from 'lucide-react';
-import { Modal, ModalBody, ModalContent, ModalHeader } from '@heroui/modal';
-import { Image } from '@heroui/image';
-import { Tooltip } from '@heroui/tooltip';
+import { Modal, Tooltip, TooltipContent, TooltipTrigger } from '@heroui/react';
+import dayjs from 'dayjs';
 import { useTranslations } from '@/i18n';
 import { BookBasicInfoType } from '@/store/bookInfoStore';
-import dayjs from 'dayjs';
 import { createBlobUrlFromBinary } from '@/utils/blobUrl';
 
 interface BookInfoModalProps {
@@ -13,82 +11,88 @@ interface BookInfoModalProps {
   bookInfo: BookBasicInfoType;
 }
 
-export const BookInfoModal: React.FC<BookInfoModalProps> = ({ isOpen, onClose, bookInfo }) => {
-  const tModal = useTranslations('BookInfoModal');
-  const coverUrl = bookInfo.coverUrl || (bookInfo.coverBlob ? createBlobUrlFromBinary(bookInfo.coverBlob) : '');
+function DetailRow({ label, value }: { label: string; value: string | undefined }) {
+  if (!value) {
+    return null;
+  }
 
   return (
-    <Modal backdrop="blur" size="2xl" isOpen={isOpen} onClose={onClose} className="pb-6">
-      <ModalContent>
-        {() => (
-          <>
-            <ModalHeader>
-              <div className="flex items-center">
-                <BookOpen size={16} className="mr-2" />
-                {tModal('title')}
+    <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+      <span className="font-semibold text-slate-900 dark:text-white">{label}：</span>
+      {value}
+    </p>
+  );
+}
+
+export function BookInfoModal({ isOpen, onClose, bookInfo }: BookInfoModalProps) {
+  const tModal = useTranslations('BookInfoModal');
+  const coverUrl =
+    bookInfo.coverUrl || (bookInfo.coverBlob ? createBlobUrlFromBinary(bookInfo.coverBlob) : '');
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
+      <Modal.Backdrop variant="blur">
+        <Modal.Container size="lg" placement="center">
+          <Modal.Dialog className="border border-white/50 bg-white/95 shadow-2xl dark:border-white/10 dark:bg-neutral-900/95">
+            <Modal.CloseTrigger />
+            <Modal.Header>
+              <div className="flex items-center gap-2">
+                <BookOpen size={16} className="text-slate-700 dark:text-slate-200" />
+                <Modal.Heading>{tModal('title')}</Modal.Heading>
               </div>
-            </ModalHeader>
-            <ModalBody>
-              <div className="flex">
-                <div className="mr-10">
-                  <Image
-                    isBlurred
-                    alt="Book cover"
-                    width={300}
-                    height={450}
-                    src={coverUrl}
-                    className="object-cover"
-                  />
+            </Modal.Header>
+            <Modal.Body className="pb-2 text-foreground">
+              <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)]">
+                <div className="overflow-hidden rounded-2xl bg-slate-100 shadow-sm dark:bg-white/5">
+                  {coverUrl ? (
+                    <img
+                      alt={bookInfo.name || 'Book cover'}
+                      width={300}
+                      height={450}
+                      src={coverUrl}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex aspect-[2/3] items-center justify-center p-6 text-center text-sm text-slate-500 dark:text-slate-400">
+                      {bookInfo.name || tModal('title')}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex flex-col w-1/2">
-                  <Tooltip content={bookInfo.name} delay={1000}>
-                    <h2 className="font-bold truncate w-[90%] text-2xl font-lxgw mb-2">
-                      {bookInfo.name}
-                    </h2>
+                <div className="min-w-0">
+                  <Tooltip delay={1000}>
+                    <TooltipTrigger>
+                      <h2 className="mb-4 truncate text-2xl font-bold text-slate-900 dark:text-white font-lxgw">
+                        {bookInfo.name}
+                      </h2>
+                    </TooltipTrigger>
+                    <TooltipContent>{bookInfo.name}</TooltipContent>
                   </Tooltip>
-                  {bookInfo.creator && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('author')}：</span>
-                      {bookInfo.creator}
-                    </p>
-                  )}
-                  {bookInfo.language && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('language')}：</span>
-                      {bookInfo.language}
-                    </p>
-                  )}
-                  {bookInfo.size && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('size')}：</span>
-                      {bookInfo.size}
-                    </p>
-                  )}
-                  {bookInfo.pubdate && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('publicationDate')}：</span>
-                      {dayjs(bookInfo.pubdate).format('YYYY-MM-DD')}
-                    </p>
-                  )}
-                  {bookInfo.publisher && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('publisher')}：</span>
-                      {bookInfo.publisher}
-                    </p>
-                  )}
-                  {bookInfo.identifier && (
-                    <p className="mb-2">
-                      <span className="font-bold">{tModal('identifier')}：</span>
-                      {bookInfo.identifier}
-                    </p>
-                  )}
+
+                  <div className="space-y-2">
+                    <DetailRow label={tModal('author')} value={bookInfo.creator} />
+                    <DetailRow label={tModal('language')} value={bookInfo.language} />
+                    <DetailRow label={tModal('size')} value={bookInfo.size} />
+                    <DetailRow
+                      label={tModal('publicationDate')}
+                      value={
+                        bookInfo.pubdate ? dayjs(bookInfo.pubdate).format('YYYY-MM-DD') : undefined
+                      }
+                    />
+                    <DetailRow label={tModal('publisher')} value={bookInfo.publisher} />
+                    <DetailRow label={tModal('identifier')} value={bookInfo.identifier} />
+                  </div>
                 </div>
               </div>
-            </ModalBody>
-          </>
-        )}
-      </ModalContent>
+            </Modal.Body>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal>
   );
-};
+}

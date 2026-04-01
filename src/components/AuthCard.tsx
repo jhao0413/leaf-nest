@@ -1,9 +1,7 @@
 'use client';
 
 import { FormEvent, useMemo, useState } from 'react';
-import { Button } from '@heroui/button';
-import { Card, CardBody, CardHeader } from '@heroui/card';
-import { Input } from '@heroui/input';
+import { Button, Card, TextField, Label, Input } from '@heroui/react';
 import { authClient } from '@/lib/auth/client';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 import { useTranslations } from '@/i18n';
@@ -11,7 +9,12 @@ import { useTranslations } from '@/i18n';
 type AuthMode = 'sign-in' | 'sign-up';
 
 function normalizeErrorMessage(error: unknown, fallback: string) {
-  if (typeof error === 'object' && error && 'message' in error && typeof error.message === 'string') {
+  if (
+    typeof error === 'object' &&
+    error &&
+    'message' in error &&
+    typeof error.message === 'string'
+  ) {
     return error.message;
   }
 
@@ -65,10 +68,7 @@ export function AuthCard() {
       await refetchSession?.();
     } catch (error) {
       setErrorMessage(
-        normalizeErrorMessage(
-          error,
-          mode === 'sign-in' ? t('signInFailed') : t('signUpFailed')
-        )
+        normalizeErrorMessage(error, mode === 'sign-in' ? t('signInFailed') : t('signUpFailed'))
       );
     } finally {
       setIsSubmitting(false);
@@ -86,7 +86,7 @@ export function AuthCard() {
 
       <div className="z-10 flex w-full max-w-md flex-col items-center px-4 py-10">
         <Card className="w-full border border-white/50 bg-white/60 shadow-2xl backdrop-blur-xl dark:border-neutral-700/50 dark:bg-neutral-900/60">
-          <CardHeader className="flex flex-col items-start gap-2 px-8 pt-8 pb-2">
+          <Card.Header className="flex flex-col items-start gap-2 px-8 pt-8 pb-2">
             <div className="flex w-full items-center justify-between">
               <p className="text-xs uppercase tracking-[0.4em] text-blue-500 font-semibold dark:text-blue-400">
                 Leaf Nest
@@ -98,49 +98,55 @@ export function AuthCard() {
               </h1>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('description')}</p>
             </div>
-          </CardHeader>
-          <CardBody className="px-8 pb-8 pt-4">
+          </Card.Header>
+          <Card.Content className="px-8 pb-8 pt-4">
             <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
               {mode === 'sign-up' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                  <Input
-                    label={t('name')}
+                  <TextField
+                    fullWidth
                     value={name}
-                    onValueChange={setName}
+                    onChange={setName}
                     isRequired
                     autoComplete="name"
-                    classNames={{
-                      inputWrapper: "bg-white/50 dark:bg-neutral-800/50 hover:bg-white/80 dark:hover:bg-neutral-800/80 transition-colors"
-                    }}
-                  />
+                    variant="secondary"
+                  >
+                    <Label>{t('name')}</Label>
+                    <Input className="w-full bg-white/70 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+                  </TextField>
                 </div>
               )}
-              <Input
+              <TextField
+                fullWidth
                 type="email"
-                label={t('email')}
                 value={email}
-                onValueChange={setEmail}
+                onChange={setEmail}
                 isRequired
                 autoComplete="email"
-                classNames={{
-                  inputWrapper: "bg-white/50 dark:bg-neutral-800/50 hover:bg-white/80 dark:hover:bg-neutral-800/80 transition-colors"
-                }}
-              />
-              <Input
+                variant="secondary"
+              >
+                <Label>{t('email')}</Label>
+                <Input className="w-full bg-white/70 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+              </TextField>
+              <TextField
+                fullWidth
                 type="password"
-                label={t('password')}
                 value={password}
-                onValueChange={setPassword}
+                onChange={setPassword}
                 isRequired
                 autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-                classNames={{
-                  inputWrapper: "bg-white/50 dark:bg-neutral-800/50 hover:bg-white/80 dark:hover:bg-neutral-800/80 transition-colors"
-                }}
-              />
+                variant="secondary"
+              >
+                <Label>{t('password')}</Label>
+                <Input className="w-full bg-white/70 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+              </TextField>
 
               {errorMessage && (
                 <div className="animate-in fade-in zoom-in-95 duration-200">
-                  <p className="text-sm font-medium text-red-500 bg-red-100/50 dark:bg-red-900/20 px-3 py-2 rounded-lg dark:text-red-400" role="alert">
+                  <p
+                    className="text-sm font-medium text-red-500 bg-red-100/50 dark:bg-red-900/20 px-3 py-2 rounded-lg dark:text-red-400"
+                    role="alert"
+                  >
                     {errorMessage}
                   </p>
                 </div>
@@ -148,9 +154,10 @@ export function AuthCard() {
 
               <Button
                 type="submit"
-                color="primary"
-                className="w-full font-medium shadow-md hover:shadow-lg transition-all"
-                isLoading={isSubmitting}
+                fullWidth
+                variant="primary"
+                className="font-medium shadow-md hover:shadow-lg transition-all"
+                isPending={isSubmitting}
               >
                 {mode === 'sign-in' ? t('signInAction') : t('signUpAction')}
               </Button>
@@ -174,7 +181,7 @@ export function AuthCard() {
                 {mode === 'sign-in' ? t('switchToSignUp') : t('switchToSignIn')}
               </button>
             </div>
-          </CardBody>
+          </Card.Content>
         </Card>
       </div>
     </div>

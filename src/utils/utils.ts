@@ -1,8 +1,40 @@
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+export type ClassValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | ClassDictionary
+  | ClassValue[];
+
+type ClassDictionary = Record<string, boolean | null | undefined>;
+
+const collectClassNames = (value: ClassValue, classNames: string[]) => {
+  if (!value) {
+    return;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number') {
+    classNames.push(String(value));
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    value.forEach((item) => collectClassNames(item, classNames));
+    return;
+  }
+
+  Object.entries(value).forEach(([className, isEnabled]) => {
+    if (isEnabled) {
+      classNames.push(className);
+    }
+  });
+};
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  const classNames: string[] = [];
+  inputs.forEach((input) => collectClassNames(input, classNames));
+  return classNames.join(' ');
 }
 
 export const resolvePath = (basePath: string, relativePath: string): string => {

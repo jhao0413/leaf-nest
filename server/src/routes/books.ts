@@ -66,16 +66,24 @@ async function parseCreateBookFormData(formData: FormData): Promise<BookCreateIn
 
   return {
     title: normalizedTitle,
-    creator: typeof formData.get('creator') === 'string' ? String(formData.get('creator')) || null : null,
+    creator:
+      typeof formData.get('creator') === 'string' ? String(formData.get('creator')) || null : null,
     publisher:
-      typeof formData.get('publisher') === 'string' ? String(formData.get('publisher')) || null : null,
+      typeof formData.get('publisher') === 'string'
+        ? String(formData.get('publisher')) || null
+        : null,
     identifier:
-      typeof formData.get('identifier') === 'string' ? String(formData.get('identifier')) || null : null,
+      typeof formData.get('identifier') === 'string'
+        ? String(formData.get('identifier')) || null
+        : null,
     publicationDate:
       typeof formData.get('publicationDate') === 'string'
         ? String(formData.get('publicationDate')) || null
         : null,
-    language: typeof formData.get('language') === 'string' ? String(formData.get('language')) || null : null,
+    language:
+      typeof formData.get('language') === 'string'
+        ? String(formData.get('language')) || null
+        : null,
     toc,
     file: await toUploadPart(file),
     cover: coverEntry instanceof File ? await toUploadPart(coverEntry) : null

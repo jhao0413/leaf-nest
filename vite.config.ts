@@ -5,13 +5,14 @@ import { reactRefreshWrapperPlugin } from 'vite/internal';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const reactRefreshPlugin = reactRefreshWrapperPlugin({
-  cwd: process.cwd(),
-  jsxImportSource: 'react',
-  reactRefreshHost: ''
-});
-
-reactRefreshPlugin.apply = 'serve';
+const reactRefreshPlugin = Object.assign(
+  reactRefreshWrapperPlugin({
+    cwd: process.cwd(),
+    jsxImportSource: 'react',
+    reactRefreshHost: ''
+  }),
+  { apply: 'serve' as const }
+);
 
 export default defineConfig({
   plugins: [reactRefreshPlugin],
@@ -60,6 +61,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     globals: true,
-    setupFiles: ['./vitest.setup.ts']
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    exclude: ['server/**', 'dist/**', 'dist-server/**']
   }
 });

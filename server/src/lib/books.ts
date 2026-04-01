@@ -238,7 +238,9 @@ function createBooksService(storage: StorageService): BooksService {
       }
 
       const downloadUrl = await storage.getObjectUrl(row.file.objectKey);
-      const coverUrl = row.book.coverObjectKey ? await storage.getObjectUrl(row.book.coverObjectKey) : null;
+      const coverUrl = row.book.coverObjectKey
+        ? await storage.getObjectUrl(row.book.coverObjectKey)
+        : null;
 
       return {
         id: row.book.id,

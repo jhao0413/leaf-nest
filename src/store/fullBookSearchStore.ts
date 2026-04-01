@@ -10,6 +10,7 @@ interface FullBookSearchStore {
 
   setIndexing: (isIndexing: boolean) => void;
   searchText: (query: string) => void;
+  clearSearch: () => void;
   clearIndex: () => void;
 }
 
@@ -42,6 +43,13 @@ export const useFullBookSearchStore = create<FullBookSearchStore>((set, get) => 
     set({
       searchResults: uniqueResults,
       currentSearchQuery: query
+    });
+  },
+
+  clearSearch: () => {
+    set({
+      searchResults: [],
+      currentSearchQuery: ''
     });
   },
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { HeroUIProvider } from '@heroui/system';
 import { I18nProvider } from '@/i18n';
 import { ThemeProvider } from '@/theme';
 import { authClient } from '@/lib/auth/client';
@@ -26,12 +25,10 @@ function AuthSessionBridge() {
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <I18nProvider>
-      <HeroUIProvider>
-        <ThemeProvider>
-          <AuthSessionBridge />
-          {children}
-        </ThemeProvider>
-      </HeroUIProvider>
+      <ThemeProvider>
+        <AuthSessionBridge />
+        {children}
+      </ThemeProvider>
     </I18nProvider>
   );
 }

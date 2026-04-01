@@ -229,7 +229,10 @@ describe('POST /api/books', () => {
         }
       ])
     );
-    formData.set('file', new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' }));
+    formData.set(
+      'file',
+      new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' })
+    );
     formData.set('cover', new File(['cover-bytes'], 'cover.jpg', { type: 'image/jpeg' }));
 
     const response = await app.request('/api/books', {
@@ -368,7 +371,10 @@ describe('POST /api/books', () => {
     const formData = new FormData();
     formData.set('title', 'Uploaded EPUB');
     formData.set('toc', '[]');
-    formData.set('file', new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' }));
+    formData.set(
+      'file',
+      new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' })
+    );
 
     const response = await app.request('/api/books', {
       method: 'POST',
@@ -406,7 +412,10 @@ describe('POST /api/books', () => {
     const formData = new FormData();
     formData.set('title', 'Uploaded EPUB');
     formData.set('toc', '[]');
-    formData.set('file', new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' }));
+    formData.set(
+      'file',
+      new File(['epub-content'], 'uploaded.epub', { type: 'application/epub+zip' })
+    );
 
     const response = await app.request('/api/books', {
       method: 'POST',

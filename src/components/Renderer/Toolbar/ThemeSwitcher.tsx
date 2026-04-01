@@ -1,6 +1,7 @@
 // app/components/ThemeSwitcher.tsx
 'use client';
 
+import { Button } from '@heroui/react';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/theme';
 
@@ -10,14 +11,14 @@ export function ThemeSwitcher() {
   if (!resolvedTheme) return null;
 
   return (
-    <button
-      type="button"
-      className="w-12 h-12 bg-white rounded-full mt-4 shadow-md flex items-center justify-center z-10 dark:bg-neutral-900"
-      onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+    <Button
+      className="mt-4 h-12 w-12 rounded-full bg-white shadow-md dark:bg-neutral-900"
+      isIconOnly
+      variant="outline"
+      onPress={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
       aria-label={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-      title={resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
     >
-      {resolvedTheme === 'dark' ? <Sun /> : <Moon />}
-    </button>
+      {resolvedTheme === 'dark' ? <Sun className="!size-6" /> : <Moon className="!size-6" />}
+    </Button>
   );
 }

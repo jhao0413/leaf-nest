@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Button } from '@heroui/button';
+import { Button, useOverlayState } from '@heroui/react';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useRendererConfigStore } from '@/store/fontConfigStore';
@@ -15,7 +15,6 @@ import { useBookZipStore } from '@/store/bookZipStore';
 import { parseAndProcessChapter } from '@/utils/chapterParser';
 import { waitForImagesAndCalculatePages, writeToIframe } from '@/utils/iframeHandler';
 import { useTranslations } from '@/i18n';
-import { useDisclosure } from '@heroui/modal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useRouter } from '@/navigation';
 import { BookInfoModal } from '../BookInfoModal';
@@ -300,11 +299,14 @@ const EpubReader: React.FC = () => {
     [clearSelection, updateChapterHighlight]
   );
 
-  const handleUpdateNote = useCallback((id: string, note: string) => {
-    void highlightsRepository.update(id, { note }).then((updated) => {
-      updateChapterHighlight(id, { note: updated.note });
-    });
-  }, [updateChapterHighlight]);
+  const handleUpdateNote = useCallback(
+    (id: string, note: string) => {
+      void highlightsRepository.update(id, { note }).then((updated) => {
+        updateChapterHighlight(id, { note: updated.note });
+      });
+    },
+    [updateChapterHighlight]
+  );
 
   const clickedHighlight = clickedHighlightId
     ? chapterHighlights.find((h) => h.id === clickedHighlightId)
@@ -315,7 +317,7 @@ const EpubReader: React.FC = () => {
     onNext: handleNextChapter
   });
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const bookInfoOverlay = useOverlayState();
 
   return (
     <div className="single-column-reader">
@@ -326,7 +328,7 @@ const EpubReader: React.FC = () => {
             <button
               type="button"
               className="flex items-center"
-              onClick={onOpen}
+              onClick={bookInfoOverlay.open}
               aria-label="Open book details"
             >
               <BookOpen size={20} />
@@ -341,13 +343,12 @@ const EpubReader: React.FC = () => {
             </button>
             <div>
               <Button
-                className="bg-white dark:bg-neutral-900"
+                className="bg-white dark:bg-neutral-900 rounded-sm"
                 isIconOnly
-                variant="bordered"
-                radius="sm"
+                variant="outline"
                 onPress={() => router.push('/')}
               >
-                <House size={16} className="dark:bg-neutral-900" />
+                <House size={16} className="text-black dark:text-white" />
               </Button>
             </div>
           </div>
@@ -379,14 +380,14 @@ const EpubReader: React.FC = () => {
           )}
           <div className="w-full z-10 h-20 flex justify-around items-start shrink-0">
             <Button
-              variant="bordered"
+              variant="outline"
               className="text-base rounded-md w-40 dark:bg-neutral-900"
               onPress={handlePrevChapter}
             >
               {t('previous')}
             </Button>
             <Button
-              variant="bordered"
+              variant="outline"
               className="text-base rounded-md w-40 dark:bg-neutral-900"
               onPress={handleNextChapter}
             >
@@ -399,7 +400,11 @@ const EpubReader: React.FC = () => {
         </div>
       </div>
 
-      <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={bookInfo} />
+      <BookInfoModal
+        isOpen={bookInfoOverlay.isOpen}
+        onClose={bookInfoOverlay.close}
+        bookInfo={bookInfo}
+      />
     </div>
   );
 };

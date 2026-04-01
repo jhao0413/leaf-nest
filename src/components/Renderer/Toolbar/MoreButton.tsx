@@ -1,4 +1,4 @@
-import { Button } from '@heroui/button';
+import { Button } from '@heroui/react';
 import { MoreVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Toolbar } from './Index';
@@ -25,11 +25,10 @@ export const MoreButton = () => {
   return (
     <div className="sm:hidden">
       <Button
-        className="more-button ml-2 bg-white dark:bg-neutral-900"
+        className="more-button ml-2 bg-white dark:bg-neutral-900 rounded-sm"
         isIconOnly
-        variant="bordered"
-        radius="sm"
-        onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
+        variant="outline"
+        onPress={() => setIsToolbarExpanded(!isToolbarExpanded)}
       >
         <MoreVertical size={16} className="dark:bg-neutral-900" />
       </Button>

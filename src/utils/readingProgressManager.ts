@@ -117,11 +117,11 @@ export class ReadingProgressManager {
       const percentage = this.calculatePercentage(chapter, page, bookInfo.toc.length, mode);
 
       void this.saveProgressHandler({
-          bookId,
-          currentChapter: chapter,
-          currentPage: page,
-          textAnchor,
-          percentage
+        bookId,
+        currentChapter: chapter,
+        currentPage: page,
+        textAnchor,
+        percentage
       });
     };
 

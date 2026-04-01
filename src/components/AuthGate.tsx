@@ -12,7 +12,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-slate-50 dark:bg-neutral-950 px-4 py-10">
         <div className="animate-pulse">
-          <p className="font-lxgw text-sm text-gray-500 dark:text-gray-400">{t('loadingSession')}</p>
+          <p className="font-lxgw text-sm text-gray-500 dark:text-gray-400">
+            {t('loadingSession')}
+          </p>
         </div>
       </div>
     );

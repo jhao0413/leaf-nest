@@ -40,9 +40,8 @@ const MenuIcon: React.FC<MenuIconProps> = ({ isOpen }: MenuIconProps) => {
   return (
     <div className="cursor-pointer select-none p-2 rounded-md transition-colors duration-200 flex items-center justify-center">
       <svg
+        className="!size-6"
         xmlns="http://www.w3.org/2000/svg"
-        width="28"
-        height="28"
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

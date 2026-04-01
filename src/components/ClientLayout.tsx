@@ -35,9 +35,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         {/* Main Content Area */}
         <div className="flex flex-col flex-1 h-full overflow-hidden relative rounded-2xl bg-white/60 dark:bg-neutral-900/60 shadow-lg shadow-black/5 border border-white/50 dark:border-white/5 backdrop-blur-xl">
           <main className="flex-1 overflow-x-hidden relative overflow-y-auto scroll-smooth">
-            <div className="max-w-7xl mx-auto w-full p-6">
-              {children}
-            </div>
+            <div className="max-w-7xl mx-auto w-full p-6">{children}</div>
           </main>
         </div>
       </div>

@@ -10,12 +10,16 @@ import { getReadingService } from './lib/reading.js';
 
 const env = getEnv();
 const frontendDistDir = path.resolve(process.cwd(), 'dist');
-const app = createApp(getAuth(), {
-  books: getBooksService(),
-  reading: getReadingService()
-}, {
-  frontendDistDir: existsSync(frontendDistDir) ? frontendDistDir : undefined
-});
+const app = createApp(
+  getAuth(),
+  {
+    books: getBooksService(),
+    reading: getReadingService()
+  },
+  {
+    frontendDistDir: existsSync(frontendDistDir) ? frontendDistDir : undefined
+  }
+);
 
 serve(
   {

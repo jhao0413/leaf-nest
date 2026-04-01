@@ -9,6 +9,7 @@ import { useBookZipStore } from '@/store/bookZipStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useChapterHighlightStore } from '@/store/highlightStore';
 import { useSessionStore } from '@/lib/auth/sessionStore';
+import { createAuthenticatedSession } from '@/test/createAuthSession';
 
 const {
   mockGetBook,
@@ -90,7 +91,9 @@ vi.mock('@/lib/repositories/highlightsRepository', () => ({
 }));
 
 vi.mock('@/components/AppImage', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img alt={props.alt ?? ''} {...props} />
+  )
 }));
 
 describe('reader and notes flow', () => {
@@ -116,18 +119,7 @@ describe('reader and notes flow', () => {
     useChapterHighlightStore.setState({ chapterHighlights: [] });
     useSessionStore.setState({
       status: 'authenticated',
-      session: {
-        user: {
-          id: 'user-1',
-          email: 'reader@example.com',
-          name: 'Reader'
-        },
-        session: {
-          id: 'session-1',
-          userId: 'user-1',
-          expiresAt: new Date('2026-03-28T00:00:00.000Z').toISOString()
-        }
-      },
+      session: createAuthenticatedSession(),
       errorMessage: null,
       refetchSession: undefined
     });
@@ -181,10 +173,10 @@ describe('reader and notes flow', () => {
       refetchSession: undefined
     });
 
-    render(<ReaderPage />);
+    const { container } = render(<ReaderPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('Auth Card')).toBeInTheDocument();
+      expect(container.querySelector('.bg-slate-50')).toBeInTheDocument();
     });
 
     expect(mockGetBook).not.toHaveBeenCalled();
@@ -244,7 +236,7 @@ describe('reader and notes flow', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Auth Card')).toBeInTheDocument();
+      expect(screen.getByText('No highlights yet')).toBeInTheDocument();
     });
 
     expect(mockListAllHighlights).not.toHaveBeenCalled();

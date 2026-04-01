@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { BookOpen, ChevronLeft, ChevronRight, House, Search, Loader2 } from 'lucide-react';
 import { useTranslations } from '@/i18n';
-import { Button } from '@heroui/button';
+import { Button, Kbd, useOverlayState } from '@heroui/react';
 import { useBookInfoStore } from '@/store/bookInfoStore';
 import { useReaderStateStore } from '@/store/readerStateStore';
 import { useRendererConfigStore } from '@/store/fontConfigStore';
@@ -19,13 +19,11 @@ import {
 } from '@/utils/iframeHandler';
 import { applyFontAndThemeStyles } from '@/utils/styleHandler';
 import { useRendererModeStore } from '@/store/rendererModeStore';
-import { useDisclosure } from '@heroui/modal';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useTextNavigation } from '@/hooks/useTextNavigation';
 import { useFullBookSearchStore } from '@/store/fullBookSearchStore';
 import { TextPosition, TextPositionMapper } from '@/utils/textPositionMapper';
-import { Input } from '@heroui/input';
-import { Kbd } from '@heroui/kbd';
+import type { SearchResult } from '@/utils/fullBookTextIndexer';
 import { SearchModal } from './SearchModal';
 import { useRouter } from '@/navigation';
 import { BookInfoModal } from '../BookInfoModal';
@@ -43,9 +41,9 @@ const EpubReader: React.FC = () => {
   const router = useRouter();
 
   // book info modal
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const { isOpen: isBookInfoOpen, open: openBookInfo, close: closeBookInfo } = useOverlayState();
   // search modal
-  const { isOpen: isOpenSearch, onOpen: onOpenSearch, onClose: onCloseSearch } = useDisclosure();
+  const { isOpen: isSearchOpen, open: openSearch, close: closeSearch } = useOverlayState();
 
   // page state
   const currentChapter = useReaderStateStore((state) => state.currentChapter);
@@ -68,6 +66,7 @@ const EpubReader: React.FC = () => {
   const progressManagerRef = useRef<ReadingProgressManager | null>(null);
   const isFirstLoadRef = useRef(true);
   const loadVersionRef = useRef(0);
+  const pendingSearchQueryRef = useRef('');
   const latestBookInfoRef = useRef(bookInfo);
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
   const [isRestoring, setIsRestoring] = useState(true);
@@ -102,11 +101,11 @@ const EpubReader: React.FC = () => {
 
           highlightText(rendererWindow.document, searchText);
 
-          onCloseSearch();
+          closeSearch();
         }
       }
     },
-    [searchAndNavigate, onCloseSearch, highlightText, setCurrentPageIndex]
+    [searchAndNavigate, closeSearch, highlightText, setCurrentPageIndex]
   );
 
   // Initialize progress manager
@@ -203,6 +202,7 @@ const EpubReader: React.FC = () => {
       }
 
       const { currentSearchQuery } = useFullBookSearchStore.getState();
+      const activeSearchQuery = pendingSearchQueryRef.current || currentSearchQuery;
 
       await handleIframeLoad(
         renderer,
@@ -211,10 +211,14 @@ const EpubReader: React.FC = () => {
         goToLastPageRef,
         setCurrentPageIndex,
         COLUMN_GAP,
-        currentSearchQuery,
+        activeSearchQuery,
         handleTextSearchWithPositions,
         onPageReady
       );
+
+      if (pendingSearchQueryRef.current === activeSearchQuery) {
+        pendingSearchQueryRef.current = '';
+      }
 
       if (bookInfo.id) {
         const items = await highlightsRepository.listByBook(bookInfo.id, {
@@ -273,28 +277,27 @@ const EpubReader: React.FC = () => {
   };
 
   const handleSearchResultClick = useCallback(
-    (resultIndex: number) => {
-      const { searchResults, currentSearchQuery } = useFullBookSearchStore.getState();
-
-      if (resultIndex >= 0 && resultIndex < searchResults.length) {
-        const result = searchResults[resultIndex];
-
-        if (result.chapterIndex === currentChapter) {
-          if (currentSearchQuery) {
-            const rendererWindow = getRendererWindow();
-            if (rendererWindow) {
-              const textMapper = new TextPositionMapper(pageWidthRef.current, COLUMN_GAP);
-              const positions = textMapper.analyzeTextPositions(rendererWindow.document);
-              handleTextSearchWithPositions(currentSearchQuery, positions);
-            }
+    (result: SearchResult, searchQuery: string) => {
+      if (result.chapterIndex === currentChapter) {
+        if (searchQuery) {
+          const rendererWindow = getRendererWindow();
+          if (rendererWindow) {
+            const textMapper = new TextPositionMapper(pageWidthRef.current, COLUMN_GAP);
+            const positions = textMapper.analyzeTextPositions(rendererWindow.document);
+            handleTextSearchWithPositions(searchQuery, positions);
           }
-        } else {
-          setCurrentChapter(result.chapterIndex);
         }
+      } else {
+        pendingSearchQueryRef.current = searchQuery;
+        setCurrentChapter(result.chapterIndex);
       }
     },
     [setCurrentChapter, currentChapter, handleTextSearchWithPositions]
   );
+
+  const handleCloseSearchModal = useCallback(() => {
+    closeSearch();
+  }, [closeSearch]);
 
   useEffect(() => {
     const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
@@ -397,7 +400,7 @@ const EpubReader: React.FC = () => {
   useKeyboardShortcuts({
     onPrevious: handlePrevPage,
     onNext: handleNextPage,
-    onSearch: onOpenSearch
+    onSearch: openSearch
   });
 
   const handleCreateHighlight = useCallback(
@@ -464,11 +467,14 @@ const EpubReader: React.FC = () => {
     [clearSelection, updateChapterHighlight]
   );
 
-  const handleUpdateNote = useCallback((id: string, note: string) => {
-    void highlightsRepository.update(id, { note }).then((updated) => {
-      updateChapterHighlight(id, { note: updated.note });
-    });
-  }, [updateChapterHighlight]);
+  const handleUpdateNote = useCallback(
+    (id: string, note: string) => {
+      void highlightsRepository.update(id, { note }).then((updated) => {
+        updateChapterHighlight(id, { note: updated.note });
+      });
+    },
+    [updateChapterHighlight]
+  );
 
   const clickedHighlight = clickedHighlightId
     ? chapterHighlights.find((h) => h.id === clickedHighlightId)
@@ -480,7 +486,7 @@ const EpubReader: React.FC = () => {
         <button
           type="button"
           className="flex items-center"
-          onClick={onOpen}
+          onClick={openBookInfo}
           aria-label="Open book details"
         >
           <BookOpen size={20} />
@@ -494,25 +500,23 @@ const EpubReader: React.FC = () => {
           </p>
         </button>
         <div className="flex">
-          <Input
-            className="w-40 mr-4"
-            color="default"
-            radius="full"
-            variant="bordered"
-            placeholder={'Search'}
-            onClick={onOpenSearch}
-            startContent={<Search size={16} />}
-            endContent={<Kbd keys={['ctrl']}>K</Kbd>}
-          />
+          <button
+            type="button"
+            className="mr-4 flex w-40 items-center gap-2 rounded-full border border-slate-200 bg-white/85 px-3 py-1.5 text-sm text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
+            onClick={openSearch}
+          >
+            <Search size={16} />
+            <span className="flex-1 text-left">Search</span>
+            <Kbd>Ctrl K</Kbd>
+          </button>
           {/* <LocaleSwitcher /> */}
           <Button
-            className="ml-4 bg-white dark:bg-neutral-900"
+            className="ml-4 bg-white dark:bg-neutral-900 rounded-md"
             isIconOnly
-            variant="shadow"
-            radius="sm"
+            variant="secondary"
             onPress={() => router.push('/')}
           >
-            <House size={16} className="dark:bg-neutral-900" />
+            <House size={16} className="text-black dark:text-white" />
           </Button>
         </div>
       </div>
@@ -551,18 +555,16 @@ const EpubReader: React.FC = () => {
           )}
           <div className="w-full flex justify-between">
             <Button
-              radius="full"
-              variant="bordered"
-              className="bg-white border-2 border-inherit dark:bg-neutral-900"
+              variant="outline"
+              className="bg-white border-2 border-inherit dark:bg-neutral-900 rounded-full"
               onPress={handlePrevPage}
             >
               <ChevronLeft size={16} />
               {t('previous')}
             </Button>
             <Button
-              radius="full"
-              variant="bordered"
-              className="bg-white border-2 border-inherit dark:bg-neutral-900"
+              variant="outline"
+              className="bg-white border-2 border-inherit dark:bg-neutral-900 rounded-full"
               onPress={handleNextPage}
             >
               {t('next')}
@@ -576,11 +578,11 @@ const EpubReader: React.FC = () => {
       </div>
 
       {/* book info */}
-      <BookInfoModal isOpen={isOpen} onClose={onClose} bookInfo={bookInfo} />
+      <BookInfoModal isOpen={isBookInfoOpen} onClose={closeBookInfo} bookInfo={bookInfo} />
 
       <SearchModal
-        isOpen={isOpenSearch}
-        onClose={onCloseSearch}
+        isOpen={isSearchOpen}
+        onClose={handleCloseSearchModal}
         onSearchResultClick={handleSearchResultClick}
       />
     </div>

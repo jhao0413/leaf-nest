@@ -63,7 +63,9 @@ export const booksRepository = {
   },
 
   async getBook(bookId: string) {
-    const response = await apiClient.get<ApiItemResponse<ApiBookDetailItem>>(`/api/books/${bookId}`);
+    const response = await apiClient.get<ApiItemResponse<ApiBookDetailItem>>(
+      `/api/books/${bookId}`
+    );
     return mapBookDetail(response.item);
   },
 
@@ -83,7 +85,10 @@ export const booksRepository = {
       formData.set('cover', input.cover);
     }
 
-    const response = await apiClient.postForm<ApiItemResponse<ApiBookListItem>>('/api/books', formData);
+    const response = await apiClient.postForm<ApiItemResponse<ApiBookListItem>>(
+      '/api/books',
+      formData
+    );
     return mapBook(response.item);
   },
 

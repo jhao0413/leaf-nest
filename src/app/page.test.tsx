@@ -4,6 +4,7 @@ import HomePage from '@/app/page';
 import { useBookInfoListStore } from '@/store/bookInfoStore';
 import { useManageModeStore, useSelectedBookIdsStore } from '@/store/manageModeStore';
 import { useSessionStore } from '@/lib/auth/sessionStore';
+import { createAuthenticatedSession } from '@/test/createAuthSession';
 
 const { mockListBooks } = vi.hoisted(() => ({
   mockListBooks: vi.fn()
@@ -45,13 +46,7 @@ describe('HomePage', () => {
   it('loads the empty library state when the session is authenticated', async () => {
     useSessionStore.setState({
       status: 'authenticated',
-      session: {
-        user: {
-          id: 'user-1',
-          email: 'reader@example.com',
-          name: 'Reader'
-        }
-      },
+      session: createAuthenticatedSession(),
       errorMessage: null,
       refetchSession: undefined
     });

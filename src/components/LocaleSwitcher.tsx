@@ -1,7 +1,13 @@
 'use client';
 import { Languages } from 'lucide-react';
-import { Dropdown, DropdownTrigger, DropdownItem, DropdownMenu } from '@heroui/dropdown';
-import { Button } from '@heroui/button';
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownPopover,
+  DropdownItem,
+  DropdownMenu,
+  Button
+} from '@heroui/react';
 import { useTransition } from 'react';
 import { setUserLocale } from '@/hooks/useLocale';
 import { Locale } from '@/i18n/config';
@@ -25,24 +31,24 @@ export default function LocaleSwitcher() {
     <Dropdown>
       <DropdownTrigger>
         <Button
-          className=" bg-white dark:bg-neutral-900"
+          className="bg-white dark:bg-neutral-900 rounded-sm"
           isIconOnly
-          variant={mode === 'single' ? 'bordered' : 'shadow'}
-          radius="sm"
+          variant={mode === 'single' ? 'outline' : 'secondary'}
         >
-          <Languages className="cursor-pointer" size={16} />
+          <Languages size={16} />
         </Button>
       </DropdownTrigger>
-      <DropdownMenu
-        disallowEmptySelection
-        variant="light"
-        selectionMode="single"
-        selectedKeys={[locale]}
-        onAction={(key) => onChange(String(key))}
-      >
-        <DropdownItem key="en">English</DropdownItem>
-        <DropdownItem key="zh">简体中文</DropdownItem>
-      </DropdownMenu>
+      <DropdownPopover>
+        <DropdownMenu
+          disallowEmptySelection
+          selectionMode="single"
+          selectedKeys={[locale]}
+          onAction={(key) => onChange(String(key))}
+        >
+          <DropdownItem id="en">English</DropdownItem>
+          <DropdownItem id="zh">简体中文</DropdownItem>
+        </DropdownMenu>
+      </DropdownPopover>
     </Dropdown>
   );
 }
