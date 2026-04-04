@@ -31,6 +31,8 @@ export function AuthCard() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const inputClassName =
+    'w-full border border-slate-200/80 bg-white/85 text-slate-900 placeholder:text-slate-500 transition-colors hover:bg-white dark:border-white/15 dark:bg-neutral-800/70 dark:text-slate-100 dark:placeholder:text-slate-400';
 
   const title = useMemo(
     () => (mode === 'sign-in' ? t('signInTitle') : t('signUpTitle')),
@@ -123,7 +125,7 @@ export function AuthCard() {
                       variant="secondary"
                     >
                       <Label>{t('name')}</Label>
-                      <Input className="w-full bg-white/85 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+                      <Input className={inputClassName} />
                     </TextField>
                   </div>
                 )}
@@ -137,7 +139,7 @@ export function AuthCard() {
                   variant="secondary"
                 >
                   <Label>{t('email')}</Label>
-                  <Input className="w-full bg-white/85 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+                  <Input className={inputClassName} />
                 </TextField>
                 <TextField
                   fullWidth
@@ -149,7 +151,7 @@ export function AuthCard() {
                   variant="secondary"
                 >
                   <Label>{t('password')}</Label>
-                  <Input className="w-full bg-white/85 dark:bg-neutral-800/70 hover:bg-white dark:hover:bg-neutral-800 transition-colors" />
+                  <Input className={inputClassName} />
                 </TextField>
 
                 {errorMessage && (
