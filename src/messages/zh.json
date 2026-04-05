@@ -68,7 +68,18 @@
     "collapsedHint": "点击展开查看该书笔记",
     "backToBooks": "返回书籍列表",
     "bookNotFound": "未找到该书",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "share": "分享",
+    "shareThisNote": "分享这条笔记",
+    "shareCardHeader": "笔记卡片",
+    "shareCopy": "复制卡片",
+    "shareCopying": "复制中...",
+    "shareCopied": "已复制图片到剪贴板",
+    "shareCopyFallback": "当前环境不支持复制图片，已改为复制文本",
+    "shareCopyFailed": "复制失败，请重试",
+    "shareBook": "所在书籍",
+    "shareSourceLabel": "摘录原文",
+    "close": "关闭"
   },
   "Highlights": {
     "highlight": "高亮",

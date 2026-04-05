@@ -68,7 +68,18 @@
     "collapsedHint": "Click to expand to view this book's notes",
     "backToBooks": "Back to books",
     "bookNotFound": "Book not found",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "share": "Share",
+    "shareThisNote": "Share this note",
+    "shareCardHeader": "Note Card",
+    "shareCopy": "Copy card",
+    "shareCopying": "Copying...",
+    "shareCopied": "Image copied to clipboard",
+    "shareCopyFallback": "Image copy is not supported, fallback to text copy",
+    "shareCopyFailed": "Copy failed, please try again",
+    "shareBook": "Book",
+    "shareSourceLabel": "Source Quote",
+    "close": "Close"
   },
   "Highlights": {
     "highlight": "Highlight",
