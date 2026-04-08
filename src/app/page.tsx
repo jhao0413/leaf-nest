@@ -186,33 +186,31 @@ export default function Home() {
             <Card
               variant="transparent"
               key={book.id || index}
-              className="w-[160px] h-[240px] border-none bg-transparent shadow-none p-0 hover:-translate-y-2 hover:scale-[1.02] transition-all duration-300 ease-out group"
+              className="relative w-[160px] h-[240px] overflow-hidden rounded-[14px] border-none bg-transparent p-0 shadow-md ring-1 ring-black/5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20 group dark:ring-white/10"
             >
-              <div className="relative w-full h-full rounded-[14px] overflow-hidden shadow-md group-hover:shadow-2xl group-hover:shadow-blue-500/20 transition-all duration-300 ring-1 ring-black/5 dark:ring-white/10">
-                <button
-                  type="button"
-                  className="w-full h-full"
-                  onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
-                  disabled={manageMode}
-                  aria-label={`Open ${book.name}`}
-                >
-                  {book.coverUrl ? (
-                    <img
-                      alt={book.name}
-                      className="z-0 w-full h-full object-cover"
-                      src={book.coverUrl}
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
-                      <span className="text-gray-400 font-lxgw p-4 text-center text-sm">
-                        {book.name}
-                      </span>
-                    </div>
-                  )}
-                </button>
-              </div>
+              <button
+                type="button"
+                className="h-full w-full"
+                onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
+                disabled={manageMode}
+                aria-label={`Open ${book.name}`}
+              >
+                {book.coverUrl ? (
+                  <img
+                    alt={book.name}
+                    className="z-0 h-full w-full object-cover"
+                    src={book.coverUrl}
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800">
+                    <span className="p-4 text-center text-sm text-gray-400 font-lxgw">
+                      {book.name}
+                    </span>
+                  </div>
+                )}
+              </button>
 
-              <Card.Footer className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-2 rounded-b-[14px] border-t border-white/35 bg-white/80 px-3 py-2 shadow-lg backdrop-blur-md dark:border-white/10 dark:bg-black/55">
+              <Card.Footer className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-2 rounded-b-[14px] border-t border-white/28 bg-white/40 px-3 py-2 backdrop-blur-lg backdrop-saturate-150 dark:border-white/10 dark:bg-black/45">
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-xs font-semibold text-slate-900 dark:text-white/90 font-lxgw">
                     {book.name}
