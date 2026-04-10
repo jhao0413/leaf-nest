@@ -190,7 +190,7 @@ export default function Home() {
             >
               <button
                 type="button"
-                className="h-full w-full"
+                className="h-full w-full cursor-pointer disabled:cursor-default"
                 onClick={() => !manageMode && router.push(`/reader/${book.id}`)}
                 disabled={manageMode}
                 aria-label={`Open ${book.name}`}

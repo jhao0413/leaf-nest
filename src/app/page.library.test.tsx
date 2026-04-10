@@ -97,6 +97,7 @@ describe('HomePage library flow', () => {
     });
 
     expect(screen.getByText('Remote Book')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open Remote Book' })).toHaveClass('cursor-pointer');
   });
 
   it('deletes selected books through the repository', async () => {
