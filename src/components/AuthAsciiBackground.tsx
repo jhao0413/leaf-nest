@@ -7,14 +7,25 @@ const BG_LUMA_CUTOFF = 236;
 const BG_COLOR_TOLERANCE = 237;
 const ASCII_CONTRAST = 0.9;
 const SHARPEN_AMOUNT = 0.24;
-const FPS = 30;
-const FRAME_INTERVAL = 1000 / FPS;
+const FPS = 20;
+const GECKO_FPS = 16;
+const REDUCED_MOTION_FPS = 10;
 const FRAME_SMOOTHNESS = 0.72;
 const ASCII_CHAR_SCALE_X = 0.6;
 const ASCII_CHAR_SCALE_Y = 0.78;
-const ASCII_FONT_MIN = 9;
-const ASCII_FONT_MAX = 18;
+const ASCII_GRID_SCALE_X = 1.18;
+const ASCII_GRID_SCALE_Y = 1.12;
+const ASCII_FONT_MIN = 7;
+const ASCII_FONT_MAX = 15;
 const ASCII_WIDE_BIAS = 0.9;
+const BG_RESAMPLE_INTERVAL = 18;
+const LOOP_RESET_THRESHOLD = 0.08;
+const MAX_DEVICE_PIXEL_RATIO = 1.75;
+const GECKO_MAX_DEVICE_PIXEL_RATIO = 1.15;
+const MAX_ASCII_COLS = 138;
+const MOBILE_MAX_ASCII_COLS = 104;
+const LOW_POWER_CELL_COUNT = 9500;
+const GLYPH_ALPHA_MIN = 0.16;
 
 interface BgColor {
   r: number;
@@ -55,6 +66,17 @@ function sampleBackgroundColor(
   return { r: r / count, g: g / count, b: b / count };
 }
 
+function blendBackgroundColor(current: BgColor | null, next: BgColor | null): BgColor | null {
+  if (!next) return current;
+  if (!current) return next;
+
+  return {
+    r: current.r * 0.82 + next.r * 0.18,
+    g: current.g * 0.82 + next.g * 0.18,
+    b: current.b * 0.82 + next.b * 0.18,
+  };
+}
+
 function isBackgroundPixel(
   r: number,
   g: number,
@@ -70,9 +92,24 @@ function isBackgroundPixel(
   return dr * dr + dg * dg + db * db <= BG_COLOR_TOLERANCE;
 }
 
-function pixelToAscii(v: number): string {
-  const idx = Math.round((Math.min(255, Math.max(0, v)) / 255) * (ASCII_CHARS.length - 1));
-  return ASCII_CHARS[idx];
+function pixelToAsciiIndex(v: number): number {
+  return Math.round((Math.min(255, Math.max(0, v)) / 255) * (ASCII_CHARS.length - 1));
+}
+
+function smoothstep01(value: number): number {
+  const clamped = Math.min(1, Math.max(0, value));
+  return clamped * clamped * (3 - 2 * clamped);
+}
+
+function getGlyphColor(): [number, number, number] {
+  const hasDarkClass =
+    document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
+
+  if (hasDarkClass || window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    return [207, 250, 254];
+  }
+
+  return [22, 78, 99];
 }
 
 export function AuthAsciiBackground({
@@ -81,22 +118,27 @@ export function AuthAsciiBackground({
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const preRef = useRef<HTMLPreElement>(null);
+  const outputCanvasRef = useRef<HTMLCanvasElement>(null);
+  const sampleCanvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const previousFrame = useRef<Float32Array | null>(null);
   const grayscaleBuffer = useRef<Float32Array | null>(null);
   const sharpenedBuffer = useRef<Float32Array | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const pre = preRef.current;
+    const outputCanvas = outputCanvasRef.current;
+    const sampleCanvas = sampleCanvasRef.current;
     const container = containerRef.current;
-    if (!video || !canvas || !pre || !container) return;
+    if (!video || !outputCanvas || !sampleCanvas || !container) return;
 
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (!ctx) return;
+    const outputCtx = outputCanvas.getContext('2d');
+    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+    if (!outputCtx || !sampleCtx) return;
+
+    const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isGeckoLike = userAgent.includes('firefox') || userAgent.includes('zen');
 
     let bgColor: BgColor | null = null;
     let lastTs = 0;
@@ -105,64 +147,122 @@ export function AuthAsciiBackground({
     let frameWidth = 0;
     let frameHeight = 0;
     let framePixels = 0;
+    let fontPx = ASCII_FONT_MIN;
+    let charW = 0;
+    let charH = 0;
+    let offsetX = 0;
+    let offsetY = 0;
+    let containerWidth = 0;
+    let containerHeight = 0;
+    let currentDpr = 1;
+    let frameCount = 0;
+    let previousVideoTime = -1;
 
-    const resizeToVideo = () => {
-      const containerW = Math.max(1, container.clientWidth);
-      const containerH = Math.max(1, container.clientHeight);
-      const fallbackRatio = 9 / 16;
-      const ratio =
-        Number.isFinite(video.videoWidth) && video.videoWidth > 0
-          ? (video.videoHeight / video.videoWidth) / ASCII_WIDE_BIAS
-          : fallbackRatio / ASCII_WIDE_BIAS;
+    const syncGeometry = () => {
+      containerWidth = Math.max(1, container.clientWidth);
+      containerHeight = Math.max(1, container.clientHeight);
+      currentDpr = Math.min(
+        window.devicePixelRatio || 1,
+        isGeckoLike ? GECKO_MAX_DEVICE_PIXEL_RATIO : MAX_DEVICE_PIXEL_RATIO,
+      );
 
-      const targetFontPx = Math.max(
+      const outputWidth = Math.max(1, Math.round(containerWidth * currentDpr));
+      const outputHeight = Math.max(1, Math.round(containerHeight * currentDpr));
+
+      if (outputCanvas.width !== outputWidth || outputCanvas.height !== outputHeight) {
+        outputCanvas.width = outputWidth;
+        outputCanvas.height = outputHeight;
+      }
+
+      fontPx = Math.max(
         ASCII_FONT_MIN,
-        Math.min(ASCII_FONT_MAX, Math.round(Math.min(containerW / 75, containerH / 45))),
+        Math.min(ASCII_FONT_MAX, Math.round(Math.min(containerWidth / 75, containerHeight / 45))),
       );
-      pre.style.fontSize = `${targetFontPx}px`;
 
-      const charW = Math.max(4, targetFontPx * ASCII_CHAR_SCALE_X);
-      const charH = Math.max(4, targetFontPx * ASCII_CHAR_SCALE_Y);
-      const dynamicCols = Math.max(1, Math.floor(containerW / charW));
+      charW = Math.max(4, fontPx * ASCII_CHAR_SCALE_X * ASCII_GRID_SCALE_X);
+      charH = Math.max(4, fontPx * ASCII_CHAR_SCALE_Y * ASCII_GRID_SCALE_Y);
+      const maxCols = containerWidth < 768 ? MOBILE_MAX_ASCII_COLS : MAX_ASCII_COLS;
+      const cols = Math.max(1, Math.min(maxCols, Math.ceil(containerWidth / charW)));
+      const rows = Math.max(1, Math.ceil(containerHeight / charH));
 
-      const naturalRows = Math.max(
-        1,
-        Math.floor(dynamicCols * ratio * (charW / charH)),
-      );
-      const maxRows = Math.max(1, Math.floor(containerH / charH));
-      const rows = Math.min(naturalRows, maxRows);
-      if (dynamicCols !== frameWidth || rows !== frameHeight) {
-        canvas.width = dynamicCols;
-        canvas.height = rows;
-        frameWidth = dynamicCols;
+      offsetX = 0;
+      offsetY = 0;
+
+      if (cols !== frameWidth || rows !== frameHeight) {
+        sampleCanvas.width = cols;
+        sampleCanvas.height = rows;
+        frameWidth = cols;
         frameHeight = rows;
-        framePixels = dynamicCols * rows;
+        framePixels = cols * rows;
         grayscaleBuffer.current = new Float32Array(framePixels);
         sharpenedBuffer.current = new Float32Array(framePixels);
         previousFrame.current = null;
         bgColor = null;
       }
+
+      outputCtx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+      outputCtx.textAlign = 'center';
+      outputCtx.textBaseline = 'middle';
+      outputCtx.font = `700 ${fontPx}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+      outputCtx.shadowBlur = fontPx * 0.28;
+    };
+
+    const clearOutput = () => {
+      outputCtx.setTransform(1, 0, 0, 1, 0, 0);
+      outputCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+      outputCtx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+    };
+
+    const resetTemporalState = () => {
+      previousFrame.current = null;
+      bgColor = null;
+      frameCount = 0;
+      previousVideoTime = -1;
+      lastTs = 0;
+    };
+
+    const ensureAnimationFrame = () => {
+      if (!animFrame && !document.hidden) {
+        animFrame = requestAnimationFrame(render);
+      }
     };
 
     const render = (ts: number) => {
-      if (!video.duration || !isFinite(video.duration)) {
-        animFrame = requestAnimationFrame(render);
+      animFrame = 0;
+
+      if (document.hidden) {
         return;
       }
+
+      if (!video.duration || !Number.isFinite(video.duration)) {
+        ensureAnimationFrame();
+        return;
+      }
+
+      const preferredFrameInterval = 1000 /
+        (reducedMotionQuery.matches ? REDUCED_MOTION_FPS : isGeckoLike ? GECKO_FPS : FPS);
 
       if (!lastTs) lastTs = ts;
       const elapsed = ts - lastTs;
 
-      if (elapsed > FRAME_INTERVAL && video.readyState >= 2) {
-        lastTs = ts;
+      if (elapsed >= preferredFrameInterval && video.readyState >= 2) {
+        lastTs = ts - (elapsed % preferredFrameInterval);
 
         if (!frameWidth || !frameHeight) {
-          resizeToVideo();
+          syncGeometry();
           if (!frameWidth || !frameHeight) {
-            animFrame = requestAnimationFrame(render);
+            ensureAnimationFrame();
             return;
           }
         }
+
+        if (
+          previousVideoTime >= 0 &&
+          video.currentTime + LOOP_RESET_THRESHOLD < previousVideoTime
+        ) {
+          resetTemporalState();
+        }
+        previousVideoTime = video.currentTime;
 
         const width = frameWidth;
         const height = frameHeight;
@@ -171,16 +271,16 @@ export function AuthAsciiBackground({
         const outValues = sharpenedBuffer.current;
 
         if (!values || !outValues) {
-          animFrame = requestAnimationFrame(render);
+          ensureAnimationFrame();
           return;
         }
 
-        ctx.drawImage(video, 0, 0, width, height);
-        const imageData = ctx.getImageData(0, 0, width, height);
+        sampleCtx.drawImage(video, 0, 0, width, height);
+        const imageData = sampleCtx.getImageData(0, 0, width, height);
         const image = imageData.data;
 
-        if (!bgColor) {
-          bgColor = sampleBackgroundColor(image, width, height);
+        if (!bgColor || frameCount % BG_RESAMPLE_INTERVAL === 0) {
+          bgColor = blendBackgroundColor(bgColor, sampleBackgroundColor(image, width, height));
         }
 
         for (let i = 0; i < total; i++) {
@@ -231,33 +331,77 @@ export function AuthAsciiBackground({
           }
         }
 
-        let out = '';
+        const [colorR, colorG, colorB] = getGlyphColor();
+        const shadowAlpha = document.documentElement.classList.contains('dark') ? 0.18 : 0.1;
+        const lowPowerMode = isGeckoLike || total > LOW_POWER_CELL_COUNT;
+        const fillColor = `rgb(${colorR}, ${colorG}, ${colorB})`;
+
+        clearOutput();
+        outputCtx.font = `700 ${fontPx}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
+        outputCtx.shadowColor = `rgba(15, 23, 42, ${shadowAlpha})`;
+        outputCtx.shadowBlur = lowPowerMode ? fontPx * 0.12 : fontPx * 0.28;
+        outputCtx.fillStyle = fillColor;
+
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
-            const i = (y * width + x) * 4;
+            const pxIndex = (y * width + x) * 4;
+            if (isBackgroundPixel(image[pxIndex], image[pxIndex + 1], image[pxIndex + 2], bgColor)) {
+              continue;
+            }
+
             const idx = y * width + x;
             const bright = SHARPEN_AMOUNT > 0.001 ? outValues[idx] : values[idx];
-            out += isBackgroundPixel(image[i], image[i + 1], image[i + 2], bgColor)
-              ? ' '
-              : pixelToAscii(bright);
+            const charIndex = pixelToAsciiIndex(bright);
+            if (charIndex <= 0) {
+              continue;
+            }
+
+            const glyph = ASCII_CHARS[charIndex];
+            const tone = smoothstep01(charIndex / (ASCII_CHARS.length - 1));
+            const alpha = Math.min(0.95, GLYPH_ALPHA_MIN + tone * 0.82);
+            const drawX = offsetX + x * charW + charW / 2;
+            const drawY = offsetY + y * charH + charH / 2;
+
+            outputCtx.globalAlpha = alpha;
+            outputCtx.fillText(glyph, drawX, drawY);
+
+            if (!lowPowerMode && tone > 0.82) {
+              outputCtx.globalAlpha = Math.min(0.98, alpha * 0.5);
+              outputCtx.fillText(glyph, drawX, drawY);
+            }
           }
-          out += '\n';
         }
-        pre.textContent = out;
+        outputCtx.globalAlpha = 1;
+
+        frameCount += 1;
       }
 
-      animFrame = requestAnimationFrame(render);
+      ensureAnimationFrame();
     };
 
     const onResize = () => {
-      bgColor = null;
-      resizeToVideo();
-      pre.textContent = pre.textContent ?? '';
+      syncGeometry();
+      resetTemporalState();
+      clearOutput();
+    };
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        if (animFrame) {
+          cancelAnimationFrame(animFrame);
+          animFrame = 0;
+        }
+        return;
+      }
+
+      lastTs = 0;
+      ensureAnimationFrame();
     };
 
     const onLoadedData = async () => {
-      bgColor = null;
-      resizeToVideo();
+      syncGeometry();
+      resetTemporalState();
+
       try {
         await video.play();
       } catch {
@@ -270,27 +414,35 @@ export function AuthAsciiBackground({
         };
         document.addEventListener('click', startPlayback);
       }
-      if (!animFrame) animFrame = requestAnimationFrame(render);
+
+      ensureAnimationFrame();
     };
 
     const onCanPlay = () => {
-      if (!animFrame) animFrame = requestAnimationFrame(render);
+      syncGeometry();
+      ensureAnimationFrame();
     };
+
+    const resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(container);
 
     video.addEventListener('loadeddata', onLoadedData);
     video.addEventListener('canplay', onCanPlay);
-    window.addEventListener('resize', onResize);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    syncGeometry();
     video.load();
 
     return () => {
       if (animFrame) cancelAnimationFrame(animFrame);
+      resizeObserver.disconnect();
       video.removeEventListener('loadeddata', onLoadedData);
       video.removeEventListener('canplay', onCanPlay);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (startPlayback) {
         document.removeEventListener('click', startPlayback);
         startPlayback = null;
       }
-      window.removeEventListener('resize', onResize);
       video.pause();
     };
   }, []);
@@ -300,17 +452,14 @@ export function AuthAsciiBackground({
       ref={containerRef}
       className={`relative overflow-hidden ${className}`}
     >
-      <pre
-        ref={preRef}
+      <canvas
+        ref={outputCanvasRef}
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full m-0 overflow-hidden whitespace-pre font-mono text-[10px] font-extrabold leading-[0.78] tracking-[-0.01em] text-cyan-900/80 dark:text-cyan-100/70 select-none"
+        className="absolute inset-0 h-full w-full pointer-events-none"
         style={{
-          textShadow: '0 0 6px rgba(15,23,42,0.1), 0 0 12px rgba(30,41,59,0.1)',
-          transform: 'scaleX(0.99) scaleY(1.01)',
-          filter: 'contrast(1.14) saturate(1.03)',
+          filter: 'contrast(1.08) saturate(1.02)',
+          transform: 'scaleX(0.995) scaleY(1.01)',
           transition: 'opacity 600ms ease',
-          width: '100%',
-          height: '100%',
         }}
       />
       <video
@@ -324,7 +473,7 @@ export function AuthAsciiBackground({
         preload="auto"
       />
       <canvas
-        ref={canvasRef}
+        ref={sampleCanvasRef}
         className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
       />
     </div>
