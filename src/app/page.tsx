@@ -220,8 +220,15 @@ export default function Home() {
                 {manageMode ? (
                   <Checkbox
                     className="mr-0"
+                    aria-label={`Select ${book.name}`}
+                    isSelected={book.id ? selectedBookIds.includes(book.id) : false}
+                    isInvalid
                     onChange={(isSelected) => onSelectBook(book.id, isSelected)}
-                  />
+                  >
+                    <Checkbox.Control>
+                      <Checkbox.Indicator />
+                    </Checkbox.Control>
+                  </Checkbox>
                 ) : (
                   <button
                     type="button"
