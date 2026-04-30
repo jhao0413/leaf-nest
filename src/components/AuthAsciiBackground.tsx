@@ -36,7 +36,7 @@ interface BgColor {
 function sampleBackgroundColor(
   data: Uint8ClampedArray,
   width: number,
-  height: number,
+  height: number
 ): BgColor | null {
   let r = 0;
   let g = 0;
@@ -73,16 +73,11 @@ function blendBackgroundColor(current: BgColor | null, next: BgColor | null): Bg
   return {
     r: current.r * 0.82 + next.r * 0.18,
     g: current.g * 0.82 + next.g * 0.18,
-    b: current.b * 0.82 + next.b * 0.18,
+    b: current.b * 0.82 + next.b * 0.18
   };
 }
 
-function isBackgroundPixel(
-  r: number,
-  g: number,
-  b: number,
-  bgColor: BgColor | null,
-): boolean {
+function isBackgroundPixel(r: number, g: number, b: number, bgColor: BgColor | null): boolean {
   if (!bgColor) return false;
   const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
   if (luma >= BG_LUMA_CUTOFF) return true;
@@ -112,11 +107,7 @@ function getGlyphColor(): [number, number, number] {
   return [22, 78, 99];
 }
 
-export function AuthAsciiBackground({
-  className = '',
-}: {
-  className?: string;
-}) {
+export function AuthAsciiBackground({ className = '' }: { className?: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const outputCanvasRef = useRef<HTMLCanvasElement>(null);
   const sampleCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -163,7 +154,7 @@ export function AuthAsciiBackground({
       containerHeight = Math.max(1, container.clientHeight);
       currentDpr = Math.min(
         window.devicePixelRatio || 1,
-        isGeckoLike ? GECKO_MAX_DEVICE_PIXEL_RATIO : MAX_DEVICE_PIXEL_RATIO,
+        isGeckoLike ? GECKO_MAX_DEVICE_PIXEL_RATIO : MAX_DEVICE_PIXEL_RATIO
       );
 
       const outputWidth = Math.max(1, Math.round(containerWidth * currentDpr));
@@ -176,7 +167,7 @@ export function AuthAsciiBackground({
 
       fontPx = Math.max(
         ASCII_FONT_MIN,
-        Math.min(ASCII_FONT_MAX, Math.round(Math.min(containerWidth / 75, containerHeight / 45))),
+        Math.min(ASCII_FONT_MAX, Math.round(Math.min(containerWidth / 75, containerHeight / 45)))
       );
 
       charW = Math.max(4, fontPx * ASCII_CHAR_SCALE_X * ASCII_GRID_SCALE_X);
@@ -239,8 +230,8 @@ export function AuthAsciiBackground({
         return;
       }
 
-      const preferredFrameInterval = 1000 /
-        (reducedMotionQuery.matches ? REDUCED_MOTION_FPS : isGeckoLike ? GECKO_FPS : FPS);
+      const preferredFrameInterval =
+        1000 / (reducedMotionQuery.matches ? REDUCED_MOTION_FPS : isGeckoLike ? GECKO_FPS : FPS);
 
       if (!lastTs) lastTs = ts;
       const elapsed = ts - lastTs;
@@ -345,7 +336,9 @@ export function AuthAsciiBackground({
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             const pxIndex = (y * width + x) * 4;
-            if (isBackgroundPixel(image[pxIndex], image[pxIndex + 1], image[pxIndex + 2], bgColor)) {
+            if (
+              isBackgroundPixel(image[pxIndex], image[pxIndex + 1], image[pxIndex + 2], bgColor)
+            ) {
               continue;
             }
 
@@ -448,10 +441,7 @@ export function AuthAsciiBackground({
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className={`relative overflow-hidden ${className}`}
-    >
+    <div ref={containerRef} className={`relative overflow-hidden ${className}`}>
       <canvas
         ref={outputCanvasRef}
         aria-hidden="true"
@@ -459,7 +449,7 @@ export function AuthAsciiBackground({
         style={{
           filter: 'contrast(1.08) saturate(1.02)',
           transform: 'scaleX(0.995) scaleY(1.01)',
-          transition: 'opacity 600ms ease',
+          transition: 'opacity 600ms ease'
         }}
       />
       <video

@@ -94,104 +94,105 @@ export function AuthCard() {
 
       <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center justify-end px-4 py-10 sm:pr-12 md:pr-16 lg:pr-32">
         <div className="relative flex w-full max-w-[26rem] flex-col gap-6 sm:w-[90%] md:w-[70%]">
-          
           <div className="group relative w-full">
             {/* Stacked Glass Effect Layers */}
             <div className="absolute -inset-1.5 z-0 rotate-[-3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[-5deg] group-hover:scale-[1.02] dark:bg-black/20" />
             <div className="absolute -inset-1.5 z-0 rotate-[3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[5deg] group-hover:scale-[1.02] dark:bg-black/20" />
-            
+
             <Card className="relative z-10 w-full border border-white/30 bg-white/60 px-3 py-6 shadow-[0_30px_100px_-20px_rgba(15,23,42,0.3)] backdrop-blur-2xl transition-transform duration-500 hover:scale-[1.01] dark:border-white/10 dark:bg-neutral-900/50">
               <Card.Header className="relative z-10 flex flex-col gap-2 px-6 pb-2 pt-4">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-cyan-700/80 dark:text-cyan-300/90">
-                Leaf Nest
-              </p>
-              <div>
-                <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300">
-                  {title}
-                </h1>
-                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t('description')}</p>
-              </div>
-            </Card.Header>
-            <Card.Content className="px-6 pb-6 pt-3">
-              <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-                {mode === 'sign-up' && (
-                  <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <TextField
-                      fullWidth
-                      value={name}
-                      onChange={setName}
-                      isRequired
-                      autoComplete="name"
-                      variant="secondary"
-                    >
-                      <Label>{t('name')}</Label>
-                      <Input className={inputClassName} />
-                    </TextField>
-                  </div>
-                )}
-                <TextField
-                  fullWidth
-                  type="email"
-                  value={email}
-                  onChange={setEmail}
-                  isRequired
-                  autoComplete="email"
-                  variant="secondary"
-                >
-                  <Label>{t('email')}</Label>
-                  <Input className={inputClassName} />
-                </TextField>
-                <TextField
-                  fullWidth
-                  type="password"
-                  value={password}
-                  onChange={setPassword}
-                  isRequired
-                  autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
-                  variant="secondary"
-                >
-                  <Label>{t('password')}</Label>
-                  <Input className={inputClassName} />
-                </TextField>
-
-                {errorMessage && (
-                  <div className="animate-in fade-in zoom-in-95 duration-200">
-                    <p
-                      className="rounded-lg bg-red-100/55 px-3 py-2 text-sm font-medium text-red-600 dark:bg-red-900/20 dark:text-red-300"
-                      role="alert"
-                    >
-                      {errorMessage}
-                    </p>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  variant="primary"
-                  className="font-medium shadow-md hover:shadow-lg transition-all"
-                  isPending={isSubmitting}
-                >
-                  {mode === 'sign-in' ? t('signInAction') : t('signUpAction')}
-                </Button>
-              </form>
-
-              <div className="mt-8 flex flex-col items-center">
-                <p className="text-center text-sm text-slate-500 dark:text-slate-400">
-                  <button
-                    type="button"
-                    className="font-medium text-cyan-700 transition-colors hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300 ml-1"
-                    onClick={() => {
-                      setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
-                      setErrorMessage(null);
-                    }}
-                  >
-                    {mode === 'sign-in' ? t('switchToSignUp') : t('switchToSignIn')}
-                  </button>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-cyan-700/80 dark:text-cyan-300/90">
+                  Leaf Nest
                 </p>
-              </div>
-            </Card.Content>
-          </Card>
+                <div>
+                  <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 dark:from-white dark:to-slate-300">
+                    {title}
+                  </h1>
+                  <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                    {t('description')}
+                  </p>
+                </div>
+              </Card.Header>
+              <Card.Content className="px-6 pb-6 pt-3">
+                <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+                  {mode === 'sign-up' && (
+                    <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                      <TextField
+                        fullWidth
+                        value={name}
+                        onChange={setName}
+                        isRequired
+                        autoComplete="name"
+                        variant="secondary"
+                      >
+                        <Label>{t('name')}</Label>
+                        <Input className={inputClassName} />
+                      </TextField>
+                    </div>
+                  )}
+                  <TextField
+                    fullWidth
+                    type="email"
+                    value={email}
+                    onChange={setEmail}
+                    isRequired
+                    autoComplete="email"
+                    variant="secondary"
+                  >
+                    <Label>{t('email')}</Label>
+                    <Input className={inputClassName} />
+                  </TextField>
+                  <TextField
+                    fullWidth
+                    type="password"
+                    value={password}
+                    onChange={setPassword}
+                    isRequired
+                    autoComplete={mode === 'sign-in' ? 'current-password' : 'new-password'}
+                    variant="secondary"
+                  >
+                    <Label>{t('password')}</Label>
+                    <Input className={inputClassName} />
+                  </TextField>
+
+                  {errorMessage && (
+                    <div className="animate-in fade-in zoom-in-95 duration-200">
+                      <p
+                        className="rounded-lg bg-red-100/55 px-3 py-2 text-sm font-medium text-red-600 dark:bg-red-900/20 dark:text-red-300"
+                        role="alert"
+                      >
+                        {errorMessage}
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="primary"
+                    className="font-medium shadow-md hover:shadow-lg transition-all"
+                    isPending={isSubmitting}
+                  >
+                    {mode === 'sign-in' ? t('signInAction') : t('signUpAction')}
+                  </Button>
+                </form>
+
+                <div className="mt-8 flex flex-col items-center">
+                  <p className="text-center text-sm text-slate-500 dark:text-slate-400">
+                    <button
+                      type="button"
+                      className="font-medium text-cyan-700 transition-colors hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300 ml-1"
+                      onClick={() => {
+                        setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
+                        setErrorMessage(null);
+                      }}
+                    >
+                      {mode === 'sign-in' ? t('switchToSignUp') : t('switchToSignIn')}
+                    </button>
+                  </p>
+                </div>
+              </Card.Content>
+            </Card>
           </div>
         </div>
       </div>
