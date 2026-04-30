@@ -1,10 +1,36 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite-plus';
+import { defineConfig, loadEnv } from 'vite-plus';
 import { reactRefreshWrapperPlugin } from 'vite/internal';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function getOrigin(name: string, value: string | undefined, fallback: string) {
+  if (!value) return new URL(fallback).origin;
+  try {
+    return new URL(value).origin;
+  } catch {
+    console.warn(
+      `[vite.config] ${name}="${value}" is not a valid URL, falling back to ${fallback}`
+    );
+    return new URL(fallback).origin;
+  }
+}
+
+function getPort(name: string, value: string | undefined, fallback: number) {
+  if (!value) return fallback;
+  try {
+    const url = new URL(value);
+    return url.port ? Number(url.port) : fallback;
+  } catch {
+    console.warn(
+      `[vite.config] ${name}="${value}" is not a valid URL, falling back to port ${fallback}`
+    );
+    return fallback;
+  }
+}
+
 const reactRefreshPlugin = Object.assign(
   reactRefreshWrapperPlugin({
     cwd: process.cwd(),
@@ -13,6 +39,10 @@ const reactRefreshPlugin = Object.assign(
   }),
   { apply: 'serve' as const }
 );
+
+const env = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
+const appPort = getPort('APP_URL', env.APP_URL, 5173);
+const apiOrigin = getOrigin('BETTER_AUTH_URL', env.BETTER_AUTH_URL, 'http://localhost:8787');
 
 export default defineConfig({
   plugins: [reactRefreshPlugin],
@@ -51,9 +81,11 @@ export default defineConfig({
     }
   },
   server: {
+    port: appPort,
+    strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8787',
+        target: apiOrigin,
         changeOrigin: true
       }
     }
