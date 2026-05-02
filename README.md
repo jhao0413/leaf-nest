@@ -30,7 +30,7 @@ English | [简体中文](README.zh-CN.md)
 - **Framework**: Vite+ + React Router v7 + React 19
 - **Backend**: Hono + better-auth + Drizzle ORM
 - **Database**: PostgreSQL
-- **Object Storage**: S3-compatible storage / MinIO
+- **Object Storage**: S3-compatible storage / RustFS
 - **State Management**: Zustand v5
 - **Styling**: Tailwind CSS 4.x + HeroUI + Radix UI
 - **Validation**: Zod
@@ -76,41 +76,33 @@ You can verify the backend bootstrap with [http://localhost:8787/api/health](htt
 
 ### Self-hosted Deployment
 
-Current production deployment is self-hosting with the provided Docker image and Compose stack. Static-only hosting such as Vercel is not supported for the current architecture because the app depends on the bundled Hono API, Better Auth callbacks, PostgreSQL, and S3-compatible object storage.
+Current production deployment is self-hosting with the published Docker image and Compose stack. Static-only hosting such as Vercel is not supported for the current architecture because the app depends on the bundled Hono API, Better Auth callbacks, PostgreSQL, and S3-compatible object storage.
 
 1. Copy `.env.example` to `.env`.
-2. For local single-host deployment, the default Compose values are ready to use.
-3. For a remote deployment, set the optional `SELF_HOST_*` variables in `.env` before starting the stack:
+2. Set the public deployment URLs and secrets in `.env`:
    - `SELF_HOST_APP_URL`
    - `SELF_HOST_BETTER_AUTH_URL`
    - `SELF_HOST_S3_PUBLIC_ENDPOINT`
    - `SELF_HOST_S3_ENDPOINT` only if the app should reach object storage through a non-default internal address
-4. Start the backing services:
+   - `BETTER_AUTH_SECRET`
+   - `RUSTFS_ACCESS_KEY`
+   - `RUSTFS_SECRET_KEY`
+3. Choose the application image tag with `LEAF_NEST_TAG`, for example `v0.3.1`.
+4. Start the stack:
 
 ```bash
-docker compose up -d postgres minio
+docker compose up -d
 ```
 
-5. Apply database migrations against the target PostgreSQL instance:
+The Compose stack pulls `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}`, runs database migrations, creates the RustFS bucket if needed, and then starts the app. The app container serves both the SPA and the API on the configured app origin.
 
-```bash
-pnpm db:migrate
-```
+Default published service ports:
 
-6. Start the application container:
-
-```bash
-docker compose up -d app
-```
-
-The container serves both the SPA and the API on the configured app origin. With the default local values, that is [http://localhost:8787](http://localhost:8787).
-
-Default local service ports:
-
-- PostgreSQL: `5432`
 - App: `8787`
-- MinIO API: `9000`
-- MinIO Console: `9001`
+- RustFS S3 API: `9000`
+- RustFS Console: `9001`
+
+PostgreSQL is kept on the internal Docker network by default. If you publish your own app image, push a Git tag such as `v0.3.1`; the GitHub Actions workflow publishes `jhao0413/leaf-nest:<tag>` and `jhao0413/leaf-nest:latest` to Docker Hub using `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
 
 ### Database Workflow
 
@@ -146,7 +138,7 @@ The backend bootstrap currently expects these variables in `.env`:
 - `S3_SECRET_ACCESS_KEY`
 - `S3_FORCE_PATH_STYLE`
 
-For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint.
+For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `DATABASE_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint.
 
 ### Code Quality
 
@@ -207,7 +199,7 @@ leaf-nest/
 │       ├── lib/             # Services (auth, books, reading, storage, db)
 │       └── routes/          # REST API routes (books, reading, health)
 ├── public/                  # Static assets
-├── docker-compose.yml       # 3-service Docker stack (app, postgres, minio)
+├── docker-compose.yml       # Docker deployment stack (app, postgres, RustFS)
 ├── Dockerfile               # Multi-stage Node.js build
 └── vite.config.ts           # Vite+ / Vite shared configuration
 ```

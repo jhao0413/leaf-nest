@@ -1,0 +1,16 @@
+.git
+.github
+.claude
+.vscode
+.yarn
+.pnpm-store
+node_modules
+dist
+dist-server
+coverage
+*.log
+.codex-*.log
+tsconfig.tsbuildinfo
+.env
+.env.*
+!.env.example
