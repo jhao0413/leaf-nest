@@ -31,11 +31,12 @@ import { useRouter } from '@/navigation';
 import { BookInfoModal } from '../BookInfoModal';
 import { ReadingProgressManager } from '@/utils/readingProgressManager';
 import { useTextSelection } from '@/hooks/useTextSelection';
-import { useChapterHighlightStore } from '@/store/highlightStore';
+import { useChapterHighlightStore, type Highlight } from '@/store/highlightStore';
 import { applyHighlights, removeHighlightFromDOM } from '@/utils/highlightRenderer';
 import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
 import { readingRepository } from '@/lib/repositories/readingRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
+import { HighlightShareModal, type HighlightShareItem } from '@/components/HighlightShareModal';
 const COLUMN_GAP = 100;
 const RESIZE_REFRESH_DEBOUNCE_MS = 120;
 // Controls the resize mask fade-out after pagination has been recalculated.
@@ -81,6 +82,7 @@ const EpubReader: React.FC = () => {
   const [isRestoring, setIsRestoring] = useState(true);
   const [isResizeRefreshing, setIsResizeRefreshing] = useState(false);
   const [iframeReady, setIframeReady] = useState(false);
+  const [activeShareItem, setActiveShareItem] = useState<HighlightShareItem | null>(null);
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
   const {
@@ -638,6 +640,33 @@ const EpubReader: React.FC = () => {
     [updateChapterHighlight]
   );
 
+  const handleShareSelection = useCallback(() => {
+    if (!selectionInfo) return;
+
+    setActiveShareItem({
+      selectedText: selectionInfo.selectedText,
+      chapterIndex: currentChapter
+    });
+    clearSelection();
+  }, [clearSelection, currentChapter, selectionInfo]);
+
+  const handleShareHighlight = useCallback(
+    (highlight: Highlight) => {
+      setActiveShareItem({
+        selectedText: highlight.selectedText,
+        note: highlight.note,
+        chapterIndex: highlight.chapterIndex,
+        createdAt: highlight.createdAt
+      });
+      clearSelection();
+    },
+    [clearSelection]
+  );
+
+  const closeShareModal = useCallback(() => {
+    setActiveShareItem(null);
+  }, []);
+
   const clickedHighlight = clickedHighlightId
     ? chapterHighlights.find((h) => h.id === clickedHighlightId)
     : null;
@@ -711,6 +740,7 @@ const EpubReader: React.FC = () => {
             <CreateHighlightPopup
               position={popupPosition}
               onCreateHighlight={handleCreateHighlight}
+              onShare={handleShareSelection}
               onClose={clearSelection}
             />
           )}
@@ -722,6 +752,7 @@ const EpubReader: React.FC = () => {
               onUpdateNote={handleUpdateNote}
               onUpdateColor={handleUpdateColor}
               onDelete={handleDeleteHighlight}
+              onShare={() => handleShareHighlight(clickedHighlight)}
               onClose={clearSelection}
             />
           )}
@@ -757,6 +788,15 @@ const EpubReader: React.FC = () => {
         onClose={handleCloseSearchModal}
         onSearchResultClick={handleSearchResultClick}
       />
+
+      {activeShareItem ? (
+        <HighlightShareModal
+          item={activeShareItem}
+          bookName={bookInfo.name || 'Unknown'}
+          bookCoverUrl={bookInfo.coverUrl}
+          onClose={closeShareModal}
+        />
+      ) : null}
     </div>
   );
 };

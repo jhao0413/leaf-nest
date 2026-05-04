@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslations } from '@/i18n';
-import { Check, Trash2, PenLine, Highlighter, Underline } from 'lucide-react';
+import { Check, Trash2, PenLine, Highlighter, Underline, Share2 } from 'lucide-react';
 import { Highlight } from '@/store/highlightStore';
 import { PopupPosition } from '@/hooks/useTextSelection';
 
@@ -23,12 +23,14 @@ interface CreateHighlightPopupProps {
     style: 'highlight' | 'underline' | 'note',
     note: string
   ) => void;
+  onShare: () => void;
   onClose: () => void;
 }
 
 export function CreateHighlightPopup({
   position,
   onCreateHighlight,
+  onShare,
   onClose
 }: CreateHighlightPopupProps) {
   const t = useTranslations('Highlights');
@@ -106,6 +108,14 @@ export function CreateHighlightPopup({
             {t('addThought')}
           </span>
         </button>
+        <button
+          className="py-1.5 px-2 rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors flex flex-col items-center"
+          onClick={onShare}
+          title={t('share')}
+        >
+          <Share2 size={16} />
+          <span className="text-[10px] mt-0.5 text-gray-500 dark:text-gray-300">{t('share')}</span>
+        </button>
       </div>
 
       {showNote && (
@@ -139,6 +149,7 @@ interface EditHighlightPopupProps {
   onUpdateNote: (id: string, note: string) => void;
   onUpdateColor: (id: string, color: string) => void;
   onDelete: (id: string) => void;
+  onShare: () => void;
   onClose: () => void;
 }
 
@@ -148,6 +159,7 @@ export function EditHighlightPopup({
   onUpdateNote,
   onUpdateColor,
   onDelete,
+  onShare,
   onClose
 }: EditHighlightPopupProps) {
   const t = useTranslations('Highlights');
@@ -233,6 +245,13 @@ export function EditHighlightPopup({
         >
           <PenLine size={14} />
           <span>{highlight.note ? t('editThought') : t('addThought')}</span>
+        </button>
+        <button
+          className="flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
+          onClick={onShare}
+        >
+          <Share2 size={14} />
+          <span>{t('share')}</span>
         </button>
         <button
           className="flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
