@@ -1,6 +1,20 @@
 import { applyFontAndThemeStyles } from '@/utils/styleHandler';
 import { TextPositionMapper, TextPosition } from './textPositionMapper';
 import { useReaderStateStore } from '@/store/readerStateStore';
+import type { MutableRefObject } from 'react';
+
+const PAGE_SPACER_SELECTOR = '[data-epub-page-spacer="true"]';
+
+interface RecalculateIframePagesOptions {
+  renderer: HTMLIFrameElement;
+  pageWidthRef: MutableRefObject<number>;
+  pageCountRef: MutableRefObject<number>;
+  setCurrentPageIndex: (pageIndex: number) => void;
+  columnGap: number;
+  goToLastPage?: boolean;
+  currentSearchQuery?: string;
+  onTextPositionsAnalyzed?: (searchQuery: string, positions: TextPosition[]) => void;
+}
 
 export const writeToIframe = (
   updatedChapter: string,
@@ -68,11 +82,87 @@ export const waitForImagesAndCalculatePages = (
   });
 };
 
+export const recalculateIframePages = ({
+  renderer,
+  pageWidthRef,
+  pageCountRef,
+  setCurrentPageIndex,
+  columnGap,
+  goToLastPage = false,
+  currentSearchQuery = '',
+  onTextPositionsAnalyzed
+}: RecalculateIframePagesOptions): boolean => {
+  const iframeDoc = renderer.contentDocument || renderer.contentWindow?.document;
+
+  if (!iframeDoc || !renderer.contentWindow || !iframeDoc.body) {
+    console.error('Iframe document not found');
+    return false;
+  }
+
+  const body = renderer.contentWindow.document.body;
+  const computedStyle = renderer.contentWindow.getComputedStyle(body);
+  const marginLeft = parseFloat(computedStyle.marginLeft);
+  const marginRight = parseFloat(computedStyle.marginRight);
+  const newPageWidth = body.clientWidth - marginLeft - marginRight + columnGap;
+
+  // Preserve the last good width for the next successful run, but report this
+  // recalculation as failed while the body is transient (e.g. mid-resize 0 width).
+  if (newPageWidth > 0 && newPageWidth !== pageWidthRef.current) {
+    pageWidthRef.current = newPageWidth;
+  }
+
+  if (newPageWidth <= 0 || pageWidthRef.current <= 0) {
+    return false;
+  }
+
+  // Remove any spacer from a previous run before measuring scrollWidth, otherwise
+  // the spacer's width feeds back into the page count we compute below.
+  body.querySelectorAll(PAGE_SPACER_SELECTOR).forEach((spacer) => spacer.remove());
+
+  const scrollWidth = iframeDoc.body.scrollWidth;
+  const ratio = scrollWidth / pageWidthRef.current;
+  const fraction = ratio - Math.floor(ratio);
+
+  // Add one stable spacer when the last generated page would otherwise be too short.
+  if (fraction <= 0.5) {
+    const emptyDiv = renderer.contentWindow.document.createElement('div');
+    emptyDiv.dataset.epubPageSpacer = 'true';
+    emptyDiv.style.height = '100%';
+    body.appendChild(emptyDiv);
+  }
+
+  pageCountRef.current = Math.max(1, Math.ceil(scrollWidth / pageWidthRef.current));
+
+  if (goToLastPage) {
+    renderer.contentWindow.scrollTo({
+      left: (pageCountRef.current - 1) * pageWidthRef.current
+    });
+    setCurrentPageIndex(pageCountRef.current);
+  } else {
+    const { currentPageIndex } = useReaderStateStore.getState();
+    const targetPage = Math.max(1, Math.min(currentPageIndex, pageCountRef.current));
+    renderer.contentWindow.scrollTo({
+      left: (targetPage - 1) * pageWidthRef.current
+    });
+    if (targetPage !== currentPageIndex) {
+      setCurrentPageIndex(targetPage);
+    }
+  }
+
+  if (onTextPositionsAnalyzed) {
+    const textMapper = new TextPositionMapper(pageWidthRef.current, columnGap);
+    const textPositions = textMapper.analyzeTextPositions(iframeDoc);
+    onTextPositionsAnalyzed(currentSearchQuery, textPositions);
+  }
+
+  return true;
+};
+
 export const handleIframeLoad = (
   renderer: HTMLIFrameElement,
-  pageWidthRef: React.MutableRefObject<number>,
-  pageCountRef: React.MutableRefObject<number>,
-  goToLastPageRef: React.MutableRefObject<boolean>,
+  pageWidthRef: MutableRefObject<number>,
+  pageCountRef: MutableRefObject<number>,
+  goToLastPageRef: MutableRefObject<boolean>,
   setCurrentPageIndex: (pageIndex: number) => void,
   COLUMN_GAP: number,
   currentSearchQuery: string,
@@ -92,53 +182,19 @@ export const handleIframeLoad = (
       }
 
       if (iframeDoc.body) {
-        const body = renderer.contentWindow.document.body;
-        const computedStyle = renderer.contentWindow.getComputedStyle(body);
-        const marginLeft = parseFloat(computedStyle.marginLeft);
-        const marginRight = parseFloat(computedStyle.marginRight);
-        const newPageWidth = body.clientWidth - marginLeft - marginRight + COLUMN_GAP;
+        const shouldGoToLastPage = goToLastPageRef.current;
+        recalculateIframePages({
+          renderer,
+          pageWidthRef,
+          pageCountRef,
+          setCurrentPageIndex,
+          columnGap: COLUMN_GAP,
+          goToLastPage: shouldGoToLastPage,
+          currentSearchQuery,
+          onTextPositionsAnalyzed
+        });
 
-        if (newPageWidth !== pageWidthRef.current) {
-          pageWidthRef.current = newPageWidth;
-        }
-
-        const scrollWidth = iframeDoc.body.scrollWidth;
-        const ratio = scrollWidth / pageWidthRef.current;
-        const fraction = ratio - Math.floor(ratio);
-
-        // add an empty div to the end of the content if the last page is less than half full
-        if (fraction <= 0.5) {
-          const emptyDiv = renderer.contentWindow.document.createElement('div');
-          emptyDiv.style.height = '100%';
-          body.appendChild(emptyDiv);
-        }
-
-        pageCountRef.current = Math.ceil(scrollWidth / pageWidthRef.current);
-
-        if (goToLastPageRef.current) {
-          renderer.contentWindow.scrollTo({
-            left: (pageCountRef.current - 1) * pageWidthRef.current
-          });
-          goToLastPageRef.current = false;
-          setCurrentPageIndex(pageCountRef.current);
-        } else {
-          // Restore to the page index from store (set by reader page on load)
-          const { currentPageIndex } = useReaderStateStore.getState();
-          const targetPage = Math.max(1, Math.min(currentPageIndex, pageCountRef.current));
-          renderer.contentWindow.scrollTo({
-            left: (targetPage - 1) * pageWidthRef.current
-          });
-          if (targetPage !== currentPageIndex) {
-            setCurrentPageIndex(targetPage);
-          }
-        }
-
-        const textMapper = new TextPositionMapper(pageWidthRef.current, COLUMN_GAP);
-        const textPositions = textMapper.analyzeTextPositions(iframeDoc);
-
-        if (onTextPositionsAnalyzed) {
-          onTextPositionsAnalyzed(currentSearchQuery, textPositions);
-        }
+        goToLastPageRef.current = false;
 
         // Call onPageReady to update React state
         onPageReady?.();

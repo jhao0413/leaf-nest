@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { BookOpen, ChevronLeft, ChevronRight, House, Search, Loader2 } from 'lucide-react';
 import { useTranslations } from '@/i18n';
 import { Button, Kbd, useOverlayState } from '@heroui/react';
@@ -14,6 +15,7 @@ import { loadChapterContent } from '@/utils/chapterLoader';
 import { parseAndProcessChapter } from '@/utils/chapterParser';
 import {
   handleIframeLoad,
+  recalculateIframePages,
   waitForImagesAndCalculatePages,
   writeToIframe
 } from '@/utils/iframeHandler';
@@ -35,6 +37,9 @@ import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
 import { readingRepository } from '@/lib/repositories/readingRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
 const COLUMN_GAP = 100;
+const RESIZE_REFRESH_DEBOUNCE_MS = 120;
+// Controls the resize mask fade-out after pagination has been recalculated.
+const RESIZE_FADE_DURATION_MS = 200;
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('Renderer');
@@ -67,9 +72,14 @@ const EpubReader: React.FC = () => {
   const isFirstLoadRef = useRef(true);
   const loadVersionRef = useRef(0);
   const pendingSearchQueryRef = useRef('');
+  const readerViewportRef = useRef<HTMLDivElement | null>(null);
+  const resizeRefreshTimerRef = useRef<number | null>(null);
+  const resizeAnimationFrameRef = useRef<number | null>(null);
+  const lastReaderSizeRef = useRef<{ width: number; height: number } | null>(null);
   const latestBookInfoRef = useRef(bookInfo);
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
   const [isRestoring, setIsRestoring] = useState(true);
+  const [isResizeRefreshing, setIsResizeRefreshing] = useState(false);
   const [iframeReady, setIframeReady] = useState(false);
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
@@ -87,6 +97,11 @@ const EpubReader: React.FC = () => {
     removeChapterHighlight,
     updateChapterHighlight
   } = useChapterHighlightStore();
+  const chapterHighlightsRef = useRef(chapterHighlights);
+
+  useEffect(() => {
+    chapterHighlightsRef.current = chapterHighlights;
+  }, [chapterHighlights]);
 
   const handleTextSearchWithPositions = useCallback(
     (searchText: string, positions: TextPosition[]) => {
@@ -127,6 +142,27 @@ const EpubReader: React.FC = () => {
     latestStyleRef.current = { currentFontConfig, theme, rendererMode };
   }, [currentFontConfig, theme, rendererMode]);
 
+  const showResizeRefreshMask = useCallback(() => {
+    flushSync(() => {
+      setIsResizeRefreshing(true);
+    });
+  }, []);
+
+  const cancelPendingResizeRefresh = useCallback(() => {
+    if (resizeRefreshTimerRef.current) {
+      window.clearTimeout(resizeRefreshTimerRef.current);
+      resizeRefreshTimerRef.current = null;
+    }
+    if (resizeAnimationFrameRef.current) {
+      window.cancelAnimationFrame(resizeAnimationFrameRef.current);
+      resizeAnimationFrameRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return cancelPendingResizeRefresh;
+  }, [cancelPendingResizeRefresh]);
+
   // Save progress on unmount (only when component unmounts, not on page change)
   useEffect(() => {
     return () => {
@@ -159,6 +195,10 @@ const EpubReader: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    cancelPendingResizeRefresh();
+    setIsResizeRefreshing(false);
+    setIframeReady(false);
+
     const currentVersion = ++loadVersionRef.current;
 
     const processChapter = async () => {
@@ -216,6 +256,10 @@ const EpubReader: React.FC = () => {
         onPageReady
       );
 
+      if (loadVersionRef.current !== currentVersion) {
+        return;
+      }
+
       if (pendingSearchQueryRef.current === activeSearchQuery) {
         pendingSearchQueryRef.current = '';
       }
@@ -224,6 +268,11 @@ const EpubReader: React.FC = () => {
         const items = await highlightsRepository.listByBook(bookInfo.id, {
           chapterIndex: currentChapter
         });
+
+        if (loadVersionRef.current !== currentVersion) {
+          return;
+        }
+
         setChapterHighlights(items);
 
         const highlightRenderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
@@ -242,6 +291,7 @@ const EpubReader: React.FC = () => {
     bookZip,
     rendererMode,
     currentChapter,
+    cancelPendingResizeRefresh,
     handleTextSearchWithPositions,
     setCurrentPageIndex,
     onPageReady,
@@ -275,6 +325,118 @@ const EpubReader: React.FC = () => {
       return null;
     }
   };
+
+  const reapplyChapterHighlights = useCallback(() => {
+    const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+    const iframeDoc = renderer?.contentDocument;
+    const highlights = chapterHighlightsRef.current;
+
+    if (!iframeDoc || !highlights.length) {
+      return;
+    }
+
+    highlights.forEach((highlight) => removeHighlightFromDOM(iframeDoc, highlight.id));
+    applyHighlights(iframeDoc, highlights);
+  }, []);
+
+  const scheduleResizeRefresh = useCallback(() => {
+    if (!iframeReady || isRestoring) {
+      return;
+    }
+
+    cancelPendingResizeRefresh();
+
+    showResizeRefreshMask();
+    const scheduledLoadVersion = loadVersionRef.current;
+    const scheduledChapter = useReaderStateStore.getState().currentChapter;
+
+    // Wait for the user to stop resizing before mutating the iframe layout.
+    // The mask is already visible, so stale intermediate pagination is hidden.
+    resizeRefreshTimerRef.current = window.setTimeout(() => {
+      resizeRefreshTimerRef.current = null;
+
+      const { currentChapter: latestChapter } = useReaderStateStore.getState();
+      if (loadVersionRef.current !== scheduledLoadVersion || latestChapter !== scheduledChapter) {
+        setIsResizeRefreshing(false);
+        return;
+      }
+
+      const renderer = document.getElementById('epub-renderer') as HTMLIFrameElement;
+      if (renderer?.contentWindow) {
+        const {
+          currentFontConfig: latestFontConfig,
+          theme: latestTheme,
+          rendererMode: latestRendererMode
+        } = latestStyleRef.current;
+
+        applyFontAndThemeStyles(latestFontConfig, latestTheme, latestRendererMode, COLUMN_GAP);
+        const didRecalculate = recalculateIframePages({
+          renderer,
+          pageWidthRef,
+          pageCountRef,
+          setCurrentPageIndex,
+          columnGap: COLUMN_GAP
+        });
+        if (didRecalculate) {
+          reapplyChapterHighlights();
+        }
+      }
+
+      // rAF lets the browser paint the recalculated layout at opacity 0
+      // before we trigger the fade-in, avoiding a flicker of stale content.
+      resizeAnimationFrameRef.current = window.requestAnimationFrame(() => {
+        resizeAnimationFrameRef.current = null;
+        setIsResizeRefreshing(false);
+      });
+    }, RESIZE_REFRESH_DEBOUNCE_MS);
+  }, [
+    cancelPendingResizeRefresh,
+    iframeReady,
+    isRestoring,
+    reapplyChapterHighlights,
+    setCurrentPageIndex,
+    showResizeRefreshMask
+  ]);
+
+  useEffect(() => {
+    const viewport = readerViewportRef.current;
+    if (!viewport || !iframeReady) {
+      return;
+    }
+
+    const handleViewportResize = () => {
+      const width = viewport.clientWidth;
+      const height = viewport.clientHeight;
+
+      if (!width || !height) {
+        return;
+      }
+
+      const lastSize = lastReaderSizeRef.current;
+      lastReaderSizeRef.current = { width, height };
+
+      if (!lastSize) {
+        return;
+      }
+
+      if (lastSize.width === width && lastSize.height === height) {
+        return;
+      }
+
+      scheduleResizeRefresh();
+    };
+
+    handleViewportResize();
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const resizeObserver = new ResizeObserver(handleViewportResize);
+      resizeObserver.observe(viewport);
+      return () => resizeObserver.disconnect();
+    }
+
+    window.addEventListener('resize', handleViewportResize);
+    return () => window.removeEventListener('resize', handleViewportResize);
+  }, [iframeReady, scheduleResizeRefresh]);
 
   const handleSearchResultClick = useCallback(
     (result: SearchResult, searchQuery: string) => {
@@ -523,7 +685,7 @@ const EpubReader: React.FC = () => {
 
       {/* renderer */}
       <div className="w-4/5 h-[86vh] bg-white p-14 mt-4 rounded-2xl dark:bg-neutral-900">
-        <div className="h-full relative">
+        <div ref={readerViewportRef} className="h-full relative">
           {isRestoring && (
             <div className="absolute inset-0 flex items-center justify-center bg-white dark:bg-neutral-900 z-10">
               <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
@@ -534,6 +696,16 @@ const EpubReader: React.FC = () => {
             style={{ width: '100%', height: '100%' }}
             title={`${bookInfo.name || 'Book'} reader content`}
           ></iframe>
+          <div
+            aria-hidden="true"
+            data-testid="resize-refresh-mask"
+            className={`absolute inset-0 z-10 bg-white transition-opacity ease-out dark:bg-neutral-900 ${
+              isResizeRefreshing ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+            style={{
+              transitionDuration: isResizeRefreshing ? '0ms' : `${RESIZE_FADE_DURATION_MS}ms`
+            }}
+          />
 
           {popupPosition && selectionInfo && (
             <CreateHighlightPopup
