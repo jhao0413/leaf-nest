@@ -51,7 +51,7 @@
   "Settings": {
     "title": "Settings",
     "serverUrl": "Server URL",
-    "serverUrlDesc": "Configure the backend server used by Android and desktop clients",
+    "serverUrlDesc": "Configure the backend server used by the Android client",
     "serverUrlPlaceholder": "For example http://192.168.110.56:8787",
     "serverUrlSave": "Save",
     "serverUrlSaved": "Server URL saved",

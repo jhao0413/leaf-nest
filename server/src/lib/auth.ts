@@ -1,5 +1,6 @@
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { bearer } from 'better-auth/plugins/bearer';
 import { getEnv } from '../env.js';
 import { getDb } from './db.js';
 import * as schema from '../db/schema/index.js';
@@ -50,6 +51,7 @@ function createAuth() {
     emailAndPassword: {
       enabled: true
     },
+    plugins: [bearer()],
     advanced: useCrossSiteCookies
       ? {
           defaultCookieAttributes: {

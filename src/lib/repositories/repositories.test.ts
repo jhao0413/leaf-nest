@@ -2,6 +2,8 @@ import { booksRepository } from '@/lib/repositories/booksRepository';
 import { readingRepository } from '@/lib/repositories/readingRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
 import { remoteBookBinarySource } from '@/lib/binary/remoteBookBinarySource';
+import { getApiBaseUrl } from '@/lib/api/baseUrl';
+import { setAuthSessionToken } from '@/lib/auth/sessionToken';
 
 const fetchMock = vi.fn();
 
@@ -9,7 +11,13 @@ vi.stubGlobal('fetch', fetchMock);
 
 describe('repositories', () => {
   beforeEach(() => {
+    vi.stubGlobal('fetch', fetchMock);
     fetchMock.mockReset();
+    window.localStorage.clear();
+  });
+
+  afterEach(() => {
+    delete (globalThis as { isTauri?: boolean }).isTauri;
   });
 
   it('booksRepository loads books from the api and maps them to the bookshelf shape', async () => {
@@ -214,5 +222,50 @@ describe('repositories', () => {
     );
     expect(fetchMock.mock.calls[1]).toEqual(['https://example.com/book.epub']);
     expect(await blob.text()).toBe('epub-binary');
+  });
+
+  it('does not send the stored bearer token in the web runtime', async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          items: []
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    );
+    setAuthSessionToken(getApiBaseUrl(), 'session-token');
+
+    await booksRepository.listBooks();
+
+    const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(requestInit.headers).get('Authorization')).toBeNull();
+  });
+
+  it('sends the stored bearer token with protected api requests in Tauri', async () => {
+    vi.stubGlobal('isTauri', true);
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          items: []
+        }),
+        {
+          status: 200,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+    );
+    setAuthSessionToken(getApiBaseUrl(), 'session-token');
+
+    await booksRepository.listBooks();
+
+    const requestInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(requestInit.headers).get('Authorization')).toBe('Bearer session-token');
   });
 });

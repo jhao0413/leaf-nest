@@ -51,13 +51,15 @@ describe('auth integration', () => {
       method: 'OPTIONS',
       headers: new Headers({
         Origin: 'tauri://localhost',
-        'Access-Control-Request-Method': 'GET'
+        'Access-Control-Request-Method': 'GET',
+        'Access-Control-Request-Headers': 'content-type, authorization'
       })
     });
 
     expect(response.status).toBe(204);
     expect(response.headers.get('Access-Control-Allow-Origin')).toBe('tauri://localhost');
     expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
+    expect(response.headers.get('Access-Control-Allow-Headers')).toContain('Authorization');
   });
 
   it('maps the drizzle auth tables to better auth schema keys', () => {

@@ -1,6 +1,7 @@
 describe('api base URL helpers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
     vi.resetModules();
     window.localStorage.clear();
   });
@@ -23,8 +24,21 @@ describe('api base URL helpers', () => {
     expect(createApiUrl('/api/books')).toBe('https://reader.example.com/api/books');
   });
 
-  it('uses the stored runtime server URL before the build-time default', async () => {
+  it('ignores the stored runtime server URL in the web runtime', async () => {
     vi.stubEnv('VITE_API_BASE_URL', 'https://reader.example.com/');
+    vi.resetModules();
+
+    const { createApiUrl, getApiBaseUrl, setServerApiBaseUrl } = await import('./baseUrl');
+
+    setServerApiBaseUrl('http://192.168.110.56:8787/');
+
+    expect(getApiBaseUrl()).toBe('https://reader.example.com');
+    expect(createApiUrl('/api/books')).toBe('https://reader.example.com/api/books');
+  });
+
+  it('uses the stored runtime server URL before the build-time default in Tauri', async () => {
+    vi.stubEnv('VITE_API_BASE_URL', 'https://reader.example.com/');
+    vi.stubGlobal('isTauri', true);
     vi.resetModules();
 
     const { createApiUrl, getApiBaseUrl, setServerApiBaseUrl } = await import('./baseUrl');

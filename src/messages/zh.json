@@ -51,7 +51,7 @@
   "Settings": {
     "title": "设置",
     "serverUrl": "服务器地址",
-    "serverUrlDesc": "配置安卓端和桌面端连接的后端服务",
+    "serverUrlDesc": "配置安卓端连接的后端服务",
     "serverUrlPlaceholder": "例如 http://192.168.110.56:8787",
     "serverUrlSave": "保存",
     "serverUrlSaved": "服务器地址已保存",

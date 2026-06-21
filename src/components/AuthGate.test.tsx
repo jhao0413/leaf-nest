@@ -17,6 +17,7 @@ vi.mock('@/components/AuthCard', () => ({
 
 describe('AuthGate', () => {
   afterEach(() => {
+    vi.unstubAllGlobals();
     window.localStorage.clear();
   });
 
@@ -70,6 +71,7 @@ describe('AuthGate', () => {
   });
 
   it('requires the server URL to be confirmed through the login form', () => {
+    vi.stubGlobal('isTauri', true);
     setServerApiBaseUrl('https://reader.example.com');
     mockUseSessionStore.mockImplementation((selector: (state: unknown) => unknown) =>
       selector({

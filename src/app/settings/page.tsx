@@ -5,7 +5,11 @@ import { FormEvent, useState, useTransition } from 'react';
 import { setUserLocale } from '@/hooks/useLocale';
 import { Locale } from '@/i18n/config';
 import { ExternalLink, Globe, Info, Server } from 'lucide-react';
-import { getServerApiBaseUrlInputValue, setServerApiBaseUrl } from '@/lib/api/baseUrl';
+import {
+  getServerApiBaseUrlInputValue,
+  isServerApiBaseUrlConfigEnabled,
+  setServerApiBaseUrl
+} from '@/lib/api/baseUrl';
 
 const PROJECT_GITHUB_URL = 'https://github.com/jhao0413/leaf-nest';
 
@@ -15,6 +19,7 @@ export default function SettingsPage() {
   const [, startTransition] = useTransition();
   const [serverUrl, setServerUrl] = useState(() => getServerApiBaseUrlInputValue());
   const [serverUrlMessage, setServerUrlMessage] = useState<string | null>(null);
+  const canConfigureServerUrl = isServerApiBaseUrlConfigEnabled();
 
   const languages = [
     { key: 'en', label: 'English' },
@@ -56,45 +61,47 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-              <Server size={18} className="text-cyan-600 dark:text-cyan-400" />
+        {canConfigureServerUrl && (
+          <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                <Server size={18} className="text-cyan-600 dark:text-cyan-400" />
+              </div>
+              <div>
+                <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">
+                  {t('serverUrl')}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-lxgw">
+                  {t('serverUrlDesc')}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">
-                {t('serverUrl')}
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400 font-lxgw">
-                {t('serverUrlDesc')}
-              </p>
-            </div>
+
+            <form className="flex flex-col gap-3 sm:flex-row" onSubmit={onSaveServerUrl}>
+              <input
+                type="url"
+                required
+                value={serverUrl}
+                onChange={(event) => {
+                  setServerUrl(event.target.value);
+                  setServerUrlMessage(null);
+                }}
+                placeholder={t('serverUrlPlaceholder')}
+                className="min-w-0 flex-1 rounded-xl border border-white/30 bg-white/70 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-100"
+              />
+              <button
+                type="submit"
+                className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-900/50 dark:bg-cyan-900/20 dark:text-cyan-200 dark:hover:bg-cyan-900/30"
+              >
+                {t('serverUrlSave')}
+              </button>
+            </form>
+
+            {serverUrlMessage && (
+              <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{serverUrlMessage}</p>
+            )}
           </div>
-
-          <form className="flex flex-col gap-3 sm:flex-row" onSubmit={onSaveServerUrl}>
-            <input
-              type="url"
-              required
-              value={serverUrl}
-              onChange={(event) => {
-                setServerUrl(event.target.value);
-                setServerUrlMessage(null);
-              }}
-              placeholder={t('serverUrlPlaceholder')}
-              className="min-w-0 flex-1 rounded-xl border border-white/30 bg-white/70 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-100"
-            />
-            <button
-              type="submit"
-              className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-900/50 dark:bg-cyan-900/20 dark:text-cyan-200 dark:hover:bg-cyan-900/30"
-            >
-              {t('serverUrlSave')}
-            </button>
-          </form>
-
-          {serverUrlMessage && (
-            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">{serverUrlMessage}</p>
-          )}
-        </div>
+        )}
 
         {/* Language Setting */}
         <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">

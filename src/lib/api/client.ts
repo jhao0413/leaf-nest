@@ -1,4 +1,5 @@
-import { createApiUrl } from '@/lib/api/baseUrl';
+import { createApiUrl, getApiBaseUrl, isServerApiBaseUrlConfigEnabled } from '@/lib/api/baseUrl';
+import { getAuthSessionToken } from '@/lib/auth/sessionToken';
 
 export class ApiError extends Error {
   status: number;
@@ -31,9 +32,11 @@ async function parseResponse(response: Response) {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { headers, ...restOptions } = options;
   const response = await fetch(createApiUrl(path), {
     credentials: 'include',
-    ...options
+    ...restOptions,
+    headers: withAuthHeaders(headers)
   });
   const data = await parseResponse(response);
 
@@ -47,6 +50,19 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 
   return data as T;
+}
+
+function withAuthHeaders(headers?: HeadersInit) {
+  const nextHeaders = new Headers(headers);
+  const authSessionToken = isServerApiBaseUrlConfigEnabled()
+    ? getAuthSessionToken(getApiBaseUrl())
+    : undefined;
+
+  if (authSessionToken && !nextHeaders.has('Authorization')) {
+    nextHeaders.set('Authorization', `Bearer ${authSessionToken}`);
+  }
+
+  return nextHeaders;
 }
 
 function withJsonHeaders(headers?: HeadersInit) {

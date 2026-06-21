@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { getApiBaseUrl, subscribeApiBaseUrlChange } from '@/lib/api/baseUrl';
 import { createLeafNestAuthClient } from '@/lib/auth/client';
 import { useSessionStore } from '@/lib/auth/sessionStore';
+import { clearAuthSessionToken } from '@/lib/auth/sessionToken';
 
 type LeafNestAuthClient = ReturnType<typeof createLeafNestAuthClient>;
 
@@ -22,6 +23,7 @@ export function AuthClientProvider({ children }: { children: React.ReactNode }) 
     () =>
       subscribeApiBaseUrlChange(() => {
         setApiBaseUrl(getApiBaseUrl());
+        clearAuthSessionToken();
         clearSession();
       }),
     [clearSession]

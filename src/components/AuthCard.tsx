@@ -4,10 +4,13 @@ import { FormEvent, useMemo, useState } from 'react';
 import { Button, Card, TextField, Label, Input } from '@heroui/react';
 import {
   confirmServerApiBaseUrl,
+  getApiBaseUrl,
   getServerApiBaseUrlInputValue,
+  isServerApiBaseUrlConfigEnabled,
   setServerApiBaseUrl
 } from '@/lib/api/baseUrl';
 import { createLeafNestAuthClient } from '@/lib/auth/client';
+import { setAuthSessionToken } from '@/lib/auth/sessionToken';
 import { useTranslations } from '@/i18n';
 import { AuthAsciiBackground } from '@/components/AuthAsciiBackground';
 
@@ -26,6 +29,19 @@ function normalizeErrorMessage(error: unknown, fallback: string) {
   return fallback;
 }
 
+function getAuthResultToken(result: { data?: unknown }) {
+  if (
+    typeof result.data === 'object' &&
+    result.data &&
+    'token' in result.data &&
+    typeof result.data.token === 'string'
+  ) {
+    return result.data.token;
+  }
+
+  return null;
+}
+
 export function AuthCard() {
   const t = useTranslations('Auth');
   const [mode, setMode] = useState<AuthMode>('sign-in');
@@ -35,6 +51,7 @@ export function AuthCard() {
   const [password, setPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const requiresServerUrl = isServerApiBaseUrlConfigEnabled();
   const inputClassName =
     'w-full border border-slate-200/80 bg-white/85 text-slate-900 placeholder:text-slate-500 transition-colors hover:bg-white dark:border-white/15 dark:bg-neutral-800/70 dark:text-slate-100 dark:placeholder:text-slate-400';
 
@@ -49,26 +66,29 @@ export function AuthCard() {
     setErrorMessage(null);
 
     try {
-      const nextServerUrl = serverUrl.trim();
+      const nextServerUrl = requiresServerUrl ? serverUrl.trim() : getApiBaseUrl();
 
-      if (!nextServerUrl) {
+      if (requiresServerUrl && !nextServerUrl) {
         setErrorMessage(t('serverUrlRequired'));
         return;
       }
 
-      try {
-        const parsedServerUrl = new URL(nextServerUrl);
+      if (requiresServerUrl) {
+        try {
+          const parsedServerUrl = new URL(nextServerUrl);
 
-        if (!['http:', 'https:'].includes(parsedServerUrl.protocol)) {
+          if (!['http:', 'https:'].includes(parsedServerUrl.protocol)) {
+            setErrorMessage(t('serverUrlInvalid'));
+            return;
+          }
+        } catch {
           setErrorMessage(t('serverUrlInvalid'));
           return;
         }
-      } catch {
-        setErrorMessage(t('serverUrlInvalid'));
-        return;
+
+        setServerApiBaseUrl(nextServerUrl);
       }
 
-      setServerApiBaseUrl(nextServerUrl);
       const activeAuthClient = createLeafNestAuthClient(nextServerUrl);
 
       if (mode === 'sign-in') {
@@ -81,6 +101,12 @@ export function AuthCard() {
           setErrorMessage(normalizeErrorMessage(result.error, t('signInFailed')));
           return;
         }
+
+        const token = getAuthResultToken(result);
+
+        if (requiresServerUrl && token) {
+          setAuthSessionToken(nextServerUrl, token);
+        }
       } else {
         const result = await activeAuthClient.signUp.email({
           name,
@@ -92,9 +118,18 @@ export function AuthCard() {
           setErrorMessage(normalizeErrorMessage(result.error, t('signUpFailed')));
           return;
         }
+
+        const token = getAuthResultToken(result);
+
+        if (requiresServerUrl && token) {
+          setAuthSessionToken(nextServerUrl, token);
+        }
       }
 
-      confirmServerApiBaseUrl(nextServerUrl);
+      if (requiresServerUrl) {
+        confirmServerApiBaseUrl(nextServerUrl);
+      }
+
       window.location.reload();
     } catch (error) {
       setErrorMessage(
@@ -122,7 +157,6 @@ export function AuthCard() {
       <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center justify-end px-4 py-10 sm:pr-12 md:pr-16 lg:pr-32">
         <div className="relative flex w-full max-w-[26rem] flex-col gap-6 sm:w-[90%] md:w-[70%]">
           <div className="group relative w-full">
-            {/* Stacked Glass Effect Layers */}
             <div className="absolute -inset-1.5 z-0 rotate-[-3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[-5deg] group-hover:scale-[1.02] dark:bg-black/20" />
             <div className="absolute -inset-1.5 z-0 rotate-[3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[5deg] group-hover:scale-[1.02] dark:bg-black/20" />
 
@@ -142,18 +176,20 @@ export function AuthCard() {
               </Card.Header>
               <Card.Content className="px-6 pb-6 pt-3">
                 <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
-                  <TextField
-                    fullWidth
-                    type="url"
-                    value={serverUrl}
-                    onChange={setServerUrl}
-                    isRequired
-                    autoComplete="url"
-                    variant="secondary"
-                  >
-                    <Label>{t('serverUrl')}</Label>
-                    <Input className={inputClassName} placeholder={t('serverUrlPlaceholder')} />
-                  </TextField>
+                  {requiresServerUrl && (
+                    <TextField
+                      fullWidth
+                      type="url"
+                      value={serverUrl}
+                      onChange={setServerUrl}
+                      isRequired
+                      autoComplete="url"
+                      variant="secondary"
+                    >
+                      <Label>{t('serverUrl')}</Label>
+                      <Input className={inputClassName} placeholder={t('serverUrlPlaceholder')} />
+                    </TextField>
+                  )}
 
                   {mode === 'sign-up' && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">

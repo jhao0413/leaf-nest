@@ -2,10 +2,11 @@
 
 import Image from '@/components/AppImage';
 import { Home, NotebookPen, Settings, LogOut } from 'lucide-react';
-import { useAuthClient } from '@/lib/auth/AuthClientProvider';
+import { useAuthApiBaseUrl, useAuthClient } from '@/lib/auth/AuthClientProvider';
 import { usePathname, useRouter } from '@/navigation';
 import { useTranslations } from '@/i18n';
 import { useSessionStore } from '@/lib/auth/sessionStore';
+import { clearAuthSessionToken } from '@/lib/auth/sessionToken';
 
 interface SidebarItemProps {
   icon: React.ReactNode;
@@ -62,6 +63,7 @@ export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const t = useTranslations('Sidebar');
   const authClient = useAuthClient();
+  const apiBaseUrl = useAuthApiBaseUrl();
   const session = useSessionStore((state) => state.session);
 
   const menuItems = [
@@ -133,8 +135,12 @@ export const Sidebar: React.FC = () => {
           <button
             type="button"
             onClick={async () => {
-              await authClient.signOut();
-              window.location.reload();
+              try {
+                await authClient.signOut();
+              } finally {
+                clearAuthSessionToken(apiBaseUrl);
+                window.location.reload();
+              }
             }}
             title={t('logout')}
             className="p-2 -mr-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors shrink-0 outline-none focus:ring-2 focus:ring-red-500/50"
@@ -152,6 +158,7 @@ export const MobileNavigation: React.FC = () => {
   const pathname = usePathname();
   const t = useTranslations('Sidebar');
   const authClient = useAuthClient();
+  const apiBaseUrl = useAuthApiBaseUrl();
 
   const menuItems = [
     {
@@ -195,8 +202,12 @@ export const MobileNavigation: React.FC = () => {
         <button
           type="button"
           onClick={async () => {
-            await authClient.signOut();
-            window.location.reload();
+            try {
+              await authClient.signOut();
+            } finally {
+              clearAuthSessionToken(apiBaseUrl);
+              window.location.reload();
+            }
           }}
           className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-xs text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
           title={t('logout')}

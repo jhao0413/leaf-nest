@@ -1,3 +1,5 @@
+import { isTauriRuntime } from '@/lib/runtime/tauri';
+
 const API_BASE_URL_STORAGE_KEY = 'leaf-nest-api-base-url';
 const API_BASE_URL_CONFIRMED_STORAGE_KEY = 'leaf-nest-api-base-url-confirmed';
 const API_BASE_URL_CHANGE_EVENT = 'leaf-nest-api-base-url-change';
@@ -20,15 +22,23 @@ function getStoredApiBaseUrl() {
 }
 
 export function getConfiguredApiBaseUrl() {
-  return getStoredApiBaseUrl() || configuredApiBaseUrl;
+  return (isServerApiBaseUrlConfigEnabled() ? getStoredApiBaseUrl() : '') || configuredApiBaseUrl;
 }
 
 export function getServerApiBaseUrlInputValue() {
-  return getConfiguredApiBaseUrl();
+  return isServerApiBaseUrlConfigEnabled() ? getConfiguredApiBaseUrl() : '';
+}
+
+export function isServerApiBaseUrlConfigEnabled() {
+  return isTauriRuntime();
 }
 
 export function setServerApiBaseUrl(value: string) {
   if (typeof window === 'undefined') {
+    return;
+  }
+
+  if (!isServerApiBaseUrlConfigEnabled()) {
     return;
   }
 
@@ -57,6 +67,10 @@ export function confirmServerApiBaseUrl(value: string) {
     return;
   }
 
+  if (!isServerApiBaseUrlConfigEnabled()) {
+    return;
+  }
+
   const apiBaseUrl = normalizeApiBaseUrl(value);
 
   if (!apiBaseUrl) {
@@ -77,6 +91,10 @@ export function clearServerApiBaseUrlConfirmation() {
 export function isServerApiBaseUrlConfirmed() {
   if (typeof window === 'undefined') {
     return false;
+  }
+
+  if (!isServerApiBaseUrlConfigEnabled()) {
+    return true;
   }
 
   const apiBaseUrl = getConfiguredApiBaseUrl();

@@ -82,7 +82,7 @@ function registerCors(app: Hono<AppBindings>, trustedClientOrigins: string[] = [
     '/api/*',
     cors({
       origin: (origin) => (allowedOrigins.has(origin) ? origin : null),
-      allowHeaders: ['Content-Type'],
+      allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
       credentials: true
     })
