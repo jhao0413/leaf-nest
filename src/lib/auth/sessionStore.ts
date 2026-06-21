@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { AuthSession } from '@/lib/auth/client';
+import type { AuthSession } from '@/lib/auth/client';
 
 export type SessionStatus = 'loading' | 'authenticated' | 'anonymous';
 

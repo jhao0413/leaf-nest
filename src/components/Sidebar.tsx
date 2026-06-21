@@ -2,7 +2,7 @@
 
 import Image from '@/components/AppImage';
 import { Home, NotebookPen, Settings, LogOut } from 'lucide-react';
-import { authClient } from '@/lib/auth/client';
+import { useAuthClient } from '@/lib/auth/AuthClientProvider';
 import { usePathname, useRouter } from '@/navigation';
 import { useTranslations } from '@/i18n';
 import { useSessionStore } from '@/lib/auth/sessionStore';
@@ -61,6 +61,7 @@ export const Sidebar: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations('Sidebar');
+  const authClient = useAuthClient();
   const session = useSessionStore((state) => state.session);
 
   const menuItems = [
@@ -85,7 +86,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="h-full w-64 shrink-0 flex flex-col rounded-2xl border border-white/60 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-2xl shadow-lg shadow-blue-900/5 z-50 transition-all overflow-hidden">
+    <div className="hidden h-full w-64 shrink-0 flex-col rounded-2xl border border-white/60 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-2xl shadow-lg shadow-blue-900/5 z-50 transition-all overflow-hidden md:flex">
       {/* Logo Section */}
       <div className="p-6 flex items-center gap-3">
         <div className="relative w-10 h-10 overflow-hidden rounded-xl shadow-sm">
@@ -143,5 +144,67 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+export const MobileNavigation: React.FC = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const t = useTranslations('Sidebar');
+  const authClient = useAuthClient();
+
+  const menuItems = [
+    {
+      label: t('home'),
+      icon: <Home size={20} />,
+      path: '/',
+      isActive: pathname === '/'
+    },
+    {
+      label: t('notes'),
+      icon: <NotebookPen size={20} />,
+      path: '/notes',
+      isActive: pathname?.startsWith('/notes')
+    },
+    {
+      label: t('settings'),
+      icon: <Settings size={20} />,
+      path: '/settings',
+      isActive: pathname?.startsWith('/settings')
+    }
+  ];
+
+  return (
+    <nav className="fixed inset-x-3 bottom-3 z-50 rounded-2xl border border-white/60 bg-white/80 px-2 py-2 shadow-2xl shadow-slate-900/15 backdrop-blur-2xl dark:border-white/10 dark:bg-neutral-950/80 md:hidden">
+      <div className="grid grid-cols-4 gap-1">
+        {menuItems.map((item) => (
+          <button
+            key={item.path}
+            type="button"
+            onClick={() => router.push(item.path)}
+            className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-xs transition-colors ${
+              item.isActive
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200'
+                : 'text-gray-500 hover:bg-black/5 dark:text-gray-400 dark:hover:bg-white/5'
+            }`}
+          >
+            {item.icon}
+            <span className="max-w-full truncate font-lxgw">{item.label}</span>
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={async () => {
+            await authClient.signOut();
+            window.location.reload();
+          }}
+          className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-xs text-gray-500 transition-colors hover:bg-red-50 hover:text-red-500 dark:text-gray-400 dark:hover:bg-red-950/40 dark:hover:text-red-300"
+          title={t('logout')}
+        >
+          <LogOut size={20} />
+          <span className="max-w-full truncate font-lxgw">{t('logout')}</span>
+        </button>
+      </div>
+    </nav>
   );
 };

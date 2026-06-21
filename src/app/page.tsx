@@ -125,13 +125,13 @@ export default function Home() {
     <>
       <div className="flex flex-col h-full">
         {/* Top Toolbar */}
-        <div className="flex justify-between items-end mb-8 px-2 pt-4">
-          <div>
-            <h2 className="text-3xl font-bold font-lxgw bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400">
+        <div className="flex flex-col gap-4 px-1 pb-5 pt-2 sm:flex-row sm:items-end sm:justify-between sm:px-2 sm:pb-8 sm:pt-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-2xl font-bold font-lxgw bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-400 sm:text-3xl">
               {t('myBooks')}
             </h2>
           </div>
-          <div className="flex gap-3 relative z-10">
+          <div className="relative z-10 grid grid-cols-2 gap-2 sm:flex sm:gap-3">
             {/* Import / Delete Button */}
             {!manageMode && (
               <input
@@ -147,7 +147,7 @@ export default function Home() {
             <button
               type="button"
               className={`
-                group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300
+                group flex items-center justify-center gap-2 rounded-xl px-3 py-2 transition-all duration-300 sm:px-4
                 border border-white/20 shadow-sm backdrop-blur-md
                 ${
                   manageMode
@@ -166,7 +166,7 @@ export default function Home() {
             {/* Manage / Cancel Button */}
             <button
               type="button"
-              className="group flex items-center gap-2 px-4 py-2 rounded-xl cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md"
+              className="group flex items-center justify-center gap-2 rounded-xl px-3 py-2 cursor-pointer transition-all duration-300 bg-white/40 text-gray-700 hover:bg-white/60 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 border border-white/20 shadow-sm backdrop-blur-md sm:px-4"
               onClick={() => {
                 setManageMode(!manageMode);
                 if (manageMode) setSelectedBookIds([]); // Clear selection when cancelling
@@ -181,12 +181,12 @@ export default function Home() {
         </div>
 
         {/* Book Grid */}
-        <div className="flex flex-wrap content-start gap-4">
+        <div className="grid grid-cols-2 content-start gap-3 min-[420px]:grid-cols-3 sm:flex sm:flex-wrap sm:gap-4">
           {bookInfoList.map((book, index) => (
             <Card
               variant="transparent"
               key={book.id || index}
-              className="relative w-[160px] h-[240px] overflow-hidden rounded-[14px] border-none bg-transparent p-0 shadow-md ring-1 ring-black/5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20 group dark:ring-white/10"
+              className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] border-none bg-transparent p-0 shadow-md ring-1 ring-black/5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20 group dark:ring-white/10 sm:h-[240px] sm:w-[160px]"
             >
               <button
                 type="button"

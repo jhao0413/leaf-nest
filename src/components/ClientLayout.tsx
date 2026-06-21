@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from '@/navigation';
-import { Sidebar } from '@/components/Sidebar';
+import { MobileNavigation, Sidebar } from '@/components/Sidebar';
 
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -28,17 +28,18 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-sky-500/10 dark:bg-sky-600/10 blur-[100px] animate-[pulse_12s_ease-in-out_infinite]"></div>
       </div>
 
-      <div className="z-10 flex w-full h-full p-3 gap-3">
+      <div className="z-10 flex w-full h-full gap-3 p-2 pb-24 md:p-3 md:pb-3">
         {/* Sidebar Dock */}
         <Sidebar />
 
         {/* Main Content Area */}
-        <div className="flex flex-col flex-1 h-full overflow-hidden relative rounded-2xl bg-white/60 dark:bg-neutral-900/60 shadow-lg shadow-black/5 border border-white/50 dark:border-white/5 backdrop-blur-xl">
+        <div className="flex min-w-0 flex-1 flex-col h-full overflow-hidden relative rounded-2xl bg-white/60 dark:bg-neutral-900/60 shadow-lg shadow-black/5 border border-white/50 dark:border-white/5 backdrop-blur-xl">
           <main className="flex-1 overflow-x-hidden relative overflow-y-auto scroll-smooth">
-            <div className="max-w-7xl mx-auto w-full p-6">{children}</div>
+            <div className="mx-auto w-full max-w-7xl p-3 sm:p-4 md:p-6">{children}</div>
           </main>
         </div>
       </div>
+      <MobileNavigation />
     </div>
   );
 }

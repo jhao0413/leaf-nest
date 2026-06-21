@@ -22,6 +22,7 @@ describe('self-host deployment configuration', () => {
     expect(composeSource).toContain(
       'BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}'
     );
+    expect(composeSource).toContain('TRUSTED_CLIENT_ORIGINS: ${TRUSTED_CLIENT_ORIGINS:-}');
     expect(composeSource).toContain('S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://rustfs:9000}');
     expect(composeSource).toContain(
       'S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}'

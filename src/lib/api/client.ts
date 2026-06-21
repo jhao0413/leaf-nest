@@ -1,3 +1,5 @@
+import { createApiUrl } from '@/lib/api/baseUrl';
+
 export class ApiError extends Error {
   status: number;
   data: unknown;
@@ -29,7 +31,7 @@ async function parseResponse(response: Response) {
 }
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(createApiUrl(path), {
     credentials: 'include',
     ...options
   });

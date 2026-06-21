@@ -2,8 +2,12 @@
 
 import { FormEvent, useMemo, useState } from 'react';
 import { Button, Card, TextField, Label, Input } from '@heroui/react';
-import { authClient } from '@/lib/auth/client';
-import { useSessionStore } from '@/lib/auth/sessionStore';
+import {
+  confirmServerApiBaseUrl,
+  getServerApiBaseUrlInputValue,
+  setServerApiBaseUrl
+} from '@/lib/api/baseUrl';
+import { createLeafNestAuthClient } from '@/lib/auth/client';
 import { useTranslations } from '@/i18n';
 import { AuthAsciiBackground } from '@/components/AuthAsciiBackground';
 
@@ -24,8 +28,8 @@ function normalizeErrorMessage(error: unknown, fallback: string) {
 
 export function AuthCard() {
   const t = useTranslations('Auth');
-  const refetchSession = useSessionStore((state) => state.refetchSession);
   const [mode, setMode] = useState<AuthMode>('sign-in');
+  const [serverUrl, setServerUrl] = useState(() => getServerApiBaseUrlInputValue());
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,8 +49,30 @@ export function AuthCard() {
     setErrorMessage(null);
 
     try {
+      const nextServerUrl = serverUrl.trim();
+
+      if (!nextServerUrl) {
+        setErrorMessage(t('serverUrlRequired'));
+        return;
+      }
+
+      try {
+        const parsedServerUrl = new URL(nextServerUrl);
+
+        if (!['http:', 'https:'].includes(parsedServerUrl.protocol)) {
+          setErrorMessage(t('serverUrlInvalid'));
+          return;
+        }
+      } catch {
+        setErrorMessage(t('serverUrlInvalid'));
+        return;
+      }
+
+      setServerApiBaseUrl(nextServerUrl);
+      const activeAuthClient = createLeafNestAuthClient(nextServerUrl);
+
       if (mode === 'sign-in') {
-        const result = await authClient.signIn.email({
+        const result = await activeAuthClient.signIn.email({
           email,
           password
         });
@@ -56,7 +82,7 @@ export function AuthCard() {
           return;
         }
       } else {
-        const result = await authClient.signUp.email({
+        const result = await activeAuthClient.signUp.email({
           name,
           email,
           password
@@ -68,7 +94,8 @@ export function AuthCard() {
         }
       }
 
-      await refetchSession?.();
+      confirmServerApiBaseUrl(nextServerUrl);
+      window.location.reload();
     } catch (error) {
       setErrorMessage(
         normalizeErrorMessage(error, mode === 'sign-in' ? t('signInFailed') : t('signUpFailed'))
@@ -115,6 +142,19 @@ export function AuthCard() {
               </Card.Header>
               <Card.Content className="px-6 pb-6 pt-3">
                 <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
+                  <TextField
+                    fullWidth
+                    type="url"
+                    value={serverUrl}
+                    onChange={setServerUrl}
+                    isRequired
+                    autoComplete="url"
+                    variant="secondary"
+                  >
+                    <Label>{t('serverUrl')}</Label>
+                    <Input className={inputClassName} placeholder={t('serverUrlPlaceholder')} />
+                  </TextField>
+
                   {mode === 'sign-up' && (
                     <div className="animate-in fade-in slide-in-from-top-2 duration-300">
                       <TextField

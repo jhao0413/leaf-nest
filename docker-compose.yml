@@ -13,6 +13,7 @@ services:
       API_PORT: '8787'
       DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
       BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}
+      TRUSTED_CLIENT_ORIGINS: ${TRUSTED_CLIENT_ORIGINS:-}
       S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://rustfs:9000}
       S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}
       S3_REGION: ${S3_REGION:-us-east-1}

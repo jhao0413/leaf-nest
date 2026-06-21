@@ -28,9 +28,36 @@ describe('auth integration', () => {
     expect(
       buildTrustedOrigins({
         APP_URL: 'http://localhost:5173',
-        BETTER_AUTH_URL: 'http://localhost:8787'
+        BETTER_AUTH_URL: 'http://localhost:8787',
+        TRUSTED_CLIENT_ORIGINS: []
       })
     ).toEqual(['http://localhost:5173', 'http://localhost:8787']);
+  });
+
+  it('includes packaged client origins in better auth trusted origins', () => {
+    expect(
+      buildTrustedOrigins({
+        APP_URL: 'http://localhost:5173',
+        BETTER_AUTH_URL: 'http://localhost:8787',
+        TRUSTED_CLIENT_ORIGINS: ['tauri://localhost']
+      })
+    ).toEqual(['http://localhost:5173', 'http://localhost:8787', 'tauri://localhost']);
+  });
+
+  it('allows configured packaged client origins through CORS', async () => {
+    const app = createApp(fakeAuth, {}, { trustedClientOrigins: ['tauri://localhost'] });
+
+    const response = await app.request('/api/session', {
+      method: 'OPTIONS',
+      headers: new Headers({
+        Origin: 'tauri://localhost',
+        'Access-Control-Request-Method': 'GET'
+      })
+    });
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get('Access-Control-Allow-Origin')).toBe('tauri://localhost');
+    expect(response.headers.get('Access-Control-Allow-Credentials')).toBe('true');
   });
 
   it('maps the drizzle auth tables to better auth schema keys', () => {

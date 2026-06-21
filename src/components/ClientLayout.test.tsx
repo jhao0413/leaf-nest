@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { ClientLayout } from '@/components/ClientLayout';
 
 vi.mock('@/components/Sidebar', () => ({
+  MobileNavigation: () => <div data-testid="mobile-navigation">Mobile Navigation</div>,
   Sidebar: () => <div data-testid="sidebar">Sidebar</div>
 }));
 
@@ -24,6 +25,7 @@ describe('ClientLayout', () => {
     );
 
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
+    expect(screen.getByTestId('mobile-navigation')).toBeInTheDocument();
     expect(screen.getByTestId('page-content')).toBeInTheDocument();
   });
 
@@ -44,6 +46,7 @@ describe('ClientLayout', () => {
     );
 
     expect(screen.queryByTestId('sidebar')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mobile-navigation')).not.toBeInTheDocument();
     expect(screen.getByTestId('page-content')).toBeInTheDocument();
   });
 });

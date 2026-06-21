@@ -38,8 +38,49 @@ describe('parseEnv', () => {
       S3_BUCKET: 'leaf-nest',
       S3_ACCESS_KEY_ID: 'minioadmin',
       S3_SECRET_ACCESS_KEY: 'minioadmin',
-      S3_FORCE_PATH_STYLE: true
+      S3_FORCE_PATH_STYLE: true,
+      TRUSTED_CLIENT_ORIGINS: []
     });
+  });
+
+  it('parses trusted client origins for packaged clients', () => {
+    const env = parseEnv({
+      APP_URL: 'http://localhost:3000',
+      API_PORT: '8787',
+      DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/leaf_nest',
+      BETTER_AUTH_SECRET: 'super-secret-key',
+      BETTER_AUTH_URL: 'http://localhost:8787',
+      TRUSTED_CLIENT_ORIGINS: 'tauri://localhost, https://reader.example.com/mobile/',
+      S3_ENDPOINT: 'http://localhost:9000',
+      S3_PUBLIC_ENDPOINT: 'http://localhost:9000',
+      S3_REGION: 'us-east-1',
+      S3_BUCKET: 'leaf-nest',
+      S3_ACCESS_KEY_ID: 'minioadmin',
+      S3_SECRET_ACCESS_KEY: 'minioadmin',
+      S3_FORCE_PATH_STYLE: 'true'
+    });
+
+    expect(env.TRUSTED_CLIENT_ORIGINS).toEqual(['tauri://localhost', 'https://reader.example.com']);
+  });
+
+  it('rejects invalid trusted client origins', () => {
+    expect(() =>
+      parseEnv({
+        APP_URL: 'http://localhost:3000',
+        API_PORT: '8787',
+        DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/leaf_nest',
+        BETTER_AUTH_SECRET: 'super-secret-key',
+        BETTER_AUTH_URL: 'http://localhost:8787',
+        TRUSTED_CLIENT_ORIGINS: 'not a url',
+        S3_ENDPOINT: 'http://localhost:9000',
+        S3_PUBLIC_ENDPOINT: 'http://localhost:9000',
+        S3_REGION: 'us-east-1',
+        S3_BUCKET: 'leaf-nest',
+        S3_ACCESS_KEY_ID: 'minioadmin',
+        S3_SECRET_ACCESS_KEY: 'minioadmin',
+        S3_FORCE_PATH_STYLE: 'true'
+      })
+    ).toThrow(/TRUSTED_CLIENT_ORIGINS/);
   });
 
   it('falls back to S3_ENDPOINT in development when S3_PUBLIC_ENDPOINT is not configured', () => {

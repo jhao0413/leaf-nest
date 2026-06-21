@@ -1,12 +1,26 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { AuthCard } from '@/components/AuthCard';
+import { isServerApiBaseUrlConfirmed, subscribeApiBaseUrlChange } from '@/lib/api/baseUrl';
 import { useSessionStore } from '@/lib/auth/sessionStore';
 import { useTranslations } from '@/i18n';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const t = useTranslations('Auth');
   const status = useSessionStore((state) => state.status);
+  const [isServerUrlConfirmed, setIsServerUrlConfirmed] = useState(() =>
+    isServerApiBaseUrlConfirmed()
+  );
+
+  useEffect(
+    () => subscribeApiBaseUrlChange(() => setIsServerUrlConfirmed(isServerApiBaseUrlConfirmed())),
+    []
+  );
+
+  if (!isServerUrlConfirmed) {
+    return <AuthCard />;
+  }
 
   if (status === 'loading') {
     return (

@@ -31,6 +31,7 @@ English | [简体中文](README.zh-CN.md)
 - **Backend**: Hono + better-auth + Drizzle ORM
 - **Database**: PostgreSQL
 - **Object Storage**: S3-compatible storage / RustFS
+- **Client Shell**: Tauri v2 for Android and desktop packaging
 - **State Management**: Zustand v5
 - **Styling**: Tailwind CSS 4.x + HeroUI + Radix UI
 - **Validation**: Zod
@@ -121,6 +122,32 @@ pnpm build
 pnpm preview
 ```
 
+### Tauri Android Client
+
+The Android client uses Tauri v2 to package the existing React reader into a native Android WebView shell while continuing to use a deployed Leaf Nest API.
+
+Prerequisites for Android builds:
+
+- Rust stable MSVC toolchain on Windows
+- Android Studio with Android SDK Platform, Platform-Tools, Build-Tools, Command-line Tools, and NDK
+- `JAVA_HOME`, `ANDROID_HOME`, and `NDK_HOME` configured for the current shell
+
+```bash
+# Install Tauri dependencies
+pnpm install
+
+# Generate the Android project the first time
+pnpm tauri:android:init
+
+# Run on an attached Android device or emulator
+$env:VITE_API_BASE_URL='https://reader.example.com'; pnpm tauri:android:dev
+
+# Build an Android package
+$env:VITE_API_BASE_URL='https://reader.example.com'; pnpm tauri:android:build
+```
+
+For the backend that serves the Android client, set `TRUSTED_CLIENT_ORIGINS=tauri://localhost` and use an HTTPS `BETTER_AUTH_URL` for cross-origin credentials.
+
 ### Environment Variables
 
 The backend bootstrap currently expects these variables in `.env`:
@@ -130,6 +157,7 @@ The backend bootstrap currently expects these variables in `.env`:
 - `DATABASE_URL`
 - `BETTER_AUTH_SECRET`
 - `BETTER_AUTH_URL`
+- `TRUSTED_CLIENT_ORIGINS`
 - `S3_ENDPOINT`
 - `S3_PUBLIC_ENDPOINT`
 - `S3_REGION`
@@ -138,7 +166,9 @@ The backend bootstrap currently expects these variables in `.env`:
 - `S3_SECRET_ACCESS_KEY`
 - `S3_FORCE_PATH_STYLE`
 
-For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `DATABASE_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint.
+The frontend also reads `VITE_API_BASE_URL`. Leave it empty for same-origin browser usage; set it to the deployed app/API origin when building the Tauri Android client.
+
+For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `DATABASE_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint. `TRUSTED_CLIENT_ORIGINS` is passed through for packaged clients.
 
 ### Code Quality
 
@@ -199,6 +229,7 @@ leaf-nest/
 │       ├── lib/             # Services (auth, books, reading, storage, db)
 │       └── routes/          # REST API routes (books, reading, health)
 ├── public/                  # Static assets
+├── src-tauri/               # Tauri v2 shell for Android and desktop packages
 ├── docker-compose.yml       # Docker deployment stack (app, postgres, RustFS)
 ├── Dockerfile               # Multi-stage Node.js build
 └── vite.config.ts           # Vite+ / Vite shared configuration

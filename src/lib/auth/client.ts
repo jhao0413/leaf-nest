@@ -1,15 +1,12 @@
 import { createAuthClient } from 'better-auth/react';
+import { getApiBaseUrl } from '@/lib/api/baseUrl';
 
-function getBaseUrl() {
-  if (typeof window !== 'undefined') {
-    return window.location.origin;
-  }
-
-  return 'http://localhost:8787';
+export function createLeafNestAuthClient(baseURL = getApiBaseUrl()) {
+  return createAuthClient({
+    baseURL
+  });
 }
 
-export const authClient = createAuthClient({
-  baseURL: getBaseUrl()
-});
+export const authClient = createLeafNestAuthClient();
 
 export type AuthSession = typeof authClient.$Infer.Session;

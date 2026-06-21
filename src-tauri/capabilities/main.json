@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Default Leaf Nest webview permissions.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

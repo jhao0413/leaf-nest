@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { Hono, MiddlewareHandler } from 'hono';
+import { cors } from 'hono/cors';
 import { registerHealthRoute } from './routes/health.js';
 import { AuthLike, AuthSession } from './lib/auth-types.js';
 import { BooksService } from './lib/books.js';
@@ -19,8 +20,9 @@ interface AppServices {
   reading?: ReadingService;
 }
 
-interface FrontendAssetsOptions {
+interface AppOptions {
   frontendDistDir?: string;
+  trustedClientOrigins?: string[];
 }
 
 const contentTypesByExtension: Record<string, string> = {
@@ -69,7 +71,25 @@ async function getStaticFileResponse(frontendDistDir: string, requestPath: strin
   });
 }
 
-function registerFrontendRoutes(app: Hono<AppBindings>, options: FrontendAssetsOptions) {
+function registerCors(app: Hono<AppBindings>, trustedClientOrigins: string[] = []) {
+  if (trustedClientOrigins.length === 0) {
+    return;
+  }
+
+  const allowedOrigins = new Set(trustedClientOrigins);
+
+  app.use(
+    '/api/*',
+    cors({
+      origin: (origin) => (allowedOrigins.has(origin) ? origin : null),
+      allowHeaders: ['Content-Type'],
+      allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+      credentials: true
+    })
+  );
+}
+
+function registerFrontendRoutes(app: Hono<AppBindings>, options: AppOptions) {
   if (!options.frontendDistDir) {
     return;
   }
@@ -132,13 +152,10 @@ function registerAuthRoutes(
   });
 }
 
-export function createApp(
-  auth?: AuthLike,
-  services: AppServices = {},
-  frontendOptions: FrontendAssetsOptions = {}
-) {
+export function createApp(auth?: AuthLike, services: AppServices = {}, options: AppOptions = {}) {
   const app = new Hono<AppBindings>();
 
+  registerCors(app, options.trustedClientOrigins);
   registerHealthRoute(app);
 
   if (auth) {
@@ -159,7 +176,7 @@ export function createApp(
     }
   }
 
-  registerFrontendRoutes(app, frontendOptions);
+  registerFrontendRoutes(app, options);
 
   return app;
 }

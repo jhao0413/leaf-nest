@@ -13,6 +13,8 @@
 /build
 /dist
 /dist-server
+/src-tauri/target
+/src-tauri/gen/schemas
 
 # misc
 .DS_Store
@@ -43,4 +45,7 @@ node_modules/
 # code agent
 CLAUDE.md
 .claude
+.opencode
+.codex
+.pi
 .codex-dev-*.log

@@ -17,7 +17,12 @@ const app = createApp(
     reading: getReadingService()
   },
   {
-    frontendDistDir: existsSync(frontendDistDir) ? frontendDistDir : undefined
+    frontendDistDir: existsSync(frontendDistDir) ? frontendDistDir : undefined,
+    trustedClientOrigins: [
+      new URL(env.APP_URL).origin,
+      new URL(env.BETTER_AUTH_URL).origin,
+      ...env.TRUSTED_CLIENT_ORIGINS
+    ]
   }
 );
 
