@@ -1,7 +1,8 @@
 'use client';
 
 import Image from '@/components/AppImage';
-import { Home, NotebookPen, Settings, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { Home, NotebookPen, Settings, LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { useAuthApiBaseUrl, useAuthClient } from '@/lib/auth/AuthClientProvider';
 import { usePathname, useRouter } from '@/navigation';
 import { useTranslations } from '@/i18n';
@@ -12,16 +13,20 @@ interface SidebarItemProps {
   icon: React.ReactNode;
   label: string;
   isActive: boolean;
+  isCollapsed: boolean;
   onClick: () => void;
 }
 
-const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
+const SidebarItem = ({ icon, label, isActive, isCollapsed, onClick }: SidebarItemProps) => {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-label={label}
+      title={isCollapsed ? label : undefined}
       className={`
-        relative flex w-full items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group text-left
+        relative flex w-full items-center rounded-xl transition-all duration-300 group
+        ${isCollapsed ? 'h-12 justify-center px-0' : 'gap-3 px-4 py-3 text-left'}
         ${
           isActive
             ? 'text-slate-900 dark:text-slate-100'
@@ -47,13 +52,15 @@ const SidebarItem = ({ icon, label, isActive, onClick }: SidebarItemProps) => {
         </div>
       </div>
 
-      <span
-        className={`relative z-10 font-lxgw text-sm transition-colors duration-300 ${
-          isActive ? 'font-bold' : 'font-medium'
-        }`}
-      >
-        {label}
-      </span>
+      {!isCollapsed && (
+        <span
+          className={`relative z-10 font-lxgw text-sm transition-colors duration-300 ${
+            isActive ? 'font-bold' : 'font-medium'
+          }`}
+        >
+          {label}
+        </span>
+      )}
     </button>
   );
 };
@@ -65,6 +72,8 @@ export const Sidebar: React.FC = () => {
   const authClient = useAuthClient();
   const apiBaseUrl = useAuthApiBaseUrl();
   const session = useSessionStore((state) => state.session);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const collapseLabel = isCollapsed ? t('expand') : t('collapse');
 
   const menuItems = [
     {
@@ -88,50 +97,74 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <div className="hidden h-full w-64 shrink-0 flex-col rounded-2xl border border-white/60 dark:border-white/10 bg-white/40 dark:bg-black/20 backdrop-blur-2xl shadow-lg shadow-blue-900/5 z-50 transition-all overflow-hidden md:flex">
+    <div
+      className={`hidden h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-lg shadow-blue-900/5 backdrop-blur-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-black/20 md:flex ${
+        isCollapsed ? 'w-20' : 'w-64'
+      } z-50`}
+    >
       {/* Logo Section */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="relative w-10 h-10 overflow-hidden rounded-xl shadow-sm">
-          {/* Fallback or actual logo */}
-          <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
+      {isCollapsed ? (
+        <div className="flex flex-col items-center gap-3 px-3 py-4">
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((current) => !current)}
+            aria-label={collapseLabel}
+            title={collapseLabel}
+            aria-expanded={!isCollapsed}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl shadow-sm">
+            <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
+          </div>
         </div>
-        <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300">
-          LeafNest
-        </h1>
-      </div>
+      ) : (
+        <div className="flex items-center justify-between gap-3 p-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-sm">
+              <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
+            </div>
+            <h1 className="truncate bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-300">
+              LeafNest
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsCollapsed((current) => !current)}
+            aria-label={collapseLabel}
+            title={collapseLabel}
+            aria-expanded={!isCollapsed}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+          >
+            <PanelLeftClose size={18} />
+          </button>
+        </div>
+      )}
 
       {/* Navigation Items */}
-      <div className="flex-1 px-4 py-4 flex flex-col gap-2">
+      <div className={`flex flex-1 flex-col gap-2 py-4 ${isCollapsed ? 'px-2' : 'px-4'}`}>
         {menuItems.map((item) => (
           <SidebarItem
             key={item.path}
             icon={item.icon}
             label={item.label}
             isActive={item.isActive}
+            isCollapsed={isCollapsed}
             onClick={() => router.push(item.path)}
           />
         ))}
       </div>
 
       {/* User Profile / Logout */}
-      <div className="p-4 mt-auto">
-        <div className="flex items-center gap-3 p-3 rounded-xl border border-white/20 bg-white/40 dark:border-white/10 dark:bg-black/20 backdrop-blur-md shadow-sm transition-all hover:bg-white/60 dark:hover:bg-white/5">
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 dark:from-blue-900/60 dark:to-sky-900/40 border border-blue-200/50 dark:border-blue-700/30 flex items-center justify-center text-blue-700 dark:text-blue-300 font-bold text-lg shadow-sm shrink-0 transition-colors">
+      {isCollapsed ? (
+        <div className="mt-auto flex flex-col items-center gap-2 px-2 pb-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-200/50 bg-gradient-to-br from-blue-100 to-blue-200 text-lg font-bold text-blue-700 shadow-sm transition-colors dark:border-blue-700/30 dark:from-blue-900/60 dark:to-sky-900/40 dark:text-blue-300"
+            title={session?.user?.name || 'User'}
+          >
             {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
-
-          {/* User Info */}
-          <div className="flex-1 min-w-0">
-            <p className="font-lxgw font-bold text-sm text-gray-800 dark:text-gray-200 truncate leading-tight">
-              {session?.user?.name || 'User'}
-            </p>
-            <p className="font-lxgw text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-              {session?.user?.email || ''}
-            </p>
-          </div>
-
-          {/* Logout Button */}
           <button
             type="button"
             onClick={async () => {
@@ -143,12 +176,51 @@ export const Sidebar: React.FC = () => {
               }
             }}
             title={t('logout')}
-            className="p-2 -mr-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition-colors shrink-0 outline-none focus:ring-2 focus:ring-red-500/50"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:hover:bg-red-900/30 dark:hover:text-red-400"
           >
             <LogOut size={18} />
           </button>
         </div>
-      </div>
+      ) : (
+        <div className="mt-auto p-4">
+          <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/40 p-3 shadow-sm backdrop-blur-md transition-all hover:bg-white/60 dark:border-white/10 dark:bg-black/20 dark:hover:bg-white/5">
+            {/* Avatar */}
+            <div
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-200/50 bg-gradient-to-br from-blue-100 to-blue-200 text-lg font-bold text-blue-700 shadow-sm transition-colors dark:border-blue-700/30 dark:from-blue-900/60 dark:to-sky-900/40 dark:text-blue-300"
+              title={session?.user?.name || 'User'}
+            >
+              {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </div>
+
+            {/* User Info */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-lxgw text-sm font-bold leading-tight text-gray-800 dark:text-gray-200">
+                {session?.user?.name || 'User'}
+              </p>
+              <p className="mt-0.5 truncate font-lxgw text-xs text-gray-500 dark:text-gray-400">
+                {session?.user?.email || ''}
+              </p>
+            </div>
+
+            {/* Logout Button */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  await authClient.signOut();
+                } finally {
+                  clearAuthSessionToken(apiBaseUrl);
+                  window.location.reload();
+                }
+              }}
+              title={t('logout')}
+              className="-mr-1 shrink-0 rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-2 focus:ring-red-500/50 dark:hover:bg-red-900/30 dark:hover:text-red-400"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

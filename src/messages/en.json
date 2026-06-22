@@ -46,6 +46,8 @@
     "notes": "Notes",
     "settings": "Settings",
     "logout": "Log out",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar",
     "builtWith": "Built with LeafNest"
   },
   "Settings": {
