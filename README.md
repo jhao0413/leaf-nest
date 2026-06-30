@@ -38,15 +38,15 @@ English | [简体中文](README.zh-CN.md)
 - **Code Quality**: Oxlint + Oxfmt via Vite+
 - **Internationalization**: Client-side i18n provider
 - **Theme**: Custom client-side theme provider
-- **Package Manager**: pnpm 9.0.0
-- **Core Libraries**: JSZip, lucide-react, framer-motion/motion, dayjs, lodash, uuid
+- **Package Manager**: pnpm 10.34.3
+- **Core Libraries**: JSZip, lucide-react, framer-motion/motion, dayjs
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js 22.12+
-- pnpm 9.0.0
+- pnpm 10.34.3
 
 ### Installation
 
