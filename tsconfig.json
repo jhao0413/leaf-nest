@@ -14,7 +14,6 @@
     "jsx": "react-jsx",
     "incremental": true,
     "types": ["vite/client", "vite-plus/test/globals"],
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
