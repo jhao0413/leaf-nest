@@ -7,8 +7,8 @@ const BG_LUMA_CUTOFF = 236;
 const BG_COLOR_TOLERANCE = 237;
 const ASCII_CONTRAST = 0.9;
 const SHARPEN_AMOUNT = 0.24;
-const FPS = 20;
-const GECKO_FPS = 16;
+const FPS = 30;
+const GECKO_FPS = 20;
 const REDUCED_MOTION_FPS = 10;
 const FRAME_SMOOTHNESS = 0.72;
 const ASCII_CHAR_SCALE_X = 0.6;
@@ -17,7 +17,6 @@ const ASCII_GRID_SCALE_X = 1.18;
 const ASCII_GRID_SCALE_Y = 1.12;
 const ASCII_FONT_MIN = 7;
 const ASCII_FONT_MAX = 15;
-const ASCII_WIDE_BIAS = 0.9;
 const BG_RESAMPLE_INTERVAL = 18;
 const LOOP_RESET_THRESHOLD = 0.08;
 const MAX_DEVICE_PIXEL_RATIO = 1.75;
@@ -26,6 +25,21 @@ const MAX_ASCII_COLS = 138;
 const MOBILE_MAX_ASCII_COLS = 104;
 const LOW_POWER_CELL_COUNT = 9500;
 const GLYPH_ALPHA_MIN = 0.16;
+const POINTER_RADIUS_MIN = 108;
+const POINTER_RADIUS_MAX = 176;
+const POINTER_FADE_MS = 760;
+const POINTER_IDLE_MS = 90;
+const HOVER_TEXT = '❧⁂¶§☙';
+const FLOW_TRAIL_LENGTH = 14;
+const FLOW_LIFETIME_MS = 1150;
+
+interface FlowPoint {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  createdAt: number;
+}
 
 interface BgColor {
   r: number;
@@ -101,10 +115,10 @@ function getGlyphColor(): [number, number, number] {
     document.documentElement.classList.contains('dark') || document.body.classList.contains('dark');
 
   if (hasDarkClass || window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    return [207, 250, 254];
+    return [226, 232, 240];
   }
 
-  return [22, 78, 99];
+  return [51, 65, 85];
 }
 
 export function AuthAsciiBackground({ className = '' }: { className?: string }) {
@@ -115,6 +129,9 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
   const previousFrame = useRef<Float32Array | null>(null);
   const grayscaleBuffer = useRef<Float32Array | null>(null);
   const sharpenedBuffer = useRef<Float32Array | null>(null);
+  const flowBuffer = useRef<Float32Array | null>(null);
+  const flowOffsetXBuffer = useRef<Float32Array | null>(null);
+  const flowOffsetYBuffer = useRef<Float32Array | null>(null);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -148,6 +165,23 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
     let currentDpr = 1;
     let frameCount = 0;
     let previousVideoTime = -1;
+    let pointerX = -1000;
+    let pointerY = -1000;
+    let pointerTs = -Infinity;
+    let pointerRadius = POINTER_RADIUS_MIN;
+    let previousPointerX = -1000;
+    let previousPointerY = -1000;
+    let previousPointerTs = -Infinity;
+    let pointerVelocityX = 0;
+    let pointerVelocityY = 0;
+    const flowTrail: FlowPoint[] = [];
+    let glyphColor = getGlyphColor();
+    let isDark = document.documentElement.classList.contains('dark');
+
+    const updateTheme = () => {
+      glyphColor = getGlyphColor();
+      isDark = document.documentElement.classList.contains('dark');
+    };
 
     const syncGeometry = () => {
       containerWidth = Math.max(1, container.clientWidth);
@@ -176,6 +210,11 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
       const cols = Math.max(1, Math.min(maxCols, Math.ceil(containerWidth / charW)));
       const rows = Math.max(1, Math.ceil(containerHeight / charH));
 
+      // When the column cap is reached on wide screens, stretch the grid spacing
+      // to the container bounds instead of leaving an uncovered strip on the right.
+      charW = containerWidth / cols;
+      charH = containerHeight / rows;
+
       offsetX = 0;
       offsetY = 0;
 
@@ -187,6 +226,9 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
         framePixels = cols * rows;
         grayscaleBuffer.current = new Float32Array(framePixels);
         sharpenedBuffer.current = new Float32Array(framePixels);
+        flowBuffer.current = new Float32Array(framePixels);
+        flowOffsetXBuffer.current = new Float32Array(framePixels);
+        flowOffsetYBuffer.current = new Float32Array(framePixels);
         previousFrame.current = null;
         bgColor = null;
       }
@@ -293,7 +335,9 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
           }
         }
 
-        if (SHARPEN_AMOUNT > 0.001) {
+        const lowPowerMode = isGeckoLike || total > LOW_POWER_CELL_COUNT;
+
+        if (SHARPEN_AMOUNT > 0.001 && !lowPowerMode) {
           for (let y = 1; y < height - 1; y++) {
             for (let x = 1; x < width - 1; x++) {
               const i = y * width + x;
@@ -322,10 +366,76 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
           }
         }
 
-        const [colorR, colorG, colorB] = getGlyphColor();
-        const shadowAlpha = document.documentElement.classList.contains('dark') ? 0.18 : 0.1;
-        const lowPowerMode = isGeckoLike || total > LOW_POWER_CELL_COUNT;
+        const [colorR, colorG, colorB] = glyphColor;
+        const shadowAlpha = isDark ? 0.18 : 0.1;
         const fillColor = `rgb(${colorR}, ${colorG}, ${colorB})`;
+        const pointerAge = ts - pointerTs;
+        const pointerPresence = reducedMotionQuery.matches
+          ? pointerAge < POINTER_FADE_MS
+            ? 0.7
+            : 0
+          : 1 - smoothstep01((pointerAge - POINTER_IDLE_MS) / POINTER_FADE_MS);
+        while (
+          flowTrail.length &&
+          ts - flowTrail[flowTrail.length - 1].createdAt > FLOW_LIFETIME_MS
+        ) {
+          flowTrail.pop();
+        }
+        const hasFlowTrail = flowTrail.length > 0;
+        const flowValues = flowBuffer.current;
+        const flowOffsetXValues = flowOffsetXBuffer.current;
+        const flowOffsetYValues = flowOffsetYBuffer.current;
+
+        if (flowValues && flowOffsetXValues && flowOffsetYValues) {
+          flowValues.fill(0);
+          flowOffsetXValues.fill(0);
+          flowOffsetYValues.fill(0);
+
+          for (const point of flowTrail) {
+            const age = ts - point.createdAt;
+            if (age < 0 || age > FLOW_LIFETIME_MS) continue;
+
+            const life = 1 - smoothstep01(age / FLOW_LIFETIME_MS);
+            const drift = reducedMotionQuery.matches ? 0 : age * 0.032;
+            const pointX = point.x + point.vx * drift;
+            const pointY = point.y + point.vy * drift;
+            const radius = pointerRadius * (0.66 + age / FLOW_LIFETIME_MS);
+            const radiusSquared = radius * radius;
+            const minX = Math.max(0, Math.floor((pointX - radius) / charW));
+            const maxX = Math.min(frameWidth - 1, Math.ceil((pointX + radius) / charW));
+            const minY = Math.max(0, Math.floor((pointY - radius) / charH));
+            const maxY = Math.min(frameHeight - 1, Math.ceil((pointY + radius) / charH));
+
+            for (let gridY = minY; gridY <= maxY; gridY++) {
+              const drawY = offsetY + gridY * charH + charH / 2;
+              const dy = drawY - pointY;
+
+              for (let gridX = minX; gridX <= maxX; gridX++) {
+                const drawX = offsetX + gridX * charW + charW / 2;
+                const dx = drawX - pointX;
+                const distanceSquared = dx * dx + dy * dy;
+                if (distanceSquared >= radiusSquared) continue;
+
+                const distance = Math.sqrt(distanceSquared);
+                const spatial = smoothstep01(1 - distance / radius);
+                const ripple = reducedMotionQuery.matches
+                  ? 1
+                  : 0.7 + 0.3 * Math.sin(age * 0.015 - distance * 0.105);
+                const influence = spatial * life * ripple;
+                const gridIndex = gridY * frameWidth + gridX;
+
+                if (influence > flowValues[gridIndex]) {
+                  flowValues[gridIndex] = influence;
+                }
+                const inverseDistance = 1 / Math.max(18, distance);
+                flowOffsetXValues[gridIndex] +=
+                  (-dy * inverseDistance * 5.5 + point.vx * 7) * influence;
+                flowOffsetYValues[gridIndex] +=
+                  (dx * inverseDistance * 5.5 + point.vy * 7) * influence;
+              }
+            }
+          }
+        }
 
         clearOutput();
         outputCtx.font = `700 ${fontPx}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace`;
@@ -336,14 +446,45 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
         for (let y = 0; y < height; y++) {
           for (let x = 0; x < width; x++) {
             const pxIndex = (y * width + x) * 4;
-            if (
-              isBackgroundPixel(image[pxIndex], image[pxIndex + 1], image[pxIndex + 2], bgColor)
-            ) {
+            const idx = y * width + x;
+            const isBackground = isBackgroundPixel(
+              image[pxIndex],
+              image[pxIndex + 1],
+              image[pxIndex + 2],
+              bgColor
+            );
+            const drawX = offsetX + x * charW + charW / 2;
+            const drawY = offsetY + y * charH + charH / 2;
+
+            if (isBackground) {
+              if (pointerPresence <= 0.001 && !hasFlowTrail) continue;
+
+              let flow = flowValues?.[idx] ?? 0;
+              const flowOffsetX = flowOffsetXValues?.[idx] ?? 0;
+              const flowOffsetY = flowOffsetYValues?.[idx] ?? 0;
+
+              if (flow <= 0.001) {
+                const dx = drawX - pointerX;
+                const dy = drawY - pointerY;
+                const distance = Math.hypot(dx, dy);
+                if (distance >= pointerRadius) continue;
+                flow = smoothstep01(1 - distance / pointerRadius) * pointerPresence;
+              }
+
+              const hoverAlpha = flow * (isDark ? 0.78 : 0.62);
+              if (hoverAlpha < 0.035) continue;
+
+              const textIndex = (x + y * 3 + Math.floor(ts / 240)) % HOVER_TEXT.length;
+              outputCtx.globalAlpha = hoverAlpha;
+              outputCtx.fillText(
+                HOVER_TEXT[textIndex],
+                drawX + Math.max(-12, Math.min(12, flowOffsetX)),
+                drawY + Math.max(-12, Math.min(12, flowOffsetY))
+              );
               continue;
             }
 
-            const idx = y * width + x;
-            const bright = SHARPEN_AMOUNT > 0.001 ? outValues[idx] : values[idx];
+            const bright = SHARPEN_AMOUNT > 0.001 && !lowPowerMode ? outValues[idx] : values[idx];
             const charIndex = pixelToAsciiIndex(bright);
             if (charIndex <= 0) {
               continue;
@@ -352,9 +493,6 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
             const glyph = ASCII_CHARS[charIndex];
             const tone = smoothstep01(charIndex / (ASCII_CHARS.length - 1));
             const alpha = Math.min(0.95, GLYPH_ALPHA_MIN + tone * 0.82);
-            const drawX = offsetX + x * charW + charW / 2;
-            const drawY = offsetY + y * charH + charH / 2;
-
             outputCtx.globalAlpha = alpha;
             outputCtx.fillText(glyph, drawX, drawY);
 
@@ -391,6 +529,50 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
       ensureAnimationFrame();
     };
 
+    const onPointerMove = (event: PointerEvent) => {
+      const rect = container.getBoundingClientRect();
+      const now = performance.now();
+      const nextX = event.clientX - rect.left;
+      const nextY = event.clientY - rect.top;
+      const elapsed = Math.max(8, now - previousPointerTs);
+
+      if (Number.isFinite(previousPointerTs)) {
+        const nextVelocityX = (nextX - previousPointerX) / elapsed;
+        const nextVelocityY = (nextY - previousPointerY) / elapsed;
+        pointerVelocityX = pointerVelocityX * 0.68 + nextVelocityX * 0.32;
+        pointerVelocityY = pointerVelocityY * 0.68 + nextVelocityY * 0.32;
+      }
+
+      pointerX = nextX;
+      pointerY = nextY;
+      pointerTs = now;
+      pointerRadius = Math.min(
+        POINTER_RADIUS_MAX,
+        Math.max(POINTER_RADIUS_MIN, Math.min(containerWidth, containerHeight) * 0.19)
+      );
+
+      const moved = Math.hypot(nextX - previousPointerX, nextY - previousPointerY);
+      if (!flowTrail.length || moved > charW * 0.7 || now - previousPointerTs > 38) {
+        flowTrail.unshift({
+          x: nextX,
+          y: nextY,
+          vx: Math.max(-1.2, Math.min(1.2, pointerVelocityX)),
+          vy: Math.max(-1.2, Math.min(1.2, pointerVelocityY)),
+          createdAt: now
+        });
+        if (flowTrail.length > FLOW_TRAIL_LENGTH) flowTrail.length = FLOW_TRAIL_LENGTH;
+      }
+
+      previousPointerX = nextX;
+      previousPointerY = nextY;
+      previousPointerTs = now;
+      ensureAnimationFrame();
+    };
+
+    const onPointerLeave = () => {
+      pointerTs = performance.now() - POINTER_IDLE_MS;
+    };
+
     const onLoadedData = async () => {
       syncGeometry();
       resetTemporalState();
@@ -417,11 +599,18 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
     };
 
     const resizeObserver = new ResizeObserver(onResize);
+    const themeObserver = new MutationObserver(updateTheme);
     resizeObserver.observe(container);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
 
     video.addEventListener('loadeddata', onLoadedData);
     video.addEventListener('canplay', onCanPlay);
     document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pointermove', onPointerMove, { passive: true });
+    document.documentElement.addEventListener('pointerleave', onPointerLeave);
 
     syncGeometry();
     video.load();
@@ -429,9 +618,12 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
     return () => {
       if (animFrame) cancelAnimationFrame(animFrame);
       resizeObserver.disconnect();
+      themeObserver.disconnect();
       video.removeEventListener('loadeddata', onLoadedData);
       video.removeEventListener('canplay', onCanPlay);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pointermove', onPointerMove);
+      document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       if (startPlayback) {
         document.removeEventListener('click', startPlayback);
         startPlayback = null;
@@ -447,13 +639,14 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
         aria-hidden="true"
         className="absolute inset-0 h-full w-full pointer-events-none"
         style={{
-          filter: 'contrast(1.08) saturate(1.02)',
+          filter: 'contrast(1.08)',
           transform: 'scaleX(0.995) scaleY(1.01)',
           transition: 'opacity 600ms ease'
         }}
       />
       <video
         ref={videoRef}
+        aria-hidden="true"
         className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
         src="/jimeng-4867-ascii.mp4"
         muted
@@ -464,6 +657,7 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
       />
       <canvas
         ref={sampleCanvasRef}
+        aria-hidden="true"
         className="pointer-events-none absolute -left-[9999px] h-px w-px opacity-0"
       />
     </div>

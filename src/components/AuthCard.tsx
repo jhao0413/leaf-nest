@@ -142,19 +142,14 @@ export function AuthCard() {
 
   return (
     <div
-      className="fixed inset-0 z-[999] flex h-[100dvh] min-h-screen w-full bg-white dark:bg-neutral-950 overflow-hidden"
+      className="fixed inset-0 z-[999] flex h-[100dvh] min-h-screen w-full overflow-hidden bg-white dark:bg-neutral-950"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div className="pointer-events-none absolute inset-0 z-0">
         <AuthAsciiBackground className="absolute inset-0 h-full w-full opacity-60 dark:opacity-40" />
       </div>
 
-      <div className="pointer-events-none absolute inset-0 z-0">
-        <div className="absolute -left-24 top-1/4 h-[360px] w-[360px] rounded-full bg-cyan-200/50 blur-[120px] dark:bg-cyan-500/10" />
-        <div className="absolute -right-28 bottom-0 h-[320px] w-[320px] rounded-full bg-violet-200/50 blur-[120px] dark:bg-violet-500/10" />
-      </div>
-
-      <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center justify-end px-4 py-10 sm:pr-12 md:pr-16 lg:pr-32">
+      <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center justify-center px-4 py-10 md:justify-end md:pr-[12vw] lg:pr-[16vw]">
         <div className="relative flex w-full max-w-[26rem] flex-col gap-6 sm:w-[90%] md:w-[70%]">
           <div className="group relative w-full">
             <div className="absolute -inset-1.5 z-0 rotate-[-3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[-5deg] group-hover:scale-[1.02] dark:bg-black/20" />
