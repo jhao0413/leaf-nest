@@ -20,5 +20,8 @@ COPY --from=builder /app/dist-server ./dist-server
 COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/drizzle.config.ts ./drizzle.config.ts
 COPY --from=builder /app/server/src/db/schema ./server/src/db/schema
+COPY docker-entrypoint.sh /usr/local/bin/leaf-nest-entrypoint
+RUN chmod +x /usr/local/bin/leaf-nest-entrypoint
 EXPOSE 8787
+ENTRYPOINT ["leaf-nest-entrypoint"]
 CMD ["node", "dist-server/index.js"]

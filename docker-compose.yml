@@ -6,12 +6,11 @@ services:
         condition: service_completed_successfully
       storage-init:
         condition: service_completed_successfully
-    env_file:
-      - .env
     environment:
       APP_URL: ${SELF_HOST_APP_URL:-http://localhost:8787}
       API_PORT: '8787'
       DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
       BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}
       TRUSTED_CLIENT_ORIGINS: ${TRUSTED_CLIENT_ORIGINS:-}
       S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://rustfs:9000}
@@ -23,14 +22,14 @@ services:
       S3_FORCE_PATH_STYLE: 'true'
     ports:
       - '8787:8787'
+    volumes:
+      - app-data:/var/lib/leaf-nest
 
   migrate:
     image: jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}
     depends_on:
       postgres:
         condition: service_healthy
-    env_file:
-      - .env
     environment:
       DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
     command: ['pnpm', 'db:migrate']
@@ -92,5 +91,6 @@ services:
       start_period: 20s
 
 volumes:
+  app-data:
   postgres-data:
   rustfs-data:

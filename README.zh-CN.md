@@ -47,6 +47,7 @@ Leaf Nest 是一款浏览器端 EPUB 阅读器与读书笔记应用，采用本�
 
 - Node.js 22.12+
 - pnpm 10.34.3
+- Docker Desktop，或其他支持 Compose 的 Docker Engine
 
 ### 安装
 
@@ -57,12 +58,17 @@ cd leaf-nest
 
 # 安装依赖
 pnpm install
-
-# 创建本地环境变量文件
-cp .env.example .env
 ```
 
 ### 开发
+
+首次开发先执行一次初始化。它会创建 `.env` 和随机认证密钥，启动 PostgreSQL 与 RustFS，创建对象存储 bucket，并执行数据库迁移：
+
+```bash
+pnpm dev:setup
+```
+
+然后启动前端和 API：
 
 ```bash
 pnpm dev
@@ -75,17 +81,36 @@ pnpm dev
 
 可以通过 [http://localhost:8787/api/health](http://localhost:8787/api/health) 检查后端基础运行状态
 
+后续开发时 Docker Desktop 通常会自动恢复基础设施。需要手动启动时运行 `pnpm dev:infra`；运行 `pnpm dev:infra:stop` 可以停止 PostgreSQL 和 RustFS，同时保留数据。
+
+开发命令说明：
+
+- `pnpm dev:setup`：可重复执行的首次初始化；保留已有 `.env` 密钥和已有数据。
+- `pnpm dev:infra`：启动 PostgreSQL、RustFS 和 bucket 初始化任务。
+- `pnpm dev:infra:stop`：停止 PostgreSQL 和 RustFS，但不删除数据卷。
+- `pnpm db:migrate`：手动执行尚未应用的数据库迁移。
+- `pnpm dev`：以 watch 模式启动 Vite 前端和 Hono API。
+
+本地开发端口：
+
+- 前端：`5173`
+- API：`8787`
+- PostgreSQL：`5432`
+- RustFS S3 API：`9000`
+- RustFS Console：`9001`
+
+如果初始化提示 Docker 不可用，请先启动 Docker Desktop，再重新执行 `pnpm dev:setup`。如果提示端口被占用，需要先停止占用对应端口的本地服务。
+
 ### Self-host 部署
 
 当前生产部署方式以自部署为准，使用已发布的 Docker 镜像和 Compose 编排。像 Vercel 这类纯静态托管不适用于现有架构，因为应用现在依赖内置的 Hono API、Better Auth 回调、PostgreSQL 和 S3 兼容对象存储。
 
-1. 复制 `.env.example` 为 `.env`。
-2. 在 `.env` 中设置公开部署地址和密钥：
+1. 需要覆盖 Compose 本地默认值时，复制 `.env.example` 为 `.env`。
+2. 在 `.env` 中设置公开部署地址和存储凭据：
    - `SELF_HOST_APP_URL`
    - `SELF_HOST_BETTER_AUTH_URL`
    - `SELF_HOST_S3_PUBLIC_ENDPOINT`
    - `SELF_HOST_S3_ENDPOINT` 仅在应用需要通过非默认内部地址访问对象存储时才需要设置
-   - `BETTER_AUTH_SECRET`
    - `RUSTFS_ACCESS_KEY`
    - `RUSTFS_SECRET_KEY`
 3. 通过 `LEAF_NEST_TAG` 选择应用镜像版本，例如 `v0.3.1`。
@@ -96,6 +121,8 @@ docker compose up -d
 ```
 
 Compose 会拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}`，执行数据库迁移，按需创建 RustFS bucket，然后启动应用。应用容器会在配置的应用地址同时提供前端 SPA 和 API。
+
+单实例 Docker 部署可以不设置 `BETTER_AUTH_SECRET`。应用首次启动时会生成密码学安全的随机密钥，并保存到持久化的 `app-data` 卷；重建容器后会继续使用同一密钥。多实例部署或使用外部密钥管理时应显式设置 `BETTER_AUTH_SECRET`。删除 `app-data` 会生成新密钥，并使已有登录会话失效。
 
 默认公开端口：
 
@@ -150,7 +177,7 @@ $env:VITE_API_BASE_URL='https://reader.example.com'; pnpm tauri:android:build
 
 ### 环境变量
 
-当前后端基础设施会从 `.env` 中读取这些变量：
+源码开发时，后端会从 `.env` 中读取这些变量：
 
 - `APP_URL`
 - `API_PORT`
@@ -168,7 +195,7 @@ $env:VITE_API_BASE_URL='https://reader.example.com'; pnpm tauri:android:build
 
 前端还会读取 `VITE_API_BASE_URL`。浏览器同源使用时保持为空；构建 Tauri Android 客户端时设置为已部署的 App/API 地址。
 
-对于 Docker Compose 部署，`app` 容器会把可选的 `SELF_HOST_*` 变量映射成运行时的 `APP_URL`、`DATABASE_URL`、`BETTER_AUTH_URL` 与 S3 endpoint。这样本地开发默认值可以保留，而远程 self-host 时也能切到公开域名和浏览器可访问的对象存储地址。`TRUSTED_CLIENT_ORIGINS` 会透传给打包客户端使用。
+对于 Docker Compose 部署，`app` 容器会把可选的 `SELF_HOST_*` 变量映射成运行时的 `APP_URL`、`DATABASE_URL`、`BETTER_AUTH_URL` 与 S3 endpoint。这样本地开发默认值可以保留，而远程 self-host 时也能切到公开域名和浏览器可访问的对象存储地址。`TRUSTED_CLIENT_ORIGINS` 会透传给打包客户端使用。可以显式提供 `BETTER_AUTH_SECRET`；未提供时，容器会在 `app-data` 中持久化自动生成的值。
 
 ### 代码检查
 

@@ -47,6 +47,7 @@ English | [简体中文](README.zh-CN.md)
 
 - Node.js 22.12+
 - pnpm 10.34.3
+- Docker Desktop, or another Docker Engine with Compose support
 
 ### Installation
 
@@ -57,12 +58,17 @@ cd leaf-nest
 
 # Install dependencies
 pnpm install
-
-# Create local environment file
-cp .env.example .env
 ```
 
 ### Development
+
+Run the one-time development setup. It creates `.env` with a random authentication secret, starts PostgreSQL and RustFS, creates the object-storage bucket, and applies database migrations:
+
+```bash
+pnpm dev:setup
+```
+
+Then start the frontend and API:
 
 ```bash
 pnpm dev
@@ -75,17 +81,36 @@ This starts:
 
 You can verify the backend bootstrap with [http://localhost:8787/api/health](http://localhost:8787/api/health)
 
+On later sessions, Docker Desktop normally restarts the infrastructure automatically. If needed, use `pnpm dev:infra` to start it again or `pnpm dev:infra:stop` to stop PostgreSQL and RustFS without deleting their data.
+
+Development commands:
+
+- `pnpm dev:setup`: idempotent first-time setup; preserves an existing `.env` secret and existing data.
+- `pnpm dev:infra`: starts PostgreSQL, RustFS, and bucket initialization.
+- `pnpm dev:infra:stop`: stops PostgreSQL and RustFS without deleting their volumes.
+- `pnpm db:migrate`: manually applies pending database migrations.
+- `pnpm dev`: starts the Vite frontend and Hono API in watch mode.
+
+Local development ports:
+
+- Frontend: `5173`
+- API: `8787`
+- PostgreSQL: `5432`
+- RustFS S3 API: `9000`
+- RustFS Console: `9001`
+
+If setup reports that Docker is unavailable, start Docker Desktop and rerun `pnpm dev:setup`. If a port is already in use, stop the conflicting local service before retrying.
+
 ### Self-hosted Deployment
 
 Current production deployment is self-hosting with the published Docker image and Compose stack. Static-only hosting such as Vercel is not supported for the current architecture because the app depends on the bundled Hono API, Better Auth callbacks, PostgreSQL, and S3-compatible object storage.
 
-1. Copy `.env.example` to `.env`.
-2. Set the public deployment URLs and secrets in `.env`:
+1. Copy `.env.example` to `.env` when you need to override the local Compose defaults.
+2. Set the public deployment URLs and storage credentials in `.env`:
    - `SELF_HOST_APP_URL`
    - `SELF_HOST_BETTER_AUTH_URL`
    - `SELF_HOST_S3_PUBLIC_ENDPOINT`
    - `SELF_HOST_S3_ENDPOINT` only if the app should reach object storage through a non-default internal address
-   - `BETTER_AUTH_SECRET`
    - `RUSTFS_ACCESS_KEY`
    - `RUSTFS_SECRET_KEY`
 3. Choose the application image tag with `LEAF_NEST_TAG`, for example `v0.3.1`.
@@ -96,6 +121,8 @@ docker compose up -d
 ```
 
 The Compose stack pulls `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}`, runs database migrations, creates the RustFS bucket if needed, and then starts the app. The app container serves both the SPA and the API on the configured app origin.
+
+`BETTER_AUTH_SECRET` is optional for a single-instance Docker deployment. When it is omitted, the app generates a cryptographically random secret on first start and stores it in the persistent `app-data` volume. Container recreation reuses that secret. Set `BETTER_AUTH_SECRET` explicitly for multi-instance deployments or externally managed secrets. Removing `app-data` invalidates existing sessions because a new secret will be generated.
 
 Default published service ports:
 
@@ -150,7 +177,7 @@ For the backend that serves the Android client, set `TRUSTED_CLIENT_ORIGINS=taur
 
 ### Environment Variables
 
-The backend bootstrap currently expects these variables in `.env`:
+Source development expects these backend variables in `.env`:
 
 - `APP_URL`
 - `API_PORT`
@@ -168,7 +195,7 @@ The backend bootstrap currently expects these variables in `.env`:
 
 The frontend also reads `VITE_API_BASE_URL`. Leave it empty for same-origin browser usage; set it to the deployed app/API origin when building the Tauri Android client.
 
-For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `DATABASE_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint. `TRUSTED_CLIENT_ORIGINS` is passed through for packaged clients.
+For Docker Compose deployments, the `app` container maps optional `SELF_HOST_*` variables to its runtime `APP_URL`, `DATABASE_URL`, `BETTER_AUTH_URL`, and S3 endpoints. This keeps local development defaults intact while allowing remote self-host deployments to use a public app domain and a browser-reachable object-storage endpoint. `TRUSTED_CLIENT_ORIGINS` is passed through for packaged clients. `BETTER_AUTH_SECRET` may be supplied explicitly; otherwise the container persists an automatically generated value in `app-data`.
 
 ### Code Quality
 

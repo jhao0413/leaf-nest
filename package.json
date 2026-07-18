@@ -9,6 +9,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently -n web,api \"pnpm dev:web\" \"pnpm dev:api\"",
+    "dev:setup": "node scripts/setup-dev.js",
+    "dev:infra": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres rustfs storage-init",
+    "dev:infra:stop": "docker compose -f docker-compose.yml -f docker-compose.dev.yml stop postgres rustfs",
     "dev:web": "vp dev",
     "dev:api": "tsx watch server/src/index.ts",
     "build": "pnpm build:web && pnpm build:api",
