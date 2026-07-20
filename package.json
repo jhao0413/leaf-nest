@@ -8,6 +8,12 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "start": "pnpm dev:infra && pnpm dev",
+    "stop": "pnpm dev:infra:stop",
+    "deploy:start": "docker compose up -d --pull always",
+    "deploy:stop": "docker compose down",
+    "deploy:logs": "docker compose logs -f app",
+    "deploy:status": "docker compose ps",
     "dev": "concurrently -n web,api \"pnpm dev:web\" \"pnpm dev:api\"",
     "dev:setup": "node scripts/setup-dev.js",
     "dev:infra": "docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres rustfs storage-init",

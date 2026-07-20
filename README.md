@@ -74,6 +74,12 @@ Then start the frontend and API:
 pnpm dev
 ```
 
+After the first-time setup, daily development needs only one command. It ensures PostgreSQL, RustFS, and the bucket are running, then starts both application processes with hot reload:
+
+```bash
+pnpm start
+```
+
 This starts:
 
 - Web app on the local URL printed by `vp dev` (by default [http://localhost:5173](http://localhost:5173))
@@ -81,11 +87,12 @@ This starts:
 
 You can verify the backend bootstrap with [http://localhost:8787/api/health](http://localhost:8787/api/health)
 
-On later sessions, Docker Desktop normally restarts the infrastructure automatically. If needed, use `pnpm dev:infra` to start it again or `pnpm dev:infra:stop` to stop PostgreSQL and RustFS without deleting their data.
+On later sessions, Docker Desktop normally restarts the infrastructure automatically. `pnpm start` ensures the infrastructure is running without recreating `.env` or applying database migrations; use `pnpm stop` to stop PostgreSQL and RustFS without deleting their data.
 
 Development commands:
 
 - `pnpm dev:setup`: idempotent first-time setup; preserves an existing `.env` secret and existing data.
+- `pnpm start`: daily development entry point; starts the infrastructure, frontend, and backend with hot reload.
 - `pnpm dev:infra`: starts PostgreSQL, RustFS, and bucket initialization.
 - `pnpm dev:infra:stop`: stops PostgreSQL and RustFS without deleting their volumes.
 - `pnpm db:migrate`: manually applies pending database migrations.
@@ -114,13 +121,20 @@ Current production deployment is self-hosting with the published Docker image an
    - `RUSTFS_ACCESS_KEY`
    - `RUSTFS_SECRET_KEY`
 3. Choose the application image tag with `LEAF_NEST_TAG`, for example `v0.3.1`.
-4. Start the stack:
+4. Start the complete stack with one command:
 
 ```bash
-docker compose up -d
+pnpm deploy:start
 ```
 
-The Compose stack pulls `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}`, runs database migrations, creates the RustFS bucket if needed, and then starts the app. The app container serves both the SPA and the API on the configured app origin.
+This command uses Compose to pull `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` and its dependency images, runs database migrations, creates the RustFS bucket if needed, and then starts the app. You do not need to look up or enter an image name. The app container serves both the SPA and the API on the configured app origin.
+
+Common service-management commands:
+
+- `pnpm deploy:start`: pulls the selected image version and starts the complete stack in the background.
+- `pnpm deploy:status`: shows container status.
+- `pnpm deploy:logs`: follows application logs.
+- `pnpm deploy:stop`: stops and removes containers while preserving data volumes.
 
 `BETTER_AUTH_SECRET` is optional for a single-instance Docker deployment. When it is omitted, the app generates a cryptographically random secret on first start and stores it in the persistent `app-data` volume. Container recreation reuses that secret. Set `BETTER_AUTH_SECRET` explicitly for multi-instance deployments or externally managed secrets. Removing `app-data` invalidates existing sessions because a new secret will be generated.
 

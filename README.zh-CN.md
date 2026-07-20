@@ -74,6 +74,12 @@ pnpm dev:setup
 pnpm dev
 ```
 
+首次初始化完成后，日常开发只需一条命令。它会确保 PostgreSQL、RustFS 和 bucket 已启动，再以前后端热更新模式启动应用：
+
+```bash
+pnpm start
+```
+
 这会同时启动：
 
 - Web 前端，默认是 `vp dev` 输出的 [http://localhost:5173](http://localhost:5173)
@@ -81,11 +87,12 @@ pnpm dev
 
 可以通过 [http://localhost:8787/api/health](http://localhost:8787/api/health) 检查后端基础运行状态
 
-后续开发时 Docker Desktop 通常会自动恢复基础设施。需要手动启动时运行 `pnpm dev:infra`；运行 `pnpm dev:infra:stop` 可以停止 PostgreSQL 和 RustFS，同时保留数据。
+后续开发时 Docker Desktop 通常会自动恢复基础设施。`pnpm start` 会主动确保基础设施已启动，但不会重复初始化 `.env` 或执行数据库迁移；运行 `pnpm stop` 可以停止 PostgreSQL 和 RustFS，同时保留数据。
 
 开发命令说明：
 
 - `pnpm dev:setup`：可重复执行的首次初始化；保留已有 `.env` 密钥和已有数据。
+- `pnpm start`：日常开发入口，启动开发基础设施，以及支持热更新的前端和后端。
 - `pnpm dev:infra`：启动 PostgreSQL、RustFS 和 bucket 初始化任务。
 - `pnpm dev:infra:stop`：停止 PostgreSQL 和 RustFS，但不删除数据卷。
 - `pnpm db:migrate`：手动执行尚未应用的数据库迁移。
@@ -114,13 +121,20 @@ pnpm dev
    - `RUSTFS_ACCESS_KEY`
    - `RUSTFS_SECRET_KEY`
 3. 通过 `LEAF_NEST_TAG` 选择应用镜像版本，例如 `v0.3.1`。
-4. 启动完整栈：
+4. 一条命令启动完整栈：
 
 ```bash
-docker compose up -d
+pnpm deploy:start
 ```
 
-Compose 会拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}`，执行数据库迁移，按需创建 RustFS bucket，然后启动应用。应用容器会在配置的应用地址同时提供前端 SPA 和 API。
+该命令会通过 Compose 拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` 及其依赖镜像，执行数据库迁移，按需创建 RustFS bucket，然后启动应用。无需自行查找或填写镜像名。应用容器会在配置的应用地址同时提供前端 SPA 和 API。
+
+常用服务管理命令：
+
+- `pnpm deploy:start`：拉取所选版本的镜像并在后台启动完整栈。
+- `pnpm deploy:status`：查看容器状态。
+- `pnpm deploy:logs`：持续查看应用日志。
+- `pnpm deploy:stop`：停止并移除容器，保留数据卷。
 
 单实例 Docker 部署可以不设置 `BETTER_AUTH_SECRET`。应用首次启动时会生成密码学安全的随机密钥，并保存到持久化的 `app-data` 卷；重建容器后会继续使用同一密钥。多实例部署或使用外部密钥管理时应显式设置 `BETTER_AUTH_SECRET`。删除 `app-data` 会生成新密钥，并使已有登录会话失效。
 
