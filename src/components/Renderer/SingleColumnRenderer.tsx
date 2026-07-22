@@ -26,6 +26,8 @@ import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
 import { readingRepository } from '@/lib/repositories/readingRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
 import { HighlightShareModal, type HighlightShareItem } from '@/components/HighlightShareModal';
+import { ImagePreviewModal } from './ImagePreviewModal';
+import { useEpubImagePreview } from '@/hooks/useEpubImagePreview';
 
 const EpubReader: React.FC = () => {
   const t = useTranslations('SingleColumnRenderer');
@@ -44,6 +46,10 @@ const EpubReader: React.FC = () => {
   const latestStyleRef = useRef({ currentFontConfig, theme, rendererMode });
   const [iframeReady, setIframeReady] = useState(false);
   const [activeShareItem, setActiveShareItem] = useState<HighlightShareItem | null>(null);
+  const { activeImage, isImagePreviewOpen, closeImagePreview } = useEpubImagePreview(
+    iframeReady,
+    currentChapter
+  );
   const {
     selectionInfo,
     popupPosition,
@@ -140,6 +146,7 @@ const EpubReader: React.FC = () => {
 
   useEffect(() => {
     const processChapter = async () => {
+      setIframeReady(false);
       const { chapterContent, basePath } = await loadChapterContent(
         bookZip,
         bookInfo,
@@ -343,7 +350,8 @@ const EpubReader: React.FC = () => {
 
   useKeyboardShortcuts({
     onPrevious: handlePrevChapter,
-    onNext: handleNextChapter
+    onNext: handleNextChapter,
+    enabled: !isImagePreviewOpen
   });
 
   const bookInfoOverlay = useOverlayState();
@@ -443,6 +451,15 @@ const EpubReader: React.FC = () => {
           bookName={bookInfo.name || 'Unknown'}
           bookCoverUrl={bookInfo.coverUrl}
           onClose={closeShareModal}
+        />
+      ) : null}
+
+      {activeImage ? (
+        <ImagePreviewModal
+          isOpen={isImagePreviewOpen}
+          src={activeImage.src}
+          alt={activeImage.alt}
+          onClose={closeImagePreview}
         />
       ) : null}
     </div>

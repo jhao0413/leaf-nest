@@ -41,6 +41,16 @@
     "tryOtherKeywords": "Please try other keywords",
     "searchInBook": "Search keywords in the book"
   },
+  "ImagePreview": {
+    "title": "Image preview",
+    "imageAlt": "Book image",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "rotate": "Rotate clockwise",
+    "reset": "Fit to window",
+    "close": "Close",
+    "closeBackdrop": "Click the background to close the image preview"
+  },
   "Sidebar": {
     "home": "Home",
     "notes": "Notes",

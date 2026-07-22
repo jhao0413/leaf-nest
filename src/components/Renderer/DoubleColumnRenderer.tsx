@@ -37,6 +37,8 @@ import { CreateHighlightPopup, EditHighlightPopup } from './HighlightPopup';
 import { readingRepository } from '@/lib/repositories/readingRepository';
 import { highlightsRepository } from '@/lib/repositories/highlightsRepository';
 import { HighlightShareModal, type HighlightShareItem } from '@/components/HighlightShareModal';
+import { ImagePreviewModal } from './ImagePreviewModal';
+import { useEpubImagePreview } from '@/hooks/useEpubImagePreview';
 const COLUMN_GAP = 100;
 const RESIZE_REFRESH_DEBOUNCE_MS = 120;
 // Controls the resize mask fade-out after pagination has been recalculated.
@@ -83,6 +85,10 @@ const EpubReader: React.FC = () => {
   const [isResizeRefreshing, setIsResizeRefreshing] = useState(false);
   const [iframeReady, setIframeReady] = useState(false);
   const [activeShareItem, setActiveShareItem] = useState<HighlightShareItem | null>(null);
+  const { activeImage, isImagePreviewOpen, closeImagePreview } = useEpubImagePreview(
+    iframeReady,
+    currentChapter
+  );
   const { searchAndNavigate, highlightText } = useTextNavigation();
   const { indexer, setIndexing } = useFullBookSearchStore();
   const {
@@ -564,7 +570,8 @@ const EpubReader: React.FC = () => {
   useKeyboardShortcuts({
     onPrevious: handlePrevPage,
     onNext: handleNextPage,
-    onSearch: openSearch
+    onSearch: openSearch,
+    enabled: !isImagePreviewOpen
   });
 
   const handleCreateHighlight = useCallback(
@@ -795,6 +802,15 @@ const EpubReader: React.FC = () => {
           bookName={bookInfo.name || 'Unknown'}
           bookCoverUrl={bookInfo.coverUrl}
           onClose={closeShareModal}
+        />
+      ) : null}
+
+      {activeImage ? (
+        <ImagePreviewModal
+          isOpen={isImagePreviewOpen}
+          src={activeImage.src}
+          alt={activeImage.alt}
+          onClose={closeImagePreview}
         />
       ) : null}
     </div>

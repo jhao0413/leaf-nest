@@ -41,6 +41,16 @@
     "tryOtherKeywords": "请尝试其他关键词",
     "searchInBook": "在书中搜索关键词"
   },
+  "ImagePreview": {
+    "title": "图片预览",
+    "imageAlt": "书中图片",
+    "zoomIn": "放大",
+    "zoomOut": "缩小",
+    "rotate": "顺时针旋转",
+    "reset": "适应窗口",
+    "close": "关闭",
+    "closeBackdrop": "点击背景关闭图片预览"
+  },
   "Sidebar": {
     "home": "首页",
     "notes": "笔记",

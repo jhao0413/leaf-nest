@@ -16,6 +16,106 @@ interface RecalculateIframePagesOptions {
   onTextPositionsAnalyzed?: (searchQuery: string, positions: TextPosition[]) => void;
 }
 
+export interface PreviewableImage {
+  src: string;
+  alt: string;
+  trigger: HTMLImageElement;
+}
+
+const isLoadedImage = (element: Element): element is HTMLImageElement =>
+  element.tagName.toLowerCase() === 'img' &&
+  (element as HTMLImageElement).complete &&
+  (element as HTMLImageElement).naturalWidth > 0;
+
+const getImageEventTarget = (event: Event): HTMLImageElement | null => {
+  const target = event.target as { nodeType?: number; tagName?: string } | null;
+  return target?.nodeType === 1 && target.tagName?.toLowerCase() === 'img'
+    ? (target as HTMLImageElement)
+    : null;
+};
+
+export const bindImagePreviewInteractions = (
+  iframeDoc: Document,
+  onPreview: (image: PreviewableImage) => void
+): (() => void) => {
+  const originalAttributes = new Map<
+    HTMLImageElement,
+    { tabindex: string | null; role: string | null }
+  >();
+  const style = iframeDoc.createElement('style');
+  style.dataset.epubImagePreview = 'true';
+  style.textContent = `
+    img[data-epub-image-preview="true"] { cursor: zoom-in; }
+    img[data-epub-image-preview="true"]:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 3px;
+    }
+  `;
+  iframeDoc.head?.appendChild(style);
+
+  const enhanceImage = (image: HTMLImageElement) => {
+    if (!isLoadedImage(image) || originalAttributes.has(image)) return;
+
+    originalAttributes.set(image, {
+      tabindex: image.getAttribute('tabindex'),
+      role: image.getAttribute('role')
+    });
+    image.dataset.epubImagePreview = 'true';
+    image.setAttribute('tabindex', '0');
+    image.setAttribute('role', 'button');
+  };
+
+  Array.from(iframeDoc.images).forEach(enhanceImage);
+
+  const openImage = (image: HTMLImageElement, event: Event) => {
+    if (!isLoadedImage(image)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    onPreview({
+      src: image.currentSrc || image.src,
+      alt: image.alt,
+      trigger: image
+    });
+  };
+
+  const handleClick = (event: Event) => {
+    const image = getImageEventTarget(event);
+    if (image) openImage(image, event);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent) => {
+    if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+
+    const image = getImageEventTarget(event);
+    if (image) openImage(image, event);
+  };
+
+  const handleLoad = (event: Event) => {
+    const image = getImageEventTarget(event);
+    if (image) enhanceImage(image);
+  };
+
+  iframeDoc.addEventListener('click', handleClick, true);
+  iframeDoc.addEventListener('keydown', handleKeyDown, true);
+  iframeDoc.addEventListener('load', handleLoad, true);
+
+  return () => {
+    iframeDoc.removeEventListener('click', handleClick, true);
+    iframeDoc.removeEventListener('keydown', handleKeyDown, true);
+    iframeDoc.removeEventListener('load', handleLoad, true);
+    style.remove();
+
+    originalAttributes.forEach((attributes, image) => {
+      delete image.dataset.epubImagePreview;
+      if (attributes.tabindex === null) image.removeAttribute('tabindex');
+      else image.setAttribute('tabindex', attributes.tabindex);
+      if (attributes.role === null) image.removeAttribute('role');
+      else image.setAttribute('role', attributes.role);
+    });
+  };
+};
+
 export const writeToIframe = (
   updatedChapter: string,
   currentFontConfig: {

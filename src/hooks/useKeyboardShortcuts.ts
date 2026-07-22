@@ -4,10 +4,18 @@ interface KeyboardShortcuts {
   onPrevious: () => void;
   onNext: () => void;
   onSearch?: () => void;
+  enabled?: boolean;
 }
 
-export const useKeyboardShortcuts = ({ onPrevious, onNext, onSearch }: KeyboardShortcuts) => {
+export const useKeyboardShortcuts = ({
+  onPrevious,
+  onNext,
+  onSearch,
+  enabled = true
+}: KeyboardShortcuts) => {
   useEffect(() => {
+    if (!enabled) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check for Ctrl+K or Cmd+K (macOS)
       const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -31,5 +39,5 @@ export const useKeyboardShortcuts = ({ onPrevious, onNext, onSearch }: KeyboardS
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [onPrevious, onNext, onSearch]);
+  }, [enabled, onPrevious, onNext, onSearch]);
 };
