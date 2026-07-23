@@ -53,6 +53,64 @@ interface NodeMapEntry {
   end: number;
 }
 
+interface TextMatch {
+  start: number;
+  end: number;
+}
+
+/**
+ * Selection.toString() inserts separators between visual lines/block elements,
+ * while a TreeWalker only exposes the text nodes themselves. Fall back to a
+ * whitespace-insensitive lookup so selections spanning paragraphs still map
+ * back to offsets in the original DOM text buffer.
+ */
+function findTextMatch(
+  fullText: string,
+  selectedText: string,
+  contextBefore: string,
+  contextAfter: string
+): TextMatch | null {
+  const fullPattern = contextBefore + selectedText + contextAfter;
+  const fullIndex = fullText.indexOf(fullPattern);
+  if (fullIndex !== -1) {
+    const start = fullIndex + contextBefore.length;
+    return { start, end: start + selectedText.length };
+  }
+
+  const selectedIndex = fullText.indexOf(selectedText);
+  if (selectedIndex !== -1) {
+    return { start: selectedIndex, end: selectedIndex + selectedText.length };
+  }
+
+  const originalOffsets: number[] = [];
+  let compactText = '';
+  for (let index = 0; index < fullText.length; index += 1) {
+    if (/\s/u.test(fullText[index])) continue;
+    compactText += fullText[index];
+    originalOffsets.push(index);
+  }
+
+  const compact = (text: string) => text.replace(/\s/gu, '');
+  const compactSelected = compact(selectedText);
+  if (!compactSelected) return null;
+
+  const compactContextBefore = compact(contextBefore);
+  const compactPattern = compactContextBefore + compactSelected + compact(contextAfter);
+  const compactPatternIndex = compactText.indexOf(compactPattern);
+  const compactStart =
+    compactPatternIndex === -1
+      ? compactText.indexOf(compactSelected)
+      : compactPatternIndex + compactContextBefore.length;
+
+  if (compactStart === -1) return null;
+
+  const compactEnd = compactStart + compactSelected.length - 1;
+  return {
+    start: originalOffsets[compactStart],
+    end: originalOffsets[compactEnd] + 1
+  };
+}
+
 export function applyHighlights(iframeDoc: Document, highlights: Highlight[]): void {
   if (!highlights.length) return;
 
@@ -90,24 +148,15 @@ export function applyHighlights(iframeDoc: Document, highlights: Highlight[]): v
   }[] = [];
 
   for (const highlight of highlights) {
-    // Try to find the match using context
-    let matchStart = -1;
+    const match = findTextMatch(
+      fullText,
+      highlight.selectedText,
+      highlight.contextBefore,
+      highlight.contextAfter
+    );
+    if (!match) continue;
 
-    // First try: full context match
-    const fullPattern = highlight.contextBefore + highlight.selectedText + highlight.contextAfter;
-    const fullIdx = fullText.indexOf(fullPattern);
-    if (fullIdx !== -1) {
-      matchStart = fullIdx + highlight.contextBefore.length;
-    }
-
-    // Second try: selectedText only (take first match)
-    if (matchStart === -1) {
-      matchStart = fullText.indexOf(highlight.selectedText);
-    }
-
-    if (matchStart === -1) continue;
-
-    const matchEnd = matchStart + highlight.selectedText.length;
+    const { start: matchStart, end: matchEnd } = match;
 
     // Find affected text nodes
     for (const entry of nodeMap) {
