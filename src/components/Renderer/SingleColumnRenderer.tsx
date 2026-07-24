@@ -147,12 +147,8 @@ const EpubReader: React.FC = () => {
   useEffect(() => {
     const processChapter = async () => {
       setIframeReady(false);
-      const { chapterContent, basePath } = await loadChapterContent(
-        bookZip,
-        bookInfo,
-        currentChapter
-      );
-      const updatedChapter = await parseAndProcessChapter(chapterContent, bookZip, basePath);
+      const { chapterDocuments } = await loadChapterContent(bookZip, bookInfo, currentChapter);
+      const updatedChapter = await parseAndProcessChapter(chapterDocuments, bookZip);
       const {
         currentFontConfig: latestFontConfig,
         theme: latestTheme,

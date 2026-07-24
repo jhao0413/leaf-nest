@@ -210,18 +210,14 @@ const EpubReader: React.FC = () => {
     const currentVersion = ++loadVersionRef.current;
 
     const processChapter = async () => {
-      const { chapterContent, basePath } = await loadChapterContent(
-        bookZip,
-        bookInfo,
-        currentChapter
-      );
+      const { chapterDocuments } = await loadChapterContent(bookZip, bookInfo, currentChapter);
 
       // Check if this load has been superseded by a newer one
       if (loadVersionRef.current !== currentVersion) {
         return;
       }
 
-      const updatedChapter = await parseAndProcessChapter(chapterContent, bookZip, basePath);
+      const updatedChapter = await parseAndProcessChapter(chapterDocuments, bookZip);
 
       // Check again after parsing
       if (loadVersionRef.current !== currentVersion) {

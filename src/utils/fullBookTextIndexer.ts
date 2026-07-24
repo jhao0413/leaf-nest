@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { BookBasicInfoType } from '@/store/bookInfoStore';
+import { loadChapterContent } from '@/utils/chapterLoader';
 
 export interface BookTextIndex {
   chapterIndex: number;
@@ -33,20 +34,21 @@ export class FullBookTextIndexer {
 
     for (let i = 0; i < totalChapters; i++) {
       try {
-        const chapter = bookInfo.toc[i];
-        const contentOpfPath = `${chapter.path ? chapter.path + '/' : ''}${decodeURIComponent(chapter.file)}`;
-        const chapterFile = zip.file(contentOpfPath);
-
-        if (chapterFile) {
-          const chapterContent = await chapterFile.async('string');
-          // html content
-          const processedContent = await this.extractTextFromChapter(chapterContent);
+        const { chapterDocuments } = await loadChapterContent(zip, bookInfo, i);
+        if (chapterDocuments.length) {
+          // Parse each XHTML document independently because concatenating complete XML
+          // documents would create multiple root elements and a parsererror document.
+          const processedContent = (
+            await Promise.all(
+              chapterDocuments.map((document) => this.extractTextFromChapter(document.content))
+            )
+          ).join('\n');
           // plain text
           const searchableText = this.extractPlainText(processedContent);
 
           this.textIndex.push({
             chapterIndex: i,
-            chapterTitle: chapter.text,
+            chapterTitle: bookInfo.toc[i].text,
             text: processedContent,
             searchableText: searchableText
           });
