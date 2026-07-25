@@ -144,7 +144,7 @@ export function HighlightShareModal({
     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6 bg-black/60 backdrop-blur-md">
       <div className="relative w-full max-w-lg overflow-hidden bg-white dark:bg-neutral-950 rounded-3xl shadow-2xl border border-gray-200/50 dark:border-neutral-800 flex flex-col">
         <div className="flex flex-row items-center justify-between px-6 pt-6 pb-4 sm:px-8 sm:pt-8 sm:pb-5">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-brand-100 bg-brand-50 text-brand-600 shadow-sm dark:border-brand-800/50 dark:bg-brand-400/10 dark:text-brand-300">
             <Share2 className="size-5" />
           </div>
 
@@ -168,7 +168,7 @@ export function HighlightShareModal({
               />
             ) : (
               <div className="aspect-[55/38] flex flex-col gap-3 items-center justify-center bg-white dark:bg-neutral-900">
-                <Loader2 size={24} className="animate-spin text-blue-500" />
+                <Loader2 size={24} className="animate-spin text-brand-600 dark:text-brand-300" />
               </div>
             )}
           </div>
@@ -192,12 +192,12 @@ export function HighlightShareModal({
                 className={`flex items-center gap-2 text-[15px] font-semibold text-gray-900 dark:text-gray-100 transition-opacity ${
                   isCopying || isSharePreviewLoading
                     ? 'opacity-50'
-                    : 'group-hover:text-blue-600 dark:group-hover:text-blue-400'
+                    : 'group-hover:text-brand-600 dark:group-hover:text-brand-300'
                 }`}
               >
                 <Copy
                   size={18}
-                  className="text-gray-400 dark:text-gray-500 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors"
+                  className="text-gray-400 transition-colors group-hover:text-brand-600 dark:text-gray-500 dark:group-hover:text-brand-300"
                 />
                 <span>
                   {isCopying
@@ -248,7 +248,9 @@ export async function buildHighlightShareImageBlob({
   const ratio = 2;
   ctx.scale(ratio, ratio);
 
-  const blueAccent = '#2563eb';
+  const brandAccent =
+    getComputedStyle(document.documentElement).getPropertyValue('--color-brand-600').trim() ||
+    'CanvasText';
   const textPrimary = '#0f172a';
   const textSecondary = '#64748b';
   const cardBg = '#ffffff';
@@ -287,14 +289,18 @@ export async function buildHighlightShareImageBlob({
   const innerPadding = 84;
   const contentWidth = width - innerPadding * 2;
 
-  ctx.fillStyle = `${blueAccent}15`;
-  ctx.beginPath();
   ctx.font = '600 15px "PingFang SC", "Microsoft YaHei", sans-serif';
   const tagWidth = ctx.measureText(labels.chapter).width + 28;
+
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = brandAccent;
+  ctx.beginPath();
   ctx.roundRect(innerPadding, 84, tagWidth, 28, 14);
   ctx.fill();
+  ctx.restore();
 
-  ctx.fillStyle = blueAccent;
+  ctx.fillStyle = brandAccent;
   ctx.fillText(labels.chapter, innerPadding + 14, 103);
 
   ctx.fillStyle = textSecondary;
@@ -305,7 +311,7 @@ export async function buildHighlightShareImageBlob({
   const primaryText = getSharePrimaryText(item);
   const secondaryText = getShareSecondaryText(item);
 
-  ctx.fillStyle = blueAccent;
+  ctx.fillStyle = brandAccent;
   ctx.font = '800 64px "Georgia", serif';
   ctx.fillText('\u201c', innerPadding, 170);
 
@@ -317,15 +323,18 @@ export async function buildHighlightShareImageBlob({
     family: '"Noto Serif SC", "PingFang SC", "Microsoft YaHei", serif'
   });
 
-  ctx.fillStyle = `${blueAccent}60`;
+  ctx.save();
+  ctx.globalAlpha = 0.38;
+  ctx.fillStyle = brandAccent;
   ctx.font = '800 64px "Georgia", serif';
   ctx.textAlign = 'right';
   ctx.fillText('\u201d', width - innerPadding + 8, endY + 24);
+  ctx.restore();
   ctx.textAlign = 'left';
 
   if (secondaryText) {
     const secondaryY = 460;
-    ctx.fillStyle = blueAccent;
+    ctx.fillStyle = brandAccent;
     ctx.beginPath();
     ctx.roundRect(innerPadding, secondaryY, 4, 60, 2);
     ctx.fill();

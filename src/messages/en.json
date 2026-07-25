@@ -22,6 +22,10 @@
     "previous": "Previous",
     "next": "Next"
   },
+  "ReaderMenu": {
+    "open": "Open table of contents",
+    "close": "Close table of contents"
+  },
   "BookInfoModal": {
     "title": "Book Information",
     "author": "Author",
@@ -115,9 +119,9 @@
     "chapter": "Chapter {chapterNumber}"
   },
   "Auth": {
-    "signInTitle": "Sign in to your library",
+    "signInTitle": "Your pages are waiting",
     "signUpTitle": "Create your account",
-    "description": "Use email and password to keep your books, progress, and highlights in sync.",
+    "description": "Your books, reading progress, and notes are all right where you left them.",
     "serverUrl": "Server URL",
     "serverUrlPlaceholder": "For example http://192.168.110.56:8787",
     "serverUrlRequired": "Enter the server URL first",

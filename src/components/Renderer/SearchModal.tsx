@@ -68,7 +68,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
     >
       <div className="mb-2 flex items-center gap-2">
         <BookOpen size={14} />
-        <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+        <span className="text-sm font-medium text-brand-600 dark:text-brand-300">
           {t('chapterFormat', {
             chapterNumber: result.chapterIndex + 1,
             chapterTitle: result.chapterTitle
@@ -102,7 +102,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
             </Modal.Header>
             <Modal.Body className="pb-6 text-foreground">
               <div className="mb-4 flex gap-2 p-4">
-                <InputGroup className="flex-1 [--focus:#111827] [--color-focus:#111827] [--color-field-focus:#ffffff] [--color-field-border:#e5e7eb] [--color-field-border-hover:#d1d5db] [--color-field-border-focus:#111827] dark:[--focus:#ffffff] dark:[--color-focus:#ffffff] dark:[--color-field-focus:#171717] dark:[--color-field-border:#3f3f46] dark:[--color-field-border-hover:#52525b] dark:[--color-field-border-focus:#ffffff]">
+                <InputGroup className="flex-1">
                   <InputGroupPrefix>
                     <Search size={16} className="text-gray-400" />
                   </InputGroupPrefix>
@@ -121,7 +121,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({
                   variant="primary"
                   onPress={handleSearch}
                   isDisabled={isIndexing || !searchText.trim()}
-                  className="min-w-20 [--accent:#111827] [--accent-foreground:#ffffff] [--focus:#111827] [--color-accent:#111827] [--color-accent-hover:#000000] [--color-accent-foreground:#ffffff] [--color-focus:#111827] dark:[--accent:#ffffff] dark:[--accent-foreground:#171717] dark:[--focus:#ffffff] dark:[--color-accent:#ffffff] dark:[--color-accent-hover:#f5f5f5] dark:[--color-accent-foreground:#171717] dark:[--color-focus:#ffffff]"
+                  className="min-w-20"
                 >
                   {isIndexing ? <Loader2 size={16} className="animate-spin" /> : t('searchButton')}
                 </Button>

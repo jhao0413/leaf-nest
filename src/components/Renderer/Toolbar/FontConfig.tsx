@@ -53,7 +53,7 @@ const FontConfig: React.FC = () => {
         aria-label="Close font settings"
       />
       <div
-        className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] [--accent:var(--eclipse)] [--accent-foreground:var(--snow)] [--focus:var(--eclipse)] dark:[--accent:var(--snow)] dark:[--accent-foreground:var(--eclipse)] dark:[--focus:var(--snow)] ${
+        className={`w-auto h-auto p-5 bg-white dark:bg-neutral-800 fixed bottom-[calc(7vh-32px)] ${
           mode === 'single' ? 'right-0 sm:right-1/4' : 'right-[10%]'
         } z-30 rounded-2xl transition-opacity duration-500 transform ${
           isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
@@ -87,8 +87,8 @@ const FontConfig: React.FC = () => {
               type="button"
               className={`min-w-36 rounded-xl p-1 mt-2 font-${font.value} text-base ${
                 rendererConfig.fontFamily === font.value
-                  ? 'border border-neutral-900 bg-neutral-900 text-white hover:bg-black focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:border-white dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 dark:focus-visible:ring-white'
-                  : 'border border-neutral-200 bg-white/85 text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-900 dark:border-neutral-600 dark:bg-neutral-700/80 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:focus-visible:ring-white'
+                  ? 'border border-brand-600 bg-brand-600 text-white hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 dark:border-brand-300 dark:bg-brand-300 dark:text-brand-950 dark:hover:bg-brand-200 dark:focus-visible:ring-brand-300'
+                  : 'border border-neutral-200 bg-white/85 text-neutral-700 hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 dark:border-neutral-600 dark:bg-neutral-700/80 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:focus-visible:ring-brand-300'
               }`}
               style={{ fontFamily: font.value }}
               onClick={() => onFontFamilyChange(font.value)}

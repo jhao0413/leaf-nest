@@ -15,8 +15,8 @@ const ASCII_CHAR_SCALE_X = 0.6;
 const ASCII_CHAR_SCALE_Y = 0.78;
 const ASCII_GRID_SCALE_X = 1.18;
 const ASCII_GRID_SCALE_Y = 1.12;
-const ASCII_FONT_MIN = 7;
-const ASCII_FONT_MAX = 15;
+const ASCII_FONT_MIN = 6;
+const ASCII_FONT_MAX = 12;
 const BG_RESAMPLE_INTERVAL = 18;
 const LOOP_RESET_THRESHOLD = 0.08;
 const MAX_DEVICE_PIXEL_RATIO = 1.75;
@@ -652,6 +652,7 @@ export function AuthAsciiBackground({ className = '' }: { className?: string }) 
         muted
         loop
         playsInline
+        disablePictureInPicture
         crossOrigin="anonymous"
         preload="auto"
       />

@@ -186,7 +186,7 @@ export default function Home() {
             <Card
               variant="transparent"
               key={book.id || index}
-              className="relative aspect-[2/3] w-full overflow-hidden rounded-[14px] border-none bg-transparent p-0 shadow-md ring-1 ring-black/5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20 group dark:ring-white/10 sm:h-[240px] sm:w-[160px]"
+              className="group relative aspect-[2/3] w-full overflow-hidden rounded-[14px] border-none bg-transparent p-0 shadow-md ring-1 ring-black/5 transition-all duration-300 ease-out hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-brand-600/20 dark:ring-white/10 sm:h-[240px] sm:w-[160px]"
             >
               <button
                 type="button"

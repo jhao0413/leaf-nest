@@ -240,7 +240,7 @@ export default function BookNotesPage() {
                       <div className="shrink-0 flex flex-col gap-2 self-start">
                         <button
                           type="button"
-                          className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 dark:bg-neutral-700 dark:text-gray-300 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950 dark:hover:text-blue-300 transition-all"
+                          className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-gray-100 px-2.5 py-1.5 text-xs font-medium text-gray-600 transition-all hover:bg-brand-50 hover:text-brand-600 dark:bg-neutral-700 dark:text-gray-300 dark:hover:bg-brand-950 dark:hover:text-brand-300"
                           onClick={() => {
                             handleOpenShare(item);
                           }}

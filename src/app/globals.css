@@ -12,6 +12,18 @@
   --color-border: var(--border);
   --color-ring: var(--focus);
 
+  --color-brand-50: oklch(0.974 0.005 228.8);
+  --color-brand-100: oklch(0.953 0.012 231.7);
+  --color-brand-200: oklch(0.873 0.023 237.7);
+  --color-brand-300: oklch(0.789 0.035 237.1);
+  --color-brand-400: oklch(0.683 0.048 238.4);
+  --color-brand-500: oklch(0.586 0.058 239.6);
+  --color-brand-600: oklch(0.52 0.078 239.3);
+  --color-brand-700: oklch(0.463 0.069 238.9);
+  --color-brand-800: oklch(0.407 0.059 238.3);
+  --color-brand-900: oklch(0.353 0.051 238.7);
+  --color-brand-950: oklch(0.274 0.038 239.3);
+
   --font-Si-yuan-song-ti:
     SiYuanSongTi, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
     'Segoe UI Symbol', 'Noto Color Emoji';
@@ -59,6 +71,25 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  :root,
+  .light,
+  .default,
+  [data-theme='light'],
+  [data-theme='default'] {
+    --accent: var(--color-brand-600);
+    --accent-foreground: var(--snow);
+    --color-field-border-focus: var(--color-brand-600);
+    --focus: var(--color-brand-600);
+  }
+
+  .dark,
+  [data-theme='dark'] {
+    --accent: var(--color-brand-300);
+    --accent-foreground: var(--color-brand-950);
+    --color-field-border-focus: var(--color-brand-300);
+    --focus: var(--color-brand-300);
+  }
+
   *,
   ::after,
   ::before,

@@ -24,8 +24,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         {/* Ambient background blobs to refract through the blur */}
-        <div className="absolute top-[-10%] right-[-5%] w-[600px] h-[600px] rounded-full bg-blue-500/10 dark:bg-blue-600/10 blur-[100px] animate-[pulse_10s_ease-in-out_infinite]"></div>
-        <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-sky-500/10 dark:bg-sky-600/10 blur-[100px] animate-[pulse_12s_ease-in-out_infinite]"></div>
+        <div className="absolute top-[-10%] right-[-5%] h-[600px] w-[600px] rounded-full bg-brand-500/10 blur-[100px] animate-[pulse_10s_ease-in-out_infinite] dark:bg-brand-400/10"></div>
+        <div className="absolute bottom-[-10%] left-[-5%] h-[500px] w-[500px] rounded-full bg-brand-300/15 blur-[100px] animate-[pulse_12s_ease-in-out_infinite] dark:bg-brand-600/10"></div>
       </div>
 
       <div className="z-10 flex w-full h-full gap-3 p-2 pb-24 md:p-3 md:pb-3">

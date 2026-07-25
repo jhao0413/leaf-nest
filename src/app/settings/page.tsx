@@ -64,8 +64,8 @@ export default function SettingsPage() {
         {canConfigureServerUrl && (
           <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-9 h-9 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                <Server size={18} className="text-cyan-600 dark:text-cyan-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/30">
+                <Server size={18} className="text-brand-600 dark:text-brand-300" />
               </div>
               <div>
                 <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">
@@ -87,11 +87,11 @@ export default function SettingsPage() {
                   setServerUrlMessage(null);
                 }}
                 placeholder={t('serverUrlPlaceholder')}
-                className="min-w-0 flex-1 rounded-xl border border-white/30 bg-white/70 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-cyan-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-100"
+                className="min-w-0 flex-1 rounded-xl border border-white/30 bg-white/70 px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-400 dark:border-white/10 dark:bg-black/20 dark:text-gray-100 dark:focus:border-brand-300"
               />
               <button
                 type="submit"
-                className="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-800 transition hover:bg-cyan-100 dark:border-cyan-900/50 dark:bg-cyan-900/20 dark:text-cyan-200 dark:hover:bg-cyan-900/30"
+                className="rounded-xl border border-brand-200 bg-brand-50 px-4 py-3 text-sm font-medium text-brand-800 transition hover:bg-brand-100 dark:border-brand-800/50 dark:bg-brand-900/20 dark:text-brand-200 dark:hover:bg-brand-900/30"
               >
                 {t('serverUrlSave')}
               </button>
@@ -106,8 +106,8 @@ export default function SettingsPage() {
         {/* Language Setting */}
         <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Globe size={18} className="text-blue-600 dark:text-blue-400" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/30">
+              <Globe size={18} className="text-brand-600 dark:text-brand-300" />
             </div>
             <div>
               <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">
@@ -130,17 +130,21 @@ export default function SettingsPage() {
                   border backdrop-blur-md
                   ${
                     locale === lang.key
-                      ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 shadow-sm'
+                      ? 'border-brand-400 bg-brand-50 text-brand-700 shadow-sm dark:bg-brand-900/20 dark:text-brand-300'
                       : 'border-white/20 bg-white/30 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/10'
                   }
                 `}
               >
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    locale === lang.key ? 'border-blue-500' : 'border-gray-300 dark:border-gray-600'
+                    locale === lang.key
+                      ? 'border-brand-600 dark:border-brand-300'
+                      : 'border-gray-300 dark:border-gray-600'
                   }`}
                 >
-                  {locale === lang.key && <div className="w-2 h-2 rounded-full bg-blue-500" />}
+                  {locale === lang.key && (
+                    <div className="h-2 w-2 rounded-full bg-brand-600 dark:bg-brand-300" />
+                  )}
                 </div>
                 <span className="font-lxgw text-sm font-medium">{lang.label}</span>
               </button>
@@ -150,8 +154,8 @@ export default function SettingsPage() {
 
         <div className="rounded-2xl border border-white/20 bg-white/40 dark:bg-white/5 backdrop-blur-md shadow-sm p-6">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-              <Info size={18} className="text-emerald-600 dark:text-emerald-400" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 dark:bg-brand-900/30">
+              <Info size={18} className="text-brand-600 dark:text-brand-300" />
             </div>
             <div>
               <h3 className="font-bold font-lxgw text-gray-800 dark:text-gray-200">{t('about')}</h3>

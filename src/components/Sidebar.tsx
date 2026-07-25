@@ -37,14 +37,14 @@ const SidebarItem = ({ icon, label, isActive, isCollapsed, onClick }: SidebarIte
       <div className="relative flex items-center justify-center w-9 h-9">
         {/* The "Ink Blot" Background (Blurred & Irregular) - Only visible when active */}
         {isActive && (
-          <div className="absolute inset-0 bg-blue-400/30 dark:bg-blue-400/40 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-md scale-125" />
+          <div className="absolute inset-0 scale-125 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] bg-brand-400/30 blur-md dark:bg-brand-300/30" />
         )}
 
         {/* The Icon (Sharp) */}
         <div
           className={`relative z-10 transition-colors duration-300 ${
             isActive
-              ? 'text-blue-700 dark:text-blue-200'
+              ? 'text-brand-700 dark:text-brand-200'
               : 'text-gray-400 group-hover:text-slate-700 dark:group-hover:text-slate-200'
           }`}
         >
@@ -98,7 +98,7 @@ export const Sidebar: React.FC = () => {
 
   return (
     <div
-      className={`hidden h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-lg shadow-blue-900/5 backdrop-blur-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-black/20 md:flex ${
+      className={`hidden h-full shrink-0 flex-col overflow-hidden rounded-2xl border border-white/60 bg-white/40 shadow-lg shadow-brand-900/5 backdrop-blur-2xl transition-[width] duration-300 dark:border-white/10 dark:bg-black/20 md:flex ${
         isCollapsed ? 'w-20' : 'w-64'
       } z-50`}
     >
@@ -111,19 +111,19 @@ export const Sidebar: React.FC = () => {
             aria-label={collapseLabel}
             title={collapseLabel}
             aria-expanded={!isCollapsed}
-            className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100 dark:focus:ring-brand-300/50"
           >
             <PanelLeftOpen size={18} />
           </button>
-          <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-xl shadow-sm">
-            <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
+          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-brand-700 shadow-sm">
+            <Image src="/logo.png" alt="LeafNest" fill className="scale-[1.04] object-cover" />
           </div>
         </div>
       ) : (
         <div className="flex items-center justify-between gap-3 p-6">
           <div className="flex min-w-0 items-center gap-3">
-            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl shadow-sm">
-              <Image src="/logo.png" alt="LeafNest" fill className="object-cover" />
+            <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full bg-brand-700 shadow-sm">
+              <Image src="/logo.png" alt="LeafNest" fill className="scale-[1.04] object-cover" />
             </div>
             <h1 className="truncate bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-300">
               LeafNest
@@ -135,7 +135,7 @@ export const Sidebar: React.FC = () => {
             aria-label={collapseLabel}
             title={collapseLabel}
             aria-expanded={!isCollapsed}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-gray-500 transition-colors hover:bg-black/5 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-brand-600/50 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-slate-100 dark:focus:ring-brand-300/50"
           >
             <PanelLeftClose size={18} />
           </button>
@@ -160,7 +160,7 @@ export const Sidebar: React.FC = () => {
       {isCollapsed ? (
         <div className="mt-auto flex flex-col items-center gap-2 px-2 pb-3">
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-200/50 bg-gradient-to-br from-blue-100 to-blue-200 text-lg font-bold text-blue-700 shadow-sm transition-colors dark:border-blue-700/30 dark:from-blue-900/60 dark:to-sky-900/40 dark:text-blue-300"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-200/60 bg-gradient-to-br from-brand-100 to-brand-200 text-lg font-bold text-brand-700 shadow-sm transition-colors dark:border-brand-700/30 dark:from-brand-900/60 dark:to-brand-800/40 dark:text-brand-300"
             title={session?.user?.name || 'User'}
           >
             {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -186,7 +186,7 @@ export const Sidebar: React.FC = () => {
           <div className="flex items-center gap-3 rounded-xl border border-white/20 bg-white/40 p-3 shadow-sm backdrop-blur-md transition-all hover:bg-white/60 dark:border-white/10 dark:bg-black/20 dark:hover:bg-white/5">
             {/* Avatar */}
             <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-200/50 bg-gradient-to-br from-blue-100 to-blue-200 text-lg font-bold text-blue-700 shadow-sm transition-colors dark:border-blue-700/30 dark:from-blue-900/60 dark:to-sky-900/40 dark:text-blue-300"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-brand-200/60 bg-gradient-to-br from-brand-100 to-brand-200 text-lg font-bold text-brand-700 shadow-sm transition-colors dark:border-brand-700/30 dark:from-brand-900/60 dark:to-brand-800/40 dark:text-brand-300"
               title={session?.user?.name || 'User'}
             >
               {session?.user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -263,7 +263,7 @@ export const MobileNavigation: React.FC = () => {
             onClick={() => router.push(item.path)}
             className={`flex min-h-14 flex-col items-center justify-center gap-1 rounded-xl px-2 text-xs transition-colors ${
               item.isActive
-                ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-200'
+                ? 'bg-brand-50 text-brand-700 dark:bg-brand-950/50 dark:text-brand-200'
                 : 'text-gray-500 hover:bg-black/5 dark:text-gray-400 dark:hover:bg-white/5'
             }`}
           >

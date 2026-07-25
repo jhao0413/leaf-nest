@@ -122,14 +122,14 @@ export function CreateHighlightPopup({
         <div className="mt-2 flex flex-col gap-1.5">
           <textarea
             ref={noteInputRef}
-            className="w-56 h-16 text-sm p-2 border border-gray-200 dark:border-neutral-600 rounded-lg bg-transparent resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="h-16 w-56 resize-none rounded-lg border border-gray-200 bg-transparent p-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-400 dark:border-neutral-600 dark:focus:ring-brand-300"
             placeholder={t('notePlaceholder')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           <div className="flex justify-end">
             <button
-              className="flex items-center gap-1 px-2 py-1 text-xs bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 rounded-md bg-brand-600 px-2 py-1 text-xs text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-brand-300 dark:text-brand-950 dark:hover:bg-brand-200"
               onClick={() => handleCreate('note')}
               disabled={note.trim() === ''}
             >
@@ -210,14 +210,14 @@ export function EditHighlightPopup({
         <div className="mb-2">
           <textarea
             ref={noteInputRef}
-            className="w-56 h-16 text-sm p-2 border border-gray-200 dark:border-neutral-600 rounded-lg bg-transparent resize-none focus:outline-none focus:ring-1 focus:ring-blue-400"
+            className="h-16 w-56 resize-none rounded-lg border border-gray-200 bg-transparent p-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-400 dark:border-neutral-600 dark:focus:ring-brand-300"
             placeholder={t('notePlaceholder')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           <div className="flex justify-end mt-1">
             <button
-              className="text-xs px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="rounded-md bg-brand-600 px-2 py-1 text-xs text-white hover:bg-brand-700 dark:bg-brand-300 dark:text-brand-950 dark:hover:bg-brand-200"
               onClick={handleSaveNote}
             >
               {t('save')}
@@ -232,7 +232,7 @@ export function EditHighlightPopup({
             <button
               key={color}
               className={`w-4 h-4 rounded-full ${colorDotStyles[color]} ${
-                highlight.color === color ? 'ring-2 ring-blue-500' : ''
+                highlight.color === color ? 'ring-2 ring-brand-600 dark:ring-brand-300' : ''
               }`}
               onClick={() => onUpdateColor(highlight.id, color)}
               title={color}

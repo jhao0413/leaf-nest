@@ -146,18 +146,18 @@ export function AuthCard() {
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       <div className="pointer-events-none absolute inset-0 z-0">
-        <AuthAsciiBackground className="absolute inset-0 h-full w-full opacity-60 dark:opacity-40" />
+        <AuthAsciiBackground className="absolute inset-0 h-full w-full opacity-45 dark:opacity-30" />
       </div>
 
       <div className="relative z-10 flex h-full min-h-[100dvh] w-full items-center justify-center px-4 py-10 md:justify-end md:pr-[12vw] lg:pr-[16vw]">
         <div className="relative flex w-full max-w-[26rem] flex-col gap-6 sm:w-[90%] md:w-[70%]">
           <div className="group relative w-full">
-            <div className="absolute -inset-1.5 z-0 rotate-[-3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[-5deg] group-hover:scale-[1.02] dark:bg-black/20" />
-            <div className="absolute -inset-1.5 z-0 rotate-[3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-all duration-500 group-hover:rotate-[5deg] group-hover:scale-[1.02] dark:bg-black/20" />
+            <div className="absolute -inset-1.5 z-0 rotate-[-3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-[rotate,scale] duration-300 motion-safe:group-hover:rotate-[-5deg] motion-safe:group-hover:scale-[1.02] dark:bg-black/20" />
+            <div className="absolute -inset-1.5 z-0 rotate-[3deg] rounded-[2.5rem] bg-white/20 opacity-60 shadow-lg backdrop-blur-md transition-[rotate,scale] duration-300 motion-safe:group-hover:rotate-[5deg] motion-safe:group-hover:scale-[1.02] dark:bg-black/20" />
 
-            <Card className="relative z-10 w-full border border-white/30 bg-white/60 px-3 py-6 shadow-[0_30px_100px_-20px_rgba(15,23,42,0.3)] backdrop-blur-2xl transition-transform duration-500 hover:scale-[1.01] dark:border-white/10 dark:bg-neutral-900/50">
+            <Card className="relative z-10 w-full border border-white/30 bg-white/70 px-3 py-6 shadow-[0_30px_100px_-20px_rgba(15,23,42,0.3)] backdrop-blur-2xl transition-transform duration-150 motion-safe:hover:scale-[1.01] dark:border-white/10 dark:bg-neutral-900/60">
               <Card.Header className="relative z-10 flex flex-col gap-2 px-6 pb-2 pt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-cyan-700/80 dark:text-cyan-300/90">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.4em] text-brand-700/80 dark:text-brand-300/90">
                   Leaf Nest
                 </p>
                 <div>
@@ -241,7 +241,7 @@ export function AuthCard() {
                     type="submit"
                     fullWidth
                     variant="primary"
-                    className="font-medium shadow-md hover:shadow-lg transition-all"
+                    className="font-medium shadow-md transition-[box-shadow] duration-150 hover:shadow-lg"
                     isPending={isSubmitting}
                   >
                     {mode === 'sign-in' ? t('signInAction') : t('signUpAction')}
@@ -252,7 +252,7 @@ export function AuthCard() {
                   <p className="text-center text-sm text-slate-500 dark:text-slate-400">
                     <button
                       type="button"
-                      className="font-medium text-cyan-700 transition-colors hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-300 ml-1"
+                      className="ml-1 font-medium text-brand-700 transition-colors hover:text-brand-800 dark:text-brand-300 dark:hover:text-brand-200"
                       onClick={() => {
                         setMode(mode === 'sign-in' ? 'sign-up' : 'sign-in');
                         setErrorMessage(null);
