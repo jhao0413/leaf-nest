@@ -8,14 +8,14 @@ services:
         condition: service_completed_successfully
         required: false
     environment:
-      APP_URL: ${SELF_HOST_APP_URL:-http://localhost:8787}
+      APP_URL: ${SELF_HOST_APP_URL:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:8787}
       API_PORT: '8787'
-      DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
+      DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-leaf_nest}}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-}
-      BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}
+      BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-${SELF_HOST_APP_URL:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:8787}}
       TRUSTED_CLIENT_ORIGINS: ${TRUSTED_CLIENT_ORIGINS:-}
       S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://rustfs:9000}
-      S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}
+      S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:9000}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_BUCKET: ${S3_BUCKET:-leaf-nest}
       S3_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
@@ -27,6 +27,7 @@ services:
       - 'host.docker.internal:host-gateway'
     volumes:
       - app-data:/var/lib/leaf-nest
+    restart: unless-stopped
 
   migrate:
     image: jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}
@@ -35,7 +36,7 @@ services:
         condition: service_healthy
         required: false
     environment:
-      DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
+      DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-leaf_nest}}
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     command: ['pnpm', 'db:migrate']
@@ -43,7 +44,7 @@ services:
 
   storage-init:
     image: minio/mc:latest
-    profiles: [local-storage]
+    scale: ${LOCAL_STORAGE_REPLICAS:-1}
     depends_on:
       rustfs:
         condition: service_healthy
@@ -60,7 +61,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
-    profiles: [local-db]
+    scale: ${LOCAL_DB_REPLICAS:-1}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-leaf_nest}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -72,10 +73,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
   rustfs:
     image: rustfs/rustfs:latest
-    profiles: [local-storage]
+    scale: ${LOCAL_STORAGE_REPLICAS:-1}
     command: /data
     environment:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
@@ -98,6 +100,7 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
+    restart: unless-stopped
 
 volumes:
   app-data:

@@ -110,48 +110,47 @@ If setup reports that Docker is unavailable, start Docker Desktop and rerun `pnp
 
 ### Self-hosted Deployment
 
-Current production deployment is self-hosting with the published Docker image and Compose stack. Static-only hosting such as Vercel is not supported for the current architecture because the app depends on the bundled Hono API, Better Auth callbacks, PostgreSQL, and S3-compatible object storage.
-
-1. Copy `.env.example` to `.env`.
-2. Choose which bundled infrastructure services Compose should start with `COMPOSE_PROFILES`:
-   - `local-db,local-storage`: start the bundled PostgreSQL and RustFS services (default in `.env.example`)
-   - `local-db`: start PostgreSQL and use externally managed S3-compatible storage
-   - `local-storage`: use an external PostgreSQL database and start RustFS
-   - an empty value: use externally managed PostgreSQL and S3-compatible storage
-3. Set the public deployment URLs and storage credentials in `.env`:
-   - `SELF_HOST_APP_URL`
-   - `SELF_HOST_BETTER_AUTH_URL`
-   - `SELF_HOST_DATABASE_URL` when `local-db` is disabled
-   - `SELF_HOST_S3_PUBLIC_ENDPOINT`
-   - `SELF_HOST_S3_ENDPOINT` when `local-storage` is disabled
-   - `RUSTFS_ACCESS_KEY`
-   - `RUSTFS_SECRET_KEY`
-4. When using external object storage, create `S3_BUCKET` before starting the app. The bundled `storage-init` service only initializes the bundled RustFS service.
-5. Choose the application image tag with `LEAF_NEST_TAG`, for example `v0.4.0`.
-6. Start the selected stack with one command:
+A complete self-hosted deployment needs a host with Docker Compose. `docker-compose.yml` includes the app, database migration, PostgreSQL, RustFS, and bucket initialization services by default. Start the complete local stack without creating an `.env` file:
 
 ```bash
-pnpm deploy:start
+docker compose up -d --pull always
 ```
 
-This command uses Compose to pull `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` and the images selected by `COMPOSE_PROFILES`, runs database migrations against the configured database, initializes bundled RustFS when enabled, and then starts the app. You do not need to look up or enter an image name. The app container serves both the SPA and the API on the configured app origin. Optional dependencies require Docker Compose 2.20.0 or later.
+The default URL is `http://localhost:8787`. For direct access through a server's LAN or public IP, create `.env` and set the host once:
+
+```dotenv
+SELF_HOST_PUBLIC_HOST=192.168.x.x
+LEAF_NEST_TAG=v0.4.0
+```
+
+Compose derives the app URL, Better Auth URL, and browser-facing RustFS URL from that host. For HTTPS, reverse proxies, custom ports, or separate domains, override them with `SELF_HOST_APP_URL`, `SELF_HOST_BETTER_AUTH_URL`, and `SELF_HOST_S3_PUBLIC_ENDPOINT`.
+
+Bundled PostgreSQL and RustFS start by default. Only disable a bundled dependency when replacing it with an external service:
+
+- External PostgreSQL: set `LOCAL_DB_REPLICAS=0` and `SELF_HOST_DATABASE_URL`
+- External S3: set `LOCAL_STORAGE_REPLICAS=0`, `SELF_HOST_S3_ENDPOINT`, and `SELF_HOST_S3_PUBLIC_ENDPOINT`
+- Both external: set both replica counts to `0`
+
+When using external object storage, create `S3_BUCKET` before starting the app; `storage-init` only initializes bundled RustFS. Production deployments should also override the default `POSTGRES_PASSWORD`, `RUSTFS_ACCESS_KEY`, and `RUSTFS_SECRET_KEY`. Compose derives the local database URL from the same `POSTGRES_*` values; use URL-safe characters in the password.
+
+`BETTER_AUTH_SECRET` is optional for a single-instance Docker deployment because it is generated and persisted on first start. The complete stack requires Docker Compose 2.20.0 or later.
 
 Common service-management commands:
 
-- `pnpm deploy:start`: pulls the selected image version and starts the complete stack in the background.
+- `pnpm deploy:start`: equivalent to `docker compose up -d --pull always`.
 - `pnpm deploy:status`: shows container status.
 - `pnpm deploy:logs`: follows application logs.
 - `pnpm deploy:stop`: stops and removes containers while preserving data volumes.
 
-`BETTER_AUTH_SECRET` is optional for a single-instance Docker deployment. When it is omitted, the app generates a cryptographically random secret on first start and stores it in the persistent `app-data` volume. Container recreation reuses that secret. Set `BETTER_AUTH_SECRET` explicitly for multi-instance deployments or externally managed secrets. Removing `app-data` invalidates existing sessions because a new secret will be generated.
+The generated authentication secret is stored in the persistent `app-data` volume, so container recreation reuses it. Set `BETTER_AUTH_SECRET` explicitly for multi-instance deployments or externally managed secrets. Removing `app-data` invalidates existing sessions because a new secret will be generated.
 
-Default published service ports when the corresponding local profile is enabled:
+Default published ports when the bundled services are enabled:
 
 - App: `8787`
 - RustFS S3 API: `9000`
 - RustFS Console: `9001`
 
-PostgreSQL is kept on the internal Docker network when `local-db` is enabled. If you publish your own app image, push a Git tag such as `v0.4.0`; the GitHub Actions workflow publishes `jhao0413/leaf-nest:<tag>` and `jhao0413/leaf-nest:latest` to Docker Hub using `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
+PostgreSQL is kept on the internal Docker network. If you publish your own app image, push a Git tag such as `v0.4.0`; the GitHub Actions workflow publishes `jhao0413/leaf-nest:<tag>` and `jhao0413/leaf-nest:latest` to Docker Hub using `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.
 
 ### Database Workflow
 

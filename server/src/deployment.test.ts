@@ -15,21 +15,25 @@ describe('self-host deployment configuration', () => {
     expect(composeSource).not.toContain('minio:');
     expect(composeSource).toContain('rustfs:');
     expect(composeSource).toContain('image: rustfs/rustfs:latest');
-    expect(composeSource).toContain('APP_URL: ${SELF_HOST_APP_URL:-http://localhost:8787}');
     expect(composeSource).toContain(
-      'DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}'
+      'APP_URL: ${SELF_HOST_APP_URL:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:8787}'
     );
     expect(composeSource).toContain(
-      'BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-http://localhost:8787}'
+      'DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-leaf_nest}}'
+    );
+    expect(composeSource).toContain(
+      'BETTER_AUTH_URL: ${SELF_HOST_BETTER_AUTH_URL:-${SELF_HOST_APP_URL:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:8787}}'
     );
     expect(composeSource).toContain('TRUSTED_CLIENT_ORIGINS: ${TRUSTED_CLIENT_ORIGINS:-}');
     expect(composeSource).toContain('S3_ENDPOINT: ${SELF_HOST_S3_ENDPOINT:-http://rustfs:9000}');
     expect(composeSource).toContain(
-      'S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}'
+      'S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://${SELF_HOST_PUBLIC_HOST:-localhost}:9000}'
     );
     expect(composeSource).toContain('storage-init:');
-    expect(composeSource).toContain('profiles: [local-db]');
-    expect(composeSource).toContain('profiles: [local-storage]');
+    expect(composeSource).toContain('scale: ${LOCAL_DB_REPLICAS:-1}');
+    expect(composeSource).toContain('scale: ${LOCAL_STORAGE_REPLICAS:-1}');
+    expect(composeSource).not.toContain('profiles:');
+    expect(composeSource.match(/restart: unless-stopped/g)).toHaveLength(3);
     expect(composeSource).toContain('required: false');
     expect(composeSource).toContain("'host.docker.internal:host-gateway'");
     expect(composeSource).toContain("command: ['pnpm', 'db:migrate']");

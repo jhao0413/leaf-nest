@@ -110,48 +110,47 @@ pnpm start
 
 ### Self-host 部署
 
-当前生产部署方式以自部署为准，使用已发布的 Docker 镜像和 Compose 编排。像 Vercel 这类纯静态托管不适用于现有架构，因为应用现在依赖内置的 Hono API、Better Auth 回调、PostgreSQL 和 S3 兼容对象存储。
-
-1. 复制 `.env.example` 为 `.env`。
-2. 通过 `COMPOSE_PROFILES` 选择由 Compose 启动的基础设施服务：
-   - `local-db,local-storage`：启动内置 PostgreSQL 和 RustFS（`.env.example` 的默认值）
-   - `local-db`：启动 PostgreSQL，使用外部 S3 兼容存储
-   - `local-storage`：使用外部 PostgreSQL，启动 RustFS
-   - 留空：PostgreSQL 和 S3 兼容存储都使用外部服务
-3. 在 `.env` 中设置公开部署地址和存储凭据：
-   - `SELF_HOST_APP_URL`
-   - `SELF_HOST_BETTER_AUTH_URL`
-   - 禁用 `local-db` 时设置 `SELF_HOST_DATABASE_URL`
-   - `SELF_HOST_S3_PUBLIC_ENDPOINT`
-   - 禁用 `local-storage` 时设置 `SELF_HOST_S3_ENDPOINT`
-   - `RUSTFS_ACCESS_KEY`
-   - `RUSTFS_SECRET_KEY`
-4. 使用外部对象存储时，需要在启动应用前创建 `S3_BUCKET`；内置的 `storage-init` 只负责初始化内置 RustFS。
-5. 通过 `LEAF_NEST_TAG` 选择应用镜像版本，例如 `v0.4.0`。
-6. 一条命令启动所选服务：
+完整自部署需要一台支持 Docker Compose 的主机。`docker-compose.yml` 默认包含应用、数据库迁移、PostgreSQL、RustFS 和 bucket 初始化服务；不创建 `.env` 也可以直接启动本机完整栈：
 
 ```bash
-pnpm deploy:start
+docker compose up -d --pull always
 ```
 
-该命令会通过 Compose 拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` 以及 `COMPOSE_PROFILES` 选中的依赖镜像，在配置的数据库上执行迁移，启用内置 RustFS 时初始化 bucket，然后启动应用。无需自行查找或填写镜像名。应用容器会在配置的应用地址同时提供前端 SPA 和 API。可选依赖要求 Docker Compose 2.20.0 或更高版本。
+默认访问地址为 `http://localhost:8787`。从局域网或公网通过服务器 IP 直接访问时，只需创建 `.env` 并填写一次主机地址：
+
+```dotenv
+SELF_HOST_PUBLIC_HOST=192.168.x.x
+LEAF_NEST_TAG=v0.4.0
+```
+
+Compose 会据此生成应用地址、Better Auth 地址和浏览器访问 RustFS 的地址。使用 HTTPS、反向代理、自定义端口或不同域名时，可分别通过 `SELF_HOST_APP_URL`、`SELF_HOST_BETTER_AUTH_URL` 和 `SELF_HOST_S3_PUBLIC_ENDPOINT` 覆盖自动生成的地址。
+
+内置 PostgreSQL 和 RustFS 默认启动。仅在使用外部服务时才需要关闭对应副本并配置连接：
+
+- 外部 PostgreSQL：设置 `LOCAL_DB_REPLICAS=0` 和 `SELF_HOST_DATABASE_URL`
+- 外部 S3：设置 `LOCAL_STORAGE_REPLICAS=0`、`SELF_HOST_S3_ENDPOINT` 和 `SELF_HOST_S3_PUBLIC_ENDPOINT`
+- 两者都外置：同时把两个副本数设为 `0`
+
+使用外部对象存储时，需要在启动应用前创建 `S3_BUCKET`；`storage-init` 只负责初始化内置 RustFS。生产部署还应覆盖 `POSTGRES_PASSWORD`、`RUSTFS_ACCESS_KEY` 和 `RUSTFS_SECRET_KEY` 的默认值。Compose 会使用同一组 `POSTGRES_*` 变量自动生成本地数据库连接；密码应使用 URL 安全字符。
+
+`BETTER_AUTH_SECRET` 对单实例 Docker 部署是可选的：首次启动时会自动生成并持久化。整个栈要求 Docker Compose 2.20.0 或更高版本。
 
 常用服务管理命令：
 
-- `pnpm deploy:start`：拉取所选版本的镜像并在后台启动完整栈。
+- `pnpm deploy:start`：等同于 `docker compose up -d --pull always`。
 - `pnpm deploy:status`：查看容器状态。
 - `pnpm deploy:logs`：持续查看应用日志。
 - `pnpm deploy:stop`：停止并移除容器，保留数据卷。
 
-单实例 Docker 部署可以不设置 `BETTER_AUTH_SECRET`。应用首次启动时会生成密码学安全的随机密钥，并保存到持久化的 `app-data` 卷；重建容器后会继续使用同一密钥。多实例部署或使用外部密钥管理时应显式设置 `BETTER_AUTH_SECRET`。删除 `app-data` 会生成新密钥，并使已有登录会话失效。
+应用生成的认证密钥保存在持久化的 `app-data` 卷中，重建容器后会继续使用同一密钥。多实例部署或使用外部密钥管理时应显式设置 `BETTER_AUTH_SECRET`。删除 `app-data` 会生成新密钥，并使已有登录会话失效。
 
-启用对应本地 profile 时的默认公开端口：
+内置服务启用时的默认公开端口：
 
 - App：`8787`
 - RustFS S3 API：`9000`
 - RustFS Console：`9001`
 
-启用 `local-db` 时，PostgreSQL 只在 Docker 内部网络中使用。如果需要发布自己的应用镜像，推送 `v0.4.0` 这类 Git tag 即可触发 GitHub Actions；workflow 会使用仓库 secrets `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 发布 `jhao0413/leaf-nest:<tag>` 与 `jhao0413/leaf-nest:latest`。
+PostgreSQL 只在 Docker 内部网络中使用。如果需要发布自己的应用镜像，推送 `v0.4.0` 这类 Git tag 即可触发 GitHub Actions；workflow 会使用仓库 secrets `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 发布 `jhao0413/leaf-nest:<tag>` 与 `jhao0413/leaf-nest:latest`。
 
 ### 数据库工作流
 
