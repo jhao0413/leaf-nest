@@ -1,6 +1,6 @@
 [package]
 name = "leaf-nest"
-version = "0.1.0"
+version = "0.4.0"
 description = "Leaf Nest Android and desktop client"
 authors = ["Jhao <jhao413@qq.com>"]
 edition = "2021"
