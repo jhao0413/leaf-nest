@@ -28,6 +28,10 @@ describe('self-host deployment configuration', () => {
       'S3_PUBLIC_ENDPOINT: ${SELF_HOST_S3_PUBLIC_ENDPOINT:-http://localhost:9000}'
     );
     expect(composeSource).toContain('storage-init:');
+    expect(composeSource).toContain('profiles: [local-db]');
+    expect(composeSource).toContain('profiles: [local-storage]');
+    expect(composeSource).toContain('required: false');
+    expect(composeSource).toContain("'host.docker.internal:host-gateway'");
     expect(composeSource).toContain("command: ['pnpm', 'db:migrate']");
   });
 
@@ -38,9 +42,9 @@ describe('self-host deployment configuration', () => {
     );
 
     expect(workflowSource).toContain("tags:\n      - 'v*'");
-    expect(workflowSource).toContain('uses: docker/login-action@v3');
+    expect(workflowSource).toContain('uses: docker/login-action@v4');
     expect(workflowSource).toContain('images: jhao0413/leaf-nest');
-    expect(workflowSource).toContain('uses: docker/build-push-action@v6');
+    expect(workflowSource).toContain('uses: docker/build-push-action@v7');
     expect(workflowSource).toContain('push: true');
   });
 });

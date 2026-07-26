@@ -6,6 +6,7 @@ services:
         condition: service_completed_successfully
       storage-init:
         condition: service_completed_successfully
+        required: false
     environment:
       APP_URL: ${SELF_HOST_APP_URL:-http://localhost:8787}
       API_PORT: '8787'
@@ -22,6 +23,8 @@ services:
       S3_FORCE_PATH_STYLE: 'true'
     ports:
       - '8787:8787'
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     volumes:
       - app-data:/var/lib/leaf-nest
 
@@ -30,13 +33,17 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+        required: false
     environment:
       DATABASE_URL: ${SELF_HOST_DATABASE_URL:-postgres://postgres:postgres@postgres:5432/leaf_nest}
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     command: ['pnpm', 'db:migrate']
     restart: 'no'
 
   storage-init:
     image: minio/mc:latest
+    profiles: [local-storage]
     depends_on:
       rustfs:
         condition: service_healthy
@@ -53,6 +60,7 @@ services:
 
   postgres:
     image: postgres:17-alpine
+    profiles: [local-db]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-leaf_nest}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -67,6 +75,7 @@ services:
 
   rustfs:
     image: rustfs/rustfs:latest
+    profiles: [local-storage]
     command: /data
     environment:
       RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}

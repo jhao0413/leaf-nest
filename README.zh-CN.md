@@ -112,22 +112,29 @@ pnpm start
 
 当前生产部署方式以自部署为准，使用已发布的 Docker 镜像和 Compose 编排。像 Vercel 这类纯静态托管不适用于现有架构，因为应用现在依赖内置的 Hono API、Better Auth 回调、PostgreSQL 和 S3 兼容对象存储。
 
-1. 需要覆盖 Compose 本地默认值时，复制 `.env.example` 为 `.env`。
-2. 在 `.env` 中设置公开部署地址和存储凭据：
+1. 复制 `.env.example` 为 `.env`。
+2. 通过 `COMPOSE_PROFILES` 选择由 Compose 启动的基础设施服务：
+   - `local-db,local-storage`：启动内置 PostgreSQL 和 RustFS（`.env.example` 的默认值）
+   - `local-db`：启动 PostgreSQL，使用外部 S3 兼容存储
+   - `local-storage`：使用外部 PostgreSQL，启动 RustFS
+   - 留空：PostgreSQL 和 S3 兼容存储都使用外部服务
+3. 在 `.env` 中设置公开部署地址和存储凭据：
    - `SELF_HOST_APP_URL`
    - `SELF_HOST_BETTER_AUTH_URL`
+   - 禁用 `local-db` 时设置 `SELF_HOST_DATABASE_URL`
    - `SELF_HOST_S3_PUBLIC_ENDPOINT`
-   - `SELF_HOST_S3_ENDPOINT` 仅在应用需要通过非默认内部地址访问对象存储时才需要设置
+   - 禁用 `local-storage` 时设置 `SELF_HOST_S3_ENDPOINT`
    - `RUSTFS_ACCESS_KEY`
    - `RUSTFS_SECRET_KEY`
-3. 通过 `LEAF_NEST_TAG` 选择应用镜像版本，例如 `v0.3.1`。
-4. 一条命令启动完整栈：
+4. 使用外部对象存储时，需要在启动应用前创建 `S3_BUCKET`；内置的 `storage-init` 只负责初始化内置 RustFS。
+5. 通过 `LEAF_NEST_TAG` 选择应用镜像版本，例如 `v0.4.0`。
+6. 一条命令启动所选服务：
 
 ```bash
 pnpm deploy:start
 ```
 
-该命令会通过 Compose 拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` 及其依赖镜像，执行数据库迁移，按需创建 RustFS bucket，然后启动应用。无需自行查找或填写镜像名。应用容器会在配置的应用地址同时提供前端 SPA 和 API。
+该命令会通过 Compose 拉取 `jhao0413/leaf-nest:${LEAF_NEST_TAG:-latest}` 以及 `COMPOSE_PROFILES` 选中的依赖镜像，在配置的数据库上执行迁移，启用内置 RustFS 时初始化 bucket，然后启动应用。无需自行查找或填写镜像名。应用容器会在配置的应用地址同时提供前端 SPA 和 API。可选依赖要求 Docker Compose 2.20.0 或更高版本。
 
 常用服务管理命令：
 
@@ -138,13 +145,13 @@ pnpm deploy:start
 
 单实例 Docker 部署可以不设置 `BETTER_AUTH_SECRET`。应用首次启动时会生成密码学安全的随机密钥，并保存到持久化的 `app-data` 卷；重建容器后会继续使用同一密钥。多实例部署或使用外部密钥管理时应显式设置 `BETTER_AUTH_SECRET`。删除 `app-data` 会生成新密钥，并使已有登录会话失效。
 
-默认公开端口：
+启用对应本地 profile 时的默认公开端口：
 
 - App：`8787`
 - RustFS S3 API：`9000`
 - RustFS Console：`9001`
 
-PostgreSQL 默认只在 Docker 内部网络中使用。如果需要发布自己的应用镜像，推送 `v0.3.1` 这类 Git tag 即可触发 GitHub Actions；workflow 会使用仓库 secrets `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 发布 `jhao0413/leaf-nest:<tag>` 与 `jhao0413/leaf-nest:latest`。
+启用 `local-db` 时，PostgreSQL 只在 Docker 内部网络中使用。如果需要发布自己的应用镜像，推送 `v0.4.0` 这类 Git tag 即可触发 GitHub Actions；workflow 会使用仓库 secrets `DOCKERHUB_USERNAME` 和 `DOCKERHUB_TOKEN` 发布 `jhao0413/leaf-nest:<tag>` 与 `jhao0413/leaf-nest:latest`。
 
 ### 数据库工作流
 
