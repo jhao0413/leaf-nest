@@ -106,6 +106,9 @@
   "Highlights": {
     "highlight": "Highlight",
     "underline": "Underline",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Unable to copy. Try again.",
     "share": "Share",
     "addNote": "Add note",
     "addThought": "Write thought",

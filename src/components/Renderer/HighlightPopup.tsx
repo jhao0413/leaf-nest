@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useTranslations } from '@/i18n';
-import { Check, Trash2, PenLine, Highlighter, Underline, Share2 } from 'lucide-react';
+import { Check, Copy, Trash2, PenLine, Highlighter, Underline, Share2 } from 'lucide-react';
 import { Highlight } from '@/store/highlightStore';
 import { PopupPosition } from '@/hooks/useTextSelection';
 
@@ -61,7 +61,7 @@ export function CreateHighlightPopup({
       ref={popupRef}
       role="dialog"
       aria-label={t('addThought')}
-      className="fixed z-[100] bg-white dark:bg-neutral-800 shadow-lg rounded-xl p-2 border border-gray-200 dark:border-neutral-700"
+      className="fixed z-[100] max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-contain bg-white dark:bg-neutral-800 shadow-lg rounded-xl p-2 border border-gray-200 dark:border-neutral-700"
       style={{
         left: adjustedPosition.x,
         top: adjustedPosition.y,
@@ -165,8 +165,13 @@ export function EditHighlightPopup({
   const t = useTranslations('Highlights');
   const [editingNote, setEditingNote] = useState(false);
   const [note, setNote] = useState(highlight.note || '');
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [isCopying, setIsCopying] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const noteInputRef = useRef<HTMLTextAreaElement>(null);
+  const copyStatusTimerRef = useRef<number | null>(null);
+  const copyRequestIdRef = useRef(0);
+  const copyInFlightRef = useRef(false);
 
   const adjustedPosition = useAdjustedPosition(popupRef, position);
 
@@ -175,6 +180,27 @@ export function EditHighlightPopup({
       noteInputRef.current?.focus();
     }
   }, [editingNote]);
+
+  const clearCopyStatusTimer = useCallback(() => {
+    if (copyStatusTimerRef.current !== null) {
+      window.clearTimeout(copyStatusTimerRef.current);
+      copyStatusTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    copyRequestIdRef.current += 1;
+    copyInFlightRef.current = false;
+    clearCopyStatusTimer();
+    setIsCopying(false);
+    setCopyStatus('idle');
+
+    return () => {
+      copyRequestIdRef.current += 1;
+      copyInFlightRef.current = false;
+      clearCopyStatusTimer();
+    };
+  }, [clearCopyStatusTimer, highlight.id]);
 
   const handleSaveNote = () => {
     onUpdateNote(highlight.id, note);
@@ -186,13 +212,45 @@ export function EditHighlightPopup({
     onClose();
   };
 
+  const handleCopy = async () => {
+    if (copyInFlightRef.current) return;
+
+    copyInFlightRef.current = true;
+    const requestId = copyRequestIdRef.current + 1;
+    copyRequestIdRef.current = requestId;
+    clearCopyStatusTimer();
+    setCopyStatus('idle');
+    setIsCopying(true);
+
+    try {
+      await copyTextToClipboard(highlight.selectedText, t('copy'));
+      if (requestId !== copyRequestIdRef.current) return;
+
+      setCopyStatus('copied');
+      copyStatusTimerRef.current = window.setTimeout(() => {
+        if (requestId === copyRequestIdRef.current) {
+          setCopyStatus('idle');
+          copyStatusTimerRef.current = null;
+        }
+      }, 1800);
+    } catch {
+      if (requestId !== copyRequestIdRef.current) return;
+      setCopyStatus('failed');
+    } finally {
+      if (requestId === copyRequestIdRef.current) {
+        copyInFlightRef.current = false;
+        setIsCopying(false);
+      }
+    }
+  };
+
   return (
     <div
       id="highlight-popup"
       ref={popupRef}
       role="dialog"
       aria-label={highlight.note ? t('editThought') : t('addThought')}
-      className="fixed z-[100] bg-white dark:bg-neutral-800 shadow-lg rounded-xl p-2 border border-gray-200 dark:border-neutral-700"
+      className="fixed z-[100] max-h-[calc(100dvh-1rem)] max-w-[calc(100vw-1rem)] overflow-y-auto overscroll-contain bg-white dark:bg-neutral-800 shadow-lg rounded-xl p-2 border border-gray-200 dark:border-neutral-700"
       style={{
         left: adjustedPosition.x,
         top: adjustedPosition.y,
@@ -226,7 +284,7 @@ export function EditHighlightPopup({
         </div>
       )}
 
-      <div className="flex items-center gap-1">
+      <div className="flex flex-wrap items-center justify-center gap-x-1 gap-y-2">
         <div className="flex items-center gap-1 border-r border-gray-200 dark:border-neutral-600 pr-2">
           {COLORS.map((color) => (
             <button
@@ -247,6 +305,20 @@ export function EditHighlightPopup({
           <span>{highlight.note ? t('editThought') : t('addThought')}</span>
         </button>
         <button
+          type="button"
+          className="flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-gray-100 disabled:cursor-wait disabled:opacity-60 dark:hover:bg-neutral-700 transition-colors"
+          onClick={() => void handleCopy()}
+          disabled={isCopying}
+          aria-busy={isCopying}
+        >
+          {copyStatus === 'copied' ? (
+            <Check size={14} aria-hidden="true" />
+          ) : (
+            <Copy size={14} aria-hidden="true" />
+          )}
+          <span>{copyStatus === 'copied' ? t('copied') : t('copy')}</span>
+        </button>
+        <button
           className="flex items-center gap-1 px-2 py-1.5 text-sm rounded-lg hover:bg-gray-100 dark:hover:bg-neutral-700 transition-colors"
           onClick={onShare}
         >
@@ -261,29 +333,97 @@ export function EditHighlightPopup({
           <span>{t('deleteHighlight')}</span>
         </button>
       </div>
+      <output
+        className={
+          copyStatus === 'failed'
+            ? 'mt-1 block px-1 text-xs text-red-500 dark:text-red-400'
+            : 'sr-only'
+        }
+      >
+        {copyStatus === 'copied' ? t('copied') : copyStatus === 'failed' ? t('copyFailed') : ''}
+      </output>
     </div>
   );
+}
+
+async function copyTextToClipboard(text: string, accessibleLabel: string): Promise<void> {
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for non-secure browser contexts where the Clipboard API is unavailable.
+    }
+  }
+
+  if (typeof document === 'undefined' || typeof document.execCommand !== 'function') {
+    throw new Error('Clipboard API is not available');
+  }
+
+  const activeElement =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.tabIndex = -1;
+  textarea.setAttribute('aria-label', accessibleLabel);
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  textarea.style.pointerEvents = 'none';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+
+  let didCopy = false;
+
+  try {
+    didCopy = document.execCommand('copy');
+  } finally {
+    textarea.remove();
+    activeElement?.focus({ preventScroll: true });
+  }
+
+  if (!didCopy) {
+    throw new Error('Unable to copy text');
+  }
 }
 
 function useAdjustedPosition(
   ref: React.RefObject<HTMLDivElement | null>,
   position: PopupPosition
 ): PopupPosition {
-  if (typeof window === 'undefined' || !ref.current) return position;
+  const [adjustedPosition, setAdjustedPosition] = useState(position);
 
-  const rect = ref.current.getBoundingClientRect();
-  let x = position.x;
-  let y = position.y;
+  useLayoutEffect(() => {
+    const popup = ref.current;
+    if (typeof window === 'undefined' || !popup) return;
 
-  // Prevent overflow on left/right
-  const halfWidth = rect.width / 2;
-  if (x - halfWidth < 8) x = halfWidth + 8;
-  if (x + halfWidth > window.innerWidth - 8) x = window.innerWidth - halfWidth - 8;
+    const updatePosition = () => {
+      const rect = popup.getBoundingClientRect();
+      const halfWidth = rect.width / 2;
+      const minX = halfWidth + 8;
+      const maxX = window.innerWidth - halfWidth - 8;
+      const x = minX <= maxX ? Math.min(Math.max(position.x, minX), maxX) : window.innerWidth / 2;
+      const preferredTop = position.y - rect.height;
+      const fallbackTop = Math.min(position.y + 40, window.innerHeight - rect.height - 8);
+      const top = Math.max(8, preferredTop >= 8 ? preferredTop : fallbackTop);
+      const y = top + rect.height;
 
-  // If popup would go above viewport, show below selection instead
-  if (y - rect.height < 8) {
-    y = position.y + 40;
-  }
+      setAdjustedPosition((current) => (current.x === x && current.y === y ? current : { x, y }));
+    };
 
-  return { x, y };
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updatePosition);
+    resizeObserver?.observe(popup);
+
+    return () => {
+      window.removeEventListener('resize', updatePosition);
+      resizeObserver?.disconnect();
+    };
+  }, [position.x, position.y, ref]);
+
+  return adjustedPosition;
 }

@@ -106,6 +106,9 @@
   "Highlights": {
     "highlight": "高亮",
     "underline": "下划线",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请重试",
     "share": "分享",
     "addNote": "添加笔记",
     "addThought": "写想法",
