@@ -39,44 +39,18 @@ const MenuIcon: React.FC<MenuIconProps> = ({ isOpen }: MenuIconProps) => {
 
   return (
     <div className="cursor-pointer select-none p-2 rounded-md transition-colors duration-200 flex items-center justify-center">
-      <svg
-        className="!size-6"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <motion.line
-          x1="4"
-          y1="6"
-          x2="20"
-          y2="6"
-          variants={lineVariants}
-          animate={controls}
-          custom={1}
-        />
-        <motion.line
-          x1="4"
-          y1="12"
-          x2="20"
-          y2="12"
-          variants={lineVariants}
-          animate={controls}
-          custom={2}
-        />
-        <motion.line
-          x1="4"
-          y1="18"
-          x2="20"
-          y2="18"
-          variants={lineVariants}
-          animate={controls}
-          custom={3}
-        />
-      </svg>
+      <div className="relative !size-6" aria-hidden="true">
+        {[1, 2, 3].map((custom) => (
+          <motion.span
+            key={custom}
+            custom={custom}
+            variants={lineVariants}
+            animate={controls}
+            className="absolute left-1 right-1 h-0.5 block rounded-full bg-current"
+            style={{ top: `${custom * 6 - 1}px` }}
+          />
+        ))}
+      </div>
     </div>
   );
 };

@@ -20,10 +20,12 @@ const DownloadIcon = () => {
   const controls = useAnimation();
 
   return (
-    <div
+    <motion.div
       className="cursor-pointer select-none p-2 rounded-md transition-colors duration-200 flex items-center justify-center"
       onMouseEnter={() => controls.start('animate')}
       onMouseLeave={() => controls.start('normal')}
+      variants={arrowVariants}
+      animate={controls}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -37,12 +39,12 @@ const DownloadIcon = () => {
         strokeLinejoin="round"
       >
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-        <motion.g variants={arrowVariants} animate={controls}>
+        <g>
           <polyline points="7 10 12 15 17 10" />
           <line x1="12" x2="12" y1="15" y2="3" />
-        </motion.g>
+        </g>
       </svg>
-    </div>
+    </motion.div>
   );
 };
 
