@@ -67,6 +67,11 @@ export const applyFontAndThemeStyles = (
             font-family: '${fontFamily}' !important;
             ${themeStyle}
         }
+
+        body [style*='font-size' i],
+        body font[size] {
+          font-size: inherit !important;
+        }
   
         a {
           text-decoration: none;
