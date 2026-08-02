@@ -1,4 +1,4 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { createHash, randomUUID } from 'node:crypto';
 import { bookFiles, books, readingProgress } from '../db/schema/index.js';
 import { getDb } from './db.js';
@@ -125,7 +125,10 @@ function createBooksService(storage: StorageService): BooksService {
           and(eq(readingProgress.bookId, books.id), eq(readingProgress.userId, userId))
         )
         .where(eq(books.ownerId, userId))
-        .orderBy(desc(books.updatedAt));
+        .orderBy(
+          sql`${readingProgress.lastReadAt} desc nulls last`,
+          desc(books.updatedAt)
+        );
 
       return Promise.all(
         rows.map(async ({ book, progress }) => ({
