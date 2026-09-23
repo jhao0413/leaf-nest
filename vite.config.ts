@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite-plus';
@@ -40,12 +41,19 @@ const reactRefreshPlugin = Object.assign(
   { apply: 'serve' as const }
 );
 
+const { version: appVersion } = JSON.parse(
+  readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8')
+) as { version: string };
+
 const env = loadEnv(process.env.NODE_ENV ?? 'development', process.cwd(), '');
 const appPort = getPort('APP_URL', env.APP_URL, 5173);
 const apiOrigin = getOrigin('BETTER_AUTH_URL', env.BETTER_AUTH_URL, 'http://localhost:8787');
 
 export default defineConfig({
   plugins: [reactRefreshPlugin],
+  define: {
+    __APP_VERSION__: JSON.stringify(appVersion)
+  },
   oxc: {
     jsxRefreshInclude: /\.[jt]sx$/
   },

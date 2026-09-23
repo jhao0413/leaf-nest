@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { I18nProvider } from '@/i18n';
 import SettingsPage from '@/app/settings/page';
+import packageJson from '../../../package.json';
 
 describe('SettingsPage', () => {
   beforeEach(() => {
@@ -22,5 +23,17 @@ describe('SettingsPage', () => {
 
     expect(githubLink).toHaveAttribute('href', 'https://github.com/jhao0413/leaf-nest');
     expect(githubLink).toHaveAttribute('target', '_blank');
+  });
+
+  it('shows the app version in the about section', () => {
+    window.localStorage.setItem('leaf-nest-locale', 'zh');
+
+    render(
+      <I18nProvider>
+        <SettingsPage />
+      </I18nProvider>
+    );
+
+    expect(screen.getByText(`版本 v${packageJson.version}`)).toBeInTheDocument();
   });
 });

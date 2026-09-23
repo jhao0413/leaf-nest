@@ -76,7 +76,8 @@
     "languageDesc": "选择你偏好的显示语言",
     "about": "关于",
     "aboutDesc": "了解 LeafNest 项目并查看源码",
-    "github": "GitHub"
+    "github": "GitHub",
+    "version": "版本 v{version}"
   },
   "NotesPage": {
     "title": "读书笔记",

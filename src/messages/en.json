@@ -76,7 +76,8 @@
     "languageDesc": "Choose your preferred display language",
     "about": "About",
     "aboutDesc": "Learn more about LeafNest and view the source code",
-    "github": "GitHub"
+    "github": "GitHub",
+    "version": "Version v{version}"
   },
   "NotesPage": {
     "title": "Reading Notes",

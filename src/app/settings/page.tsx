@@ -163,15 +163,20 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          <a
-            href={PROJECT_GITHUB_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 bg-white/30 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/10 transition-all duration-300"
-          >
-            <span className="font-lxgw text-sm font-medium">{t('github')}</span>
-            <ExternalLink size={16} />
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            <a
+              href={PROJECT_GITHUB_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl border border-white/20 bg-white/30 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-white/10 transition-all duration-300"
+            >
+              <span className="font-lxgw text-sm font-medium">{t('github')}</span>
+              <ExternalLink size={16} />
+            </a>
+            <span className="font-lxgw text-sm text-gray-500 dark:text-gray-400 tabular-nums">
+              {t('version', { version: __APP_VERSION__ })}
+            </span>
+          </div>
         </div>
       </div>
     </div>
