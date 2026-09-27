@@ -39,19 +39,21 @@ const epubStructureParser = async (file: File): Promise<BookBasicInfoType> => {
         const content = await zip.file(fullPath)?.async('string');
         const [bookBasicInfo, tocPath] = epubBasicInfoParser(content as string);
 
-        // Read cover image and toc
-        const coverFile = zip.file(`${basePath}${bookBasicInfo.coverPath}`);
+        // Read cover image and toc; the cover is optional and falls back to the default cover
+        const coverFile = bookBasicInfo.coverPath
+          ? zip.file(`${basePath}${bookBasicInfo.coverPath}`)
+          : null;
 
-        if (!coverFile) {
-          throw new Error('Failed to find cover image in EPUB structure.');
-        }
-
-        const [coverBlob, tocContent] = await Promise.all([
-          coverFile.async('blob'),
+        const [coverBuffer, tocContent] = await Promise.all([
+          coverFile?.async('arraybuffer'),
           zip.file(`${basePath}${tocPath}` as string)?.async('string')
         ]);
 
-        bookBasicInfo.coverBlob = await coverBlob.arrayBuffer();
+        if (coverBuffer) {
+          bookBasicInfo.coverBlob = coverBuffer;
+        } else {
+          bookBasicInfo.coverPath = '';
+        }
         bookBasicInfo.toc = parseToc(tocContent as string, basePath as string);
         resolve(bookBasicInfo);
       } catch (error) {
@@ -118,10 +120,13 @@ const epubBasicInfoParser = (content: string): [BookBasicInfoType, string] => {
     const coverId: string = coverMeta ? coverMeta.getAttribute('content') || '' : '';
     if (coverId) {
       const coverItem: Element | null = xmlDoc.querySelector(`manifest > item[id='${coverId}']`);
-      return coverItem ? coverItem.getAttribute('href') || '' : '';
+      const href = coverItem?.getAttribute('href');
+      if (href) return href;
     }
 
-    return '';
+    // EPUB3 marks the cover with a manifest property instead of a meta tag
+    const coverImageItem = xmlDoc.querySelector("manifest > item[properties~='cover-image']");
+    return coverImageItem?.getAttribute('href') || '';
   };
 
   const getTocPath = () => {
